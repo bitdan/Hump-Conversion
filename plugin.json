@@ -10,18 +10,6 @@
     {
       "code": "text",
       "cmds": ["驼峰"]
-    },
-    {
-      "code": "regex",
-      "cmds": [
-        {
-          "type": "regex",
-          "label": "驼峰",
-          "match": "/(.)+/、/[\\s\\S]*/",
-          "minLength": 1,
-          "maxLength": 10000
-        }
-      ]
     }
   ]
 
