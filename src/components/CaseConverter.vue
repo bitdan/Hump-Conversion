@@ -35,12 +35,14 @@ const typeLabels = {
   camel: '驼峰格式',
   underscore: '下划线格式',
   kebab: '中划线格式',
-  lower: '纯小写格式',
+  lower: '小写格式',
+  upper: '大写格式',
   empty: '空'
 }
 
 // 转换函数
 const converters = {
+  // 原有转换函数
   camelToUnderscore: (str) => {
     return str
         .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
@@ -62,12 +64,35 @@ const converters = {
         .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
   },
   underscoreToKebab: (str) => str.replace(/_/g, '-'),
-  kebabToUnderscore: (str) => str.replace(/-/g, '_')
+  kebabToUnderscore: (str) => str.replace(/-/g, '_'),
+
+  // 新增大小写转换函数
+  toUpper: (str) => {
+    // 如果是驼峰、下划线或中划线格式，先转换为对应的分隔形式
+    let processed = str
+    if (/[A-Z]/.test(str) && !/[_-]/.test(str)) {
+      processed = converters.camelToUnderscore(str)
+    }
+    return processed.toUpperCase()
+  },
+  toLower: (str) => {
+    // 如果是驼峰、下划线或中划线格式，先转换为对应的分隔形式
+    let processed = str
+    if (/[A-Z]/.test(str) && !/[_-]/.test(str)) {
+      processed = converters.camelToUnderscore(str)
+    }
+    return processed.toLowerCase()
+  }
 }
 
 // 检测输入文本的类型
 const detectType = (str) => {
   if (!str) return 'empty'
+  // 全大写检测
+  if (str === str.toUpperCase() && str.includes('_')) return 'upper'
+  // 全小写检测
+  if (str === str.toLowerCase() && !str.includes('_') && !str.includes('-')) return 'lower'
+  // 其他检测
   if (/[A-Z]/.test(str) && !/[_-]/.test(str)) return 'camel'
   if (str.includes('_')) return 'underscore'
   if (str.includes('-')) return 'kebab'
@@ -87,25 +112,35 @@ const convertedResults = computed(() => {
     case 'camel':
       results.push(
           { label: '下划线格式', value: converters.camelToUnderscore(inputText.value) },
-          { label: '中划线格式', value: converters.camelToKebab(inputText.value) }
+          { label: '中划线格式', value: converters.camelToKebab(inputText.value) },
+          { label: '全大写格式', value: converters.toUpper(inputText.value) },
+          { label: '全小写格式', value: converters.toLower(inputText.value) }
       )
       break
     case 'underscore':
       results.push(
           { label: '驼峰格式', value: converters.underscoreToCamel(inputText.value) },
-          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) }
+          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
+          { label: '全大写格式', value: converters.toUpper(inputText.value) },
+          { label: '全小写格式', value: converters.toLower(inputText.value) }
       )
       break
     case 'kebab':
       results.push(
           { label: '驼峰格式', value: converters.kebabToCamel(inputText.value) },
-          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) }
+          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
+          { label: '全大写格式', value: converters.toUpper(inputText.value) },
+          { label: '全小写格式', value: converters.toLower(inputText.value) }
       )
       break
+    case 'upper':
     case 'lower':
       results.push(
-          { label: '下划线格式', value: inputText.value },
-          { label: '中划线格式', value: inputText.value }
+          { label: '驼峰格式', value: converters.underscoreToCamel(inputText.value) },
+          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
+          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
+          { label: '全大写格式', value: converters.toUpper(inputText.value) },
+          { label: '全小写格式', value: converters.toLower(inputText.value) }
       )
       break
   }
@@ -122,7 +157,6 @@ const copyToClipboard = async (text, index) => {
     }, 2000)
   } catch (err) {
     console.error('复制失败:', err)
-    // 降级方案
     const textarea = document.createElement('textarea')
     textarea.value = text
     document.body.appendChild(textarea)
@@ -134,6 +168,7 @@ const copyToClipboard = async (text, index) => {
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .container {
   font-family: Arial, sans-serif;
   max-width: 800px;
