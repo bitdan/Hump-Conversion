@@ -1,0 +1,16 @@
+{
+  "name": "demoMatchText",
+  "version": "1.0.0",
+  "pluginName": "智能匹配文本示例",
+  "description": "智能匹配文本示例插件",
+  "main": "index.html",
+  "logo": "logo.png",
+  "preload": "preload.js",
+  "features": [
+    {
+      "code": "text",
+      "cmds": ["驼峰"]
+    }
+  ]
+
+}

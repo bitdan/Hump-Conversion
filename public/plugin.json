@@ -1,0 +1,13 @@
+{
+  "logo": "logo.png",
+  "main": "index.html",
+  "features": [
+    {
+      "code": "test",
+      "cmds": [
+        "第一个插件"
+      ],
+      "explain": "第一个插件"
+    }
+  ]
+}
