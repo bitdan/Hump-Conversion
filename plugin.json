@@ -1,8 +1,8 @@
 {
-  "name": "demoMatchText",
+  "name": "HumpConversion",
   "version": "1.0.0",
-  "pluginName": "智能匹配文本示例",
-  "description": "智能匹配文本示例插件",
+  "pluginName": "驼峰转换",
+  "description": "驼峰转换插件",
   "main": "index.html",
   "logo": "logo.png",
   "preload": "preload.js",
@@ -10,6 +10,18 @@
     {
       "code": "text",
       "cmds": ["驼峰"]
+    },
+    {
+      "code": "regex",
+      "cmds": [
+        {
+          "type": "regex",
+          "label": "驼峰",
+          "match": "/(.)+/、/[\\s\\S]*/",
+          "minLength": 1,
+          "maxLength": 10000
+        }
+      ]
     }
   ]
 
