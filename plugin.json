@@ -4,13 +4,16 @@
   "pluginName": "驼峰转换",
   "description": "驼峰转换插件",
   "main": "index.html",
-  "logo": "logo.png",
+  "logo": "public/logo.png",
   "preload": "preload.js",
   "features": [
     {
       "code": "text",
       "cmds": ["驼峰"]
     }
-  ]
+  ],
+  "development": {
+    "main": "http://localhost:5173/index.html"
+  }
 
 }
