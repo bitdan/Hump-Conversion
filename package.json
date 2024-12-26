@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "clean": "rimraf node_modules",
+    "install": "npm install",
+    "reinstall": "npm run clean && npm install",
     "dev": "vite",
     "preview": "vite preview",
     "build": "vite build"
@@ -14,6 +17,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
     "utools-api-types": "^5.2.0",
-    "vite": "^5.1.4"
+    "vite": "^5.1.4",
+    "rimraf": "^5.0.5"
   }
 }
