@@ -4,9 +4,14 @@
   "pluginName": "驼峰转换",
   "description": "驼峰转换插件",
   "main": "index.html",
-  "logo": "public/logo.png",
+  "logo": "logo.png",
   "preload": "preload.js",
   "features": [
+    {
+      "code": "main",
+      "explain": "驼峰转换",
+      "cmds":["驼峰"]
+    },
     {
       "code": "text",
       "cmds": ["驼峰"]

@@ -134,6 +134,13 @@ const convertedResults = computed(() => {
       )
       break
     case 'upper':
+      results.push(
+          { label: '驼峰格式', value: converters.kebabToCamel(inputText.value) },
+          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
+          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
+          { label: '全小写格式', value: converters.toLower(inputText.value) }
+      )
+      break
     case 'lower':
       results.push(
           { label: '驼峰格式', value: converters.underscoreToCamel(inputText.value) },
