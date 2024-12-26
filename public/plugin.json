@@ -14,8 +14,9 @@
     },
     {
       "code": "text",
-      "cmds": ["驼峰"]
+      "cmds": ["下划线"]
     }
+
   ],
   "development": {
     "main": "http://localhost:5173/index.html"
