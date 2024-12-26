@@ -1,31 +1,36 @@
 <template>
-  <div class="container">
-    <h1>驼峰转换工具</h1>
-    <div class="input-group">
+  <div class="container mx-auto p-5 bg-white rounded-lg shadow-md">
+    <h1 class="text-2xl text-gray-800 py-5">驼峰转换工具</h1>
+    <div class="flex gap-3 items-center mb-5">
       <input
           type="text"
           v-model="inputText"
           placeholder="输入文本，自动识别格式并转换"
-      >
-      <span class="type-indicator">当前格式：{{ currentTypeLabel }}</span>
+          class="flex-1 p-2 text-lg border border-gray-300 rounded-md"
+      />
+      <span class="text-gray-500">当前格式：{{ currentTypeLabel }}</span>
     </div>
-    <div class="results">
+    <div class="space-y-3 pb-5">
       <div
           v-for="(result, index) in convertedResults"
           :key="index"
-          class="result-item"
-          :class="{ copied: copiedIndex === index }"
+          class="p-3 border border-gray-300 rounded-md cursor-pointer transition-all relative hover:bg-gray-100"
+          :class="{ 'bg-green-100 border-green-400': copiedIndex === index }"
           @click="copyToClipboard(result.value, index)"
       >
-        <div class="type-label">{{ result.label }}</div>
+        <div class="text-sm text-gray-500 mb-2">{{ result.label }}</div>
         <div>{{ result.value }}</div>
+        <span
+            v-if="copiedIndex === index"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 text-sm"
+        >已复制</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import {ref, computed} from 'vue'
 
 const inputText = ref('')
 const copiedIndex = ref(-1)
@@ -42,7 +47,6 @@ const typeLabels = {
 
 // 转换函数
 const converters = {
-  // 原有转换函数
   camelToUnderscore: (str) => {
     return str
         .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
@@ -111,43 +115,43 @@ const convertedResults = computed(() => {
   switch (currentType.value) {
     case 'camel':
       results.push(
-          { label: '下划线格式', value: converters.camelToUnderscore(inputText.value) },
-          { label: '中划线格式', value: converters.camelToKebab(inputText.value) },
-          { label: '全大写格式', value: converters.toUpper(inputText.value) },
-          { label: '全小写格式', value: converters.toLower(inputText.value) }
+          {label: '下划线格式', value: converters.camelToUnderscore(inputText.value)},
+          {label: '中划线格式', value: converters.camelToKebab(inputText.value)},
+          {label: '全大写格式', value: converters.toUpper(inputText.value)},
+          {label: '全小写格式', value: converters.toLower(inputText.value)}
       )
       break
     case 'underscore':
       results.push(
-          { label: '驼峰格式', value: converters.underscoreToCamel(inputText.value) },
-          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
-          { label: '全大写格式', value: converters.toUpper(inputText.value) },
-          { label: '全小写格式', value: converters.toLower(inputText.value) }
+          {label: '驼峰格式', value: converters.underscoreToCamel(inputText.value)},
+          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
+          {label: '全大写格式', value: converters.toUpper(inputText.value)},
+          {label: '全小写格式', value: converters.toLower(inputText.value)}
       )
       break
     case 'kebab':
       results.push(
-          { label: '驼峰格式', value: converters.kebabToCamel(inputText.value) },
-          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
-          { label: '全大写格式', value: converters.toUpper(inputText.value) },
-          { label: '全小写格式', value: converters.toLower(inputText.value) }
+          {label: '驼峰格式', value: converters.kebabToCamel(inputText.value)},
+          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
+          {label: '全大写格式', value: converters.toUpper(inputText.value)},
+          {label: '全小写格式', value: converters.toLower(inputText.value)}
       )
       break
     case 'upper':
       results.push(
-          { label: '驼峰格式', value: converters.kebabToCamel(inputText.value) },
-          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
-          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
-          { label: '全小写格式', value: converters.toLower(inputText.value) }
+          {label: '驼峰格式', value: converters.kebabToCamel(inputText.value)},
+          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
+          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
+          {label: '全小写格式', value: converters.toLower(inputText.value)}
       )
       break
     case 'lower':
       results.push(
-          { label: '驼峰格式', value: converters.underscoreToCamel(inputText.value) },
-          { label: '下划线格式', value: converters.kebabToUnderscore(inputText.value) },
-          { label: '中划线格式', value: converters.underscoreToKebab(inputText.value) },
-          { label: '全大写格式', value: converters.toUpper(inputText.value) },
-          { label: '全小写格式', value: converters.toLower(inputText.value) }
+          {label: '驼峰格式', value: converters.underscoreToCamel(inputText.value)},
+          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
+          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
+          {label: '全大写格式', value: converters.toUpper(inputText.value)},
+          {label: '全小写格式', value: converters.toLower(inputText.value)}
       )
       break
   }
@@ -173,86 +177,3 @@ const copyToClipboard = async (text, index) => {
   }
 }
 </script>
-
-<style scoped>
-/* 样式保持不变 */
-.container {
-  font-family: Arial, sans-serif;
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 0 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.input-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-input {
-  flex: 1;
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.type-indicator {
-  min-width: 100px;
-  color: #666;
-}
-
-.results {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 20px;
-}
-
-.result-item {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  background-color: #ffffff;
-}
-
-.result-item:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
-}
-
-.result-item.copied {
-  background-color: #e8f5e9;
-  border-color: #81c784;
-}
-
-.result-item.copied::after {
-  content: '已复制';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #4caf50;
-  font-size: 0.9em;
-}
-
-.type-label {
-  color: #666;
-  font-size: 0.9em;
-  margin-bottom: 4px;
-}
-
-h1 {
-  color: #333;
-  padding: 20px 0;
-  margin: 0;
-  font-size: 24px;
-}
-</style>
