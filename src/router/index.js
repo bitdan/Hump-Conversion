@@ -1,23 +1,20 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../components/Home.vue'  // 新增引入
 import CaseConverter from '../components/CaseConverter.vue'
 
-// 定义路由
 const routes = [
     {
         path: '/',
         name: 'Home',
-        component: CaseConverter
+        component: Home  // 使用新的 Home 组件
     },
     {
         path: '/case-converter',
         name: 'CaseConverter',
         component: CaseConverter
     }
-    // 可以添加更多路由...
 ]
 
-// 创建路由实例
 const router = createRouter({
     history: createWebHistory(),
     routes
