@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/Home.vue'
 import CaseConverter from '../components/CaseConverter.vue'
 import StringGenerator from "../components/StringGenerator.vue";
+import TimestampTool from '../components/TimestampTool.vue'
 
 const routes = [
     {
@@ -21,6 +22,14 @@ const routes = [
         name: 'StringGenerator',
         component: StringGenerator,
         meta: { title: '字符串生成' }  // 使用 meta 存储显示名称
+    },
+    {
+        path: '/timestamp',
+        name: 'timestamp',
+        component: TimestampTool,
+        meta: {
+            title: '时间戳工具'
+        }
     }
 ]
 
