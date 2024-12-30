@@ -1,198 +1,129 @@
 <template>
-  <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-    <!-- 时区选择 -->
+  <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">时间戳转换工具</h2>
+    
+    <!-- 输入区域 -->
     <div class="mb-6">
-      <select v-model="timezone" class="w-full p-2 border rounded">
-        <option value="UTC+08:00">UTC+08:00 Asia/Shanghai - 上海</option>
-        <!-- 可以添加更多时区选项 -->
-      </select>
+      <input
+        v-model="inputValue"
+        @input="handleInput"
+        type="text"
+        class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="请输入时间戳或标准时间"
+      />
     </div>
 
-    <!-- 时间输入 -->
-    <div class="mb-6">
-      <div class="flex space-x-4">
-        <input 
-          type="datetime-local"
-          step="1"
-          v-model="dateTimeInput"
-          class="flex-1 p-2 border rounded"
-        >
-        <button 
-          @click="clearInput"
-          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          清空
-        </button>
-      </div>
-    </div>
-
-    <!-- 转换结果 -->
-    <div class="space-y-4">
-      <!-- 秒级时间戳 -->
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer"
-           @click="selectTime('second')">
-        <div class="font-mono">
-          <span class="text-gray-600 text-sm">秒：</span>
-          {{ currentSecondTimestamp }}
-        </div>
-        <div class="flex items-center space-x-2">
-          <span v-if="selectedTime === 'second'" class="text-green-500">已选中</span>
-          <button 
-            @click.stop="copyText(currentSecondTimestamp)"
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            复制
-          </button>
-        </div>
-      </div>
-
-      <!-- 毫秒级时间戳 -->
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer"
-           @click="selectTime('millisecond')">
-        <div class="font-mono">
-          <span class="text-gray-600 text-sm">毫秒：</span>
-          {{ currentMillisecondTimestamp }}
-        </div>
-        <div class="flex items-center space-x-2">
-          <span v-if="selectedTime === 'millisecond'" class="text-green-500">已选中</span>
-          <button 
-            @click.stop="copyText(currentMillisecondTimestamp)"
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            复制
-          </button>
-        </div>
-      </div>
-
-      <!-- 纳秒级时间戳 -->
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer"
-           @click="selectTime('nanosecond')">
-        <div class="font-mono">
-          <span class="text-gray-600 text-sm">纳秒：</span>
-          {{ currentNanosecondTimestamp }}
-        </div>
-        <div class="flex items-center space-x-2">
-          <span v-if="selectedTime === 'nanosecond'" class="text-green-500">已选中</span>
-          <button 
-            @click.stop="copyText(currentNanosecondTimestamp)"
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            复制
-          </button>
-        </div>
-      </div>
-
-      <!-- 标准时间格式 -->
-      <div class="mt-4">
-        <table class="w-full">
-          <thead>
-            <tr>
-              <th class="text-left p-2">格式</th>
-              <th class="text-left p-2">值</th>
-              <th class="text-right p-2">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(time, format) in currentStandardTimes" :key="format" 
-                class="border-t hover:bg-gray-50 cursor-pointer"
-                @click="selectTimeFormat(format)">
-              <td class="p-2">{{ format }}</td>
-              <td class="p-2 font-mono">{{ time }}</td>
-              <td class="p-2 text-right">
-                <div class="flex items-center justify-end space-x-2">
-                  <span v-if="selectedFormat === format" class="text-green-500">已选中</span>
-                  <button 
-                    @click.stop="copyText(time)"
-                    class="px-2 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    复制
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- 时间格式展示 -->
+    <div class="grid gap-4">
+      <div
+        v-for="(time, index) in timeFormats"
+        :key="index"
+        @click="selectTime(time.value)"
+        class="p-3 border rounded hover:bg-gray-50 cursor-pointer transition-colors"
+      >
+        <div class="text-sm text-gray-600">{{ time.label }}</div>
+        <div class="font-mono text-lg">{{ time.value }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
-const timezone = ref('UTC+08:00')
-const dateTimeInput = ref(formatDateTime(new Date()))
-const selectedTime = ref(null)
-const selectedFormat = ref(null)
-const currentTime = ref(new Date())
+const inputValue = ref('')
+const currentTime = ref(Date.now())
 
-// 每秒更新当前时间
-setInterval(() => {
-  currentTime.value = new Date()
-}, 1000)
-
-// 格式化日期时间为input所需格式
-function formatDateTime(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
+// 更新当前时间
+const updateCurrentTime = () => {
+  currentTime.value = Date.now()
 }
 
-// 实时计算属性
-const currentSecondTimestamp = computed(() => {
-  return Math.floor(currentTime.value.getTime() / 1000)
-})
-
-const currentMillisecondTimestamp = computed(() => {
-  return currentTime.value.getTime()
-})
-
-const currentNanosecondTimestamp = computed(() => {
-  return currentTime.value.getTime() + '000000'
-})
-
-const currentStandardTimes = computed(() => {
-  const date = currentTime.value
-  return {
-    '标准时间(秒)': date.toLocaleString(),
-    'Unix时间戳(秒)': Math.floor(date.getTime() / 1000),
-    '标准时间(毫秒)': date.toLocaleString() + '.' + String(date.getMilliseconds()).padStart(3, '0'),
-    'Unix时间戳(毫秒)': date.getTime()
+// 格式化日期
+const formatDate = (timestamp, withMilliseconds = false) => {
+  const date = new Date(timestamp)
+  const pad = (num) => String(num).padStart(2, '0')
+  
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hours = pad(date.getHours())
+  const minutes = pad(date.getMinutes())
+  const seconds = pad(date.getSeconds())
+  
+  let result = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  
+  if (withMilliseconds) {
+    const ms = String(date.getMilliseconds()).padStart(3, '0')
+    result += `.${ms}`
   }
+  
+  return result
+}
+
+// 计算不同格式的时间
+const timeFormats = computed(() => {
+  const timestamp = inputValue.value 
+    ? parseTimestamp(inputValue.value) 
+    : currentTime.value
+
+  if (!timestamp) return []
+
+  return [
+    {
+      label: '标准时间(秒)',
+      value: formatDate(timestamp)
+    },
+    {
+      label: 'Unix时间戳(秒)',
+      value: Math.floor(timestamp / 1000).toString()
+    },
+    {
+      label: '标准时间(毫秒)',
+      value: formatDate(timestamp, true)
+    },
+    {
+      label: 'Unix时间戳(毫秒)',
+      value: timestamp.toString()
+    }
+  ]
 })
 
-// 选择时间类型
-const selectTime = (type) => {
-  selectedTime.value = type
-  selectedFormat.value = null
-  dateTimeInput.value = formatDateTime(currentTime.value)
+// 解析输入的时间戳
+const parseTimestamp = (input) => {
+  // 移除所有空格
+  input = input.replace(/\s/g, '')
+  
+  // 尝试解析不同格式的输入
+  if (/^\d{10}$/.test(input)) {
+    // 10位时间戳（秒）
+    return parseInt(input) * 1000
+  } else if (/^\d{13}$/.test(input)) {
+    // 13位时间戳（毫秒）
+    return parseInt(input)
+  } else {
+    // 尝试解析日期字符串
+    const parsed = new Date(input).getTime()
+    return isNaN(parsed) ? null : parsed
+  }
 }
 
 // 选择时间格式
-const selectTimeFormat = (format) => {
-  selectedFormat.value = format
-  selectedTime.value = null
-  dateTimeInput.value = formatDateTime(currentTime.value)
+const selectTime = (value) => {
+  inputValue.value = value
 }
 
-// 方法
-const copyText = async (text) => {
-  try {
-    await navigator.clipboard.writeText(text.toString())
-    alert('复制成功')
-  } catch (err) {
-    alert('复制失败')
+// 处理输入
+const handleInput = () => {
+  if (!inputValue.value) {
+    updateCurrentTime()
   }
 }
 
-const clearInput = () => {
-  dateTimeInput.value = ''
-  selectedTime.value = null
-  selectedFormat.value = null
-}
-
-</script> 
+// 组件挂载时启动定时器
+onMounted(() => {
+  updateCurrentTime()
+  // 每秒更新一次当前时间
+  setInterval(updateCurrentTime, 1000)
+})
+</script>
