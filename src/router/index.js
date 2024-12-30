@@ -3,6 +3,7 @@ import Home from '../components/Home.vue'
 import CaseConverter from '../components/CaseConverter.vue'
 import StringGenerator from "../components/StringGenerator.vue";
 import TimestampTool from '../components/TimestampTool.vue'
+import TicTacToe from '../components/TicTacToe.vue'
 
 const routes = [
     {
@@ -34,6 +35,12 @@ const routes = [
         meta: {
             title: '时间戳工具'
         }
+    },
+    {
+        path: '/ticTacToe',
+        name: 'TicTacToe',
+        component: TicTacToe,
+        meta: { title: '井字棋' }  
     }
 ]
 
