@@ -4,17 +4,17 @@
       <!-- Hero Section -->
       <div class="text-center mb-16 animate-fade-in">
         <h1 class="text-6xl font-bold text-white mb-6 animate-title">
-          Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">DevTools</span>
+          欢迎来到 <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">开发者工具</span>
         </h1>
         <p class="text-xl text-white/90 mb-8 animate-subtitle">
-          Your Ultimate Developer's Toolkit for Everyday Tasks
+          您的日常任务终极开发者工具包
         </p>
         <router-link
             to="/case-converter"
             class="inline-block px-8 py-4 bg-white text-purple-600 rounded-full font-semibold
                  shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
         >
-          Get Started →
+          开始使用 →
         </router-link>
       </div>
 
@@ -39,18 +39,18 @@ import { ref } from 'vue'
 const features = ref([
   {
     icon: '⚡',
-    title: 'Fast & Efficient',
-    description: 'Transform your text instantly with lightning-fast processing speeds'
+    title: '快速高效',
+    description: '以闪电般的处理速度即时转换您的文本'
   },
   {
     icon: '🎨',
-    title: 'Modern Design',
-    description: 'Clean and intuitive interface for the best user experience'
+    title: '现代设计',
+    description: '为最佳用户体验提供简洁直观的界面'
   },
   {
     icon: '🛠️',
-    title: 'Powerful Tools',
-    description: 'Complete suite of developer tools at your fingertips'
+    title: '强大工具',
+    description: '触手可及的完整开发者工具套件'
   }
 ])
 </script>

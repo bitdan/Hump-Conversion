@@ -15,11 +15,19 @@
     {
       "code": "text",
       "cmds": ["下划线"]
+    },
+    {
+      "code": "text",
+      "explain": "字符串生成",
+      "cmds": ["生成字符串"]
+    },
+    {
+      "code": "text",
+      "explain": "时间戳工具",
+      "cmds": ["时间戳"]
     }
-
   ],
   "development": {
     "main": "http://localhost:5173/index.html"
   }
-
 }
