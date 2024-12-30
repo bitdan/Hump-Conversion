@@ -5,7 +5,6 @@
         <h1 class="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
           字符串生成器
         </h1>
-        <p class="mt-3 text-gray-600 text-lg">生成安全的随机字符串</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
