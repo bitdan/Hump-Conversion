@@ -4,6 +4,7 @@ import CaseConverter from '../components/CaseConverter.vue'
 import StringGenerator from "../components/StringGenerator.vue";
 import TimestampTool from '../components/TimestampTool.vue'
 import TicTacToe from '../components/TicTacToe.vue'
+import DataEncryption from '../components/DataEncryption.vue'
 
 const routes = [
     {
@@ -41,6 +42,12 @@ const routes = [
         name: 'TicTacToe',
         component: TicTacToe,
         meta: { title: '井字棋' }  
+    },
+    {
+        path: '/data-encryption',
+        name: 'DataEncryption',
+        component: DataEncryption,
+        meta: { title: '数据加密解密' }
     }
 ]
 

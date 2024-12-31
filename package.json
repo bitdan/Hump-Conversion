@@ -12,6 +12,8 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "crypto-js": "^4.2.0",
     "vue": "^3.4.19",
     "vue-router": "^4.5.0"
   },
