@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js'
 import bcrypt from 'bcryptjs'
-import { sm3 } from 'sm-crypto'
+import { sm2, sm3, sm4 } from 'sm-crypto'
 import * as rs from 'jsrsasign'
 
 // 哈希函数类
@@ -105,5 +105,47 @@ export class Base64 {
 
   static decode(base64: string): string {
     return CryptoJS.enc.Base64.parse(base64).toString(CryptoJS.enc.Utf8)
+  }
+}
+
+// 国密算法类
+export class SMCrypto {
+  // SM2 密钥对生成
+  static generateSM2KeyPair() {
+    return sm2.generateKeyPairHex()
+  }
+
+  // SM2 加密
+  static sm2Encrypt(text: string, publicKey: string): string {
+    const encoder = new TextEncoder()
+    const msg = encoder.encode(text)
+    return sm2.doEncrypt(msg, publicKey, 1)
+  }
+
+  // SM2 解密
+  static sm2Decrypt(ciphertext: string, privateKey: string): string {
+    try {
+      const decrypted = sm2.doDecrypt(ciphertext, privateKey, 1)
+      const decoder = new TextDecoder()
+      return decoder.decode(new Uint8Array(decrypted))
+    } catch (error) {
+      console.error('SM2 解密错误:', error)
+      throw new Error('SM2解密失败，请检查密钥格式是否正确')
+    }
+  }
+
+  // SM3 哈希
+  static sm3(text: string): string {
+    return sm3(text)
+  }
+
+  // SM4 加密
+  static sm4Encrypt(text: string, key: string): string {
+    return sm4.encrypt(text, key)
+  }
+
+  // SM4 解密
+  static sm4Decrypt(ciphertext: string, key: string): string {
+    return sm4.decrypt(ciphertext, key)
   }
 }

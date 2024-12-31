@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64 } from '../utils/crypto';
+import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../utils/crypto';
 
 const selectedType = ref('hash');
 const selectedAlgorithm = ref('MD5');
@@ -116,8 +116,8 @@ const encryptionTypes = [
 
 const algorithms = {
   hash: ['MD5', 'SHA-256', 'SHA-512', 'SHA3', 'SM3', 'RIPEMD160'],
-  symmetric: ['AES', 'DES', 'Triple DES'],
-  asymmetric: ['RSA'],
+  symmetric: ['AES', 'DES', 'Triple DES', 'SM4'],
+  asymmetric: ['RSA', 'SM2'],
   password: ['Bcrypt'],
   base64: ['Base64'],
 };
@@ -155,7 +155,13 @@ const getKeyPlaceholder = computed(() => {
     case 'symmetric':
       return '输入加密密钥';
     case 'asymmetric':
-      return selectedAlgorithm.value === 'RSA' ? '输入公钥(加密)/私钥(解密)' : '输入密钥';
+      if (selectedAlgorithm.value === 'RSA') {
+        return '输入公钥(加密)/私钥(解密)';
+      } else if (selectedAlgorithm.value === 'SM9') {
+        return '输入主公钥(加密)/用户私钥(解密)';
+      } else {
+        return '输入密钥';
+      }
     default:
       return '输入密钥';
   }
@@ -262,7 +268,7 @@ function processHash() {
       result.value = HashFunctions.sha3(inputText.value);
       break;
     case 'SM3':
-      result.value = HashFunctions.sm3(inputText.value);
+      result.value = SMCrypto.sm3(inputText.value);
       break;
     case 'RIPEMD160':
       result.value = HashFunctions.ripemd160(inputText.value);
@@ -291,6 +297,11 @@ function processSymmetric(encrypt: boolean) {
         ? SymmetricEncryption.tripleDesEncrypt(inputText.value, key.value)
         : SymmetricEncryption.tripleDesDecrypt(inputText.value, key.value);
       break;
+    case 'SM4':
+      result.value = encrypt
+        ? SMCrypto.sm4Encrypt(inputText.value, key.value)
+        : SMCrypto.sm4Decrypt(inputText.value, key.value);
+      break;
   }
 }
 
@@ -299,10 +310,27 @@ function processAsymmetric(encrypt: boolean) {
     throw new Error('请输入密钥');
   }
 
-  if (selectedAlgorithm.value === 'RSA') {
-    result.value = encrypt
-      ? AsymmetricEncryption.rsaEncrypt(inputText.value, key.value)
-      : AsymmetricEncryption.rsaDecrypt(inputText.value, key.value);
+  switch (selectedAlgorithm.value) {
+    case 'RSA':
+      result.value = encrypt
+        ? AsymmetricEncryption.rsaEncrypt(inputText.value, key.value)
+        : AsymmetricEncryption.rsaDecrypt(inputText.value, key.value);
+      break;
+    case 'SM2':
+      result.value = encrypt
+        ? SMCrypto.sm2Encrypt(inputText.value, key.value)
+        : SMCrypto.sm2Decrypt(inputText.value, key.value);
+      break;
+    case 'SM9':
+      // SM9 需要额外的用户ID输入
+      const userId = prompt('请输入用户ID');
+      if (!userId) {
+        throw new Error('需要用户ID');
+      }
+      result.value = encrypt
+        ? SMCrypto.sm9Encrypt(inputText.value, userId, key.value)
+        : SMCrypto.sm9Decrypt(inputText.value, key.value);
+      break;
   }
 }
 
