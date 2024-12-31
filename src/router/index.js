@@ -5,6 +5,7 @@ import StringGenerator from "../components/StringGenerator.vue";
 import TimestampTool from '../components/TimestampTool.vue'
 import TicTacToe from '../components/TicTacToe.vue'
 import DataEncryption from '../components/DataEncryption.vue'
+import FileConverter from '../components/FileConverter.vue'
 
 const routes = [
     {
@@ -63,6 +64,15 @@ const routes = [
         meta: { 
             title: '数据加密解密',
             icon: 'mdi-shield-lock-outline'
+        }
+    },
+    {
+        path: '/file-converter',
+        name: 'FileConverter',
+        component: FileConverter,
+        meta: {
+          title: '文件格式转换',
+          icon: 'mdi-file-convert'
         }
     }
 ]
