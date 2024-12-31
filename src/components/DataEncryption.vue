@@ -74,28 +74,30 @@
 
       <!-- 输出结果 -->
       <div class="mb-4">
-        <div class="flex justify-between items-center mb-2">
-          <label class="block text-gray-700">结果</label>
-          <button
-            @click="copyResult"
-            class="text-blue-500 hover:text-blue-600 text-sm"
-          >
-            复制结果
-          </button>
-        </div>
+        <label class="block text-gray-700 mb-2">结果</label>
         <textarea
           v-model="result"
-          class="w-full p-2 border rounded bg-gray-50"
+          class="w-full p-2 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100"
           rows="4"
           readonly
+          @click="copyText(result)"
         ></textarea>
+      </div>
+
+      <!-- 复制成功提示 -->
+      <div
+        v-if="showCopyTip"
+        class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300"
+        :class="{ 'opacity-0': copyTipFading }"
+      >
+        已复制到剪贴板
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64 } from '../utils/crypto';
 
 const selectedType = ref('hash');
@@ -158,6 +160,50 @@ const getKeyPlaceholder = computed(() => {
       return '输入密钥';
   }
 });
+
+// 添加复制提示相关的状态
+const showCopyTip = ref(false);
+const copyTipFading = ref(false);
+let copyTipTimer: number | null = null;
+
+// 监听结果变化，自动复制
+watch(result, (newValue) => {
+  if (newValue) {
+    copyText(newValue);
+  }
+});
+
+// 复制函数
+async function copyText(text: string) {
+  if (!text) return;
+  
+  try {
+    await navigator.clipboard.writeText(text);
+    
+    // 清除之前的定时器
+    if (copyTipTimer) {
+      clearTimeout(copyTipTimer);
+      showCopyTip.value = false;
+      copyTipFading.value = false;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // 显示提示
+    showCopyTip.value = true;
+    copyTipFading.value = false;
+
+    // 设置定时器淡出提示
+    copyTipTimer = window.setTimeout(() => {
+      copyTipFading.value = true;
+      setTimeout(() => {
+        showCopyTip.value = false;
+        copyTipFading.value = false;
+      }, 300);
+    }, 1500);
+  } catch (err) {
+    console.error('复制失败:', err);
+  }
+}
 
 async function processText() {
   try {
@@ -271,20 +317,18 @@ function processBase64(encode: boolean) {
     ? Base64.encode(inputText.value)
     : Base64.decode(inputText.value);
 }
-
-async function copyResult() {
-  try {
-    await navigator.clipboard.writeText(result.value);
-    // 可以添加一个提示消息
-    alert('复制成功');
-  } catch (err) {
-    alert('复制失败');
-  }
-}
 </script>
 
 <style scoped>
 .tab-active {
   @apply border-b-2 border-blue-500 text-blue-600;
+}
+
+.transition-opacity {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.opacity-0 {
+  opacity: 0;
 }
 </style> 
