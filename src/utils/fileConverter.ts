@@ -207,28 +207,46 @@ export class FileConverter {
     if (!content) return ''
     
     // 检测 JSON
-    if ((content.startsWith('{') && content.endsWith('}')) || 
-        (content.startsWith('[') && content.endsWith(']'))) {
+    try {
+      JSON.parse(content)
+      return 'json'
+    } catch {
+      // 继续检测其他格式
+    }
+    
+    // 检测 XML
+    if (content.startsWith('<?xml') || 
+        (content.startsWith('<') && content.endsWith('>') && content.includes('>'))) {
       try {
-        JSON.parse(content)
-        return 'json'
+        const parser = new Parser()
+        parser.parseStringPromise(content)
+        return 'xml'
       } catch {
         // 继续检测其他格式
       }
     }
     
-    // 检测 XML
-    if (content.startsWith('<?xml') || (content.startsWith('<') && content.endsWith('>'))) {
-      return 'xml'
+    // 检测 Properties
+    const propertiesPattern = /^([a-zA-Z0-9._-]+)\s*[=:]\s*(.*)$/m
+    const hasComments = content.split('\n').some(line => line.trim().startsWith('#'))
+    const hasProperties = content.split('\n').some(line => propertiesPattern.test(line.trim()))
+    if (hasProperties || (hasComments && !content.includes(':'))) {
+      return 'properties'
     }
     
     // 检测 YAML
-    if (content.includes('---') || content.includes(':')) {
-      return 'yaml'
+    try {
+      load(content)
+      // 额外检查，避免与 properties 格式冲突
+      if (content.includes(':') && !propertiesPattern.test(content)) {
+        return 'yaml'
+      }
+    } catch {
+      // 如果不是有效的 YAML，继续检测
     }
     
-    // 检测 Properties
-    if (content.split('\n').some(line => line.includes('='))) {
+    // 如果之前检测到了类似 properties 的格式，返回 properties
+    if (hasProperties) {
       return 'properties'
     }
     
