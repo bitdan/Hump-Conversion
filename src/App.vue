@@ -34,7 +34,7 @@
         </nav>
 
         <!-- 路由视图 -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200">
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border border-gray-200">
           <router-view v-slot="{ Component }">
             <transition 
               enter-active-class="transition ease-out duration-200"

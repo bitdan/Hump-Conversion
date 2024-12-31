@@ -27,8 +27,8 @@
     <!-- 两列布局 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- 左侧：当前时间 -->
-      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 shadow-lg">
-        <div class="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 shadow-lg">
+        <div class="text-lg font-semibold text-purple-800 mb-4 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -40,9 +40,9 @@
             v-for="(time, index) in timeFormats"
             :key="'current-' + index"
             @click="selectTime(time)"
-            class="p-4 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors border border-indigo-100"
+            class="p-4 bg-white rounded-lg hover:bg-pink-50 cursor-pointer transition-colors border border-pink-100"
           >
-            <div class="text-sm text-indigo-600 font-medium mb-1">{{ time.label }}</div>
+            <div class="text-sm text-purple-600 font-medium mb-1">{{ time.label }}</div>
             <div class="font-mono text-lg text-gray-800">{{ time.value }}</div>
           </div>
         </div>
