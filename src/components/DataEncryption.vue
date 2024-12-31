@@ -1,184 +1,290 @@
 <template>
-  <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">数据加密解密工具</h1>
-    
-    <!-- 操作类型选择 -->
-    <div class="mb-6">
+  <div class="container mx-auto p-4">
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">加密工具</h2>
+      
+      <!-- 算法类型选择 (Tab) -->
+      <div class="mb-6">
+        <div class="flex border-b border-gray-200">
+          <button
+            v-for="type in encryptionTypes"
+            :key="type.value"
+            @click="selectedType = type.value"
+            class="px-6 py-2.5 font-medium text-sm leading-5 rounded-t-lg -mb-px"
+            :class="[
+              selectedType === type.value
+                ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'focus:outline-none focus:text-blue-800 focus:border-blue-700'
+            ]"
+          >
+            {{ type.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 具体算法选择 -->
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">选择具体算法</label>
+        <select v-model="selectedAlgorithm" class="w-full p-2 border rounded">
+          <option v-for="algo in algorithms[selectedType]" :key="algo" :value="algo">
+            {{ algo }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 输入区域 -->
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">输入文本</label>
+        <textarea
+          v-model="inputText"
+          class="w-full p-2 border rounded"
+          rows="4"
+          :placeholder="getInputPlaceholder"
+        ></textarea>
+      </div>
+
+      <!-- 密钥输入 (对称/非对称加密) -->
+      <div v-if="needsKey" class="mb-4">
+        <label class="block text-gray-700 mb-2">密钥</label>
+        <input
+          v-model="key"
+          type="text"
+          class="w-full p-2 border rounded"
+          :placeholder="getKeyPlaceholder"
+        />
+      </div>
+
+      <!-- 操作按钮 -->
       <div class="flex gap-2 mb-4">
-        <button 
-          @click="operationType = 'encrypt'"
-          :class="[
-            'px-4 py-2 rounded border',
-            operationType === 'encrypt' 
-              ? 'bg-blue-500 text-white border-blue-500' 
-              : 'border-gray-300 hover:border-blue-500'
-          ]"
+        <button
+          @click="processText"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          加密
+          {{ getButtonText }}
         </button>
-        <button 
-          @click="operationType = 'decrypt'"
-          :class="[
-            'px-4 py-2 rounded border',
-            operationType === 'decrypt' 
-              ? 'bg-blue-500 text-white border-blue-500' 
-              : 'border-gray-300 hover:border-blue-500'
-          ]"
+        <button
+          v-if="canDecrypt"
+          @click="decrypt"
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
         >
           解密
         </button>
       </div>
 
-      <!-- 加密方式选择 -->
-      <div class="flex gap-2 flex-wrap">
-        <button
-          v-for="method in methods"
-          :key="method.value"
-          @click="currentMethod = method.value"
-          :class="[
-            'px-4 py-2 rounded border',
-            currentMethod === method.value
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'border-gray-300 hover:border-blue-500'
-          ]"
-        >
-          {{ method.label }}
-        </button>
+      <!-- 输出结果 -->
+      <div class="mb-4">
+        <div class="flex justify-between items-center mb-2">
+          <label class="block text-gray-700">结果</label>
+          <button
+            @click="copyResult"
+            class="text-blue-500 hover:text-blue-600 text-sm"
+          >
+            复制结果
+          </button>
+        </div>
+        <textarea
+          v-model="result"
+          class="w-full p-2 border rounded bg-gray-50"
+          rows="4"
+          readonly
+        ></textarea>
       </div>
-    </div>
-
-    <!-- AES密钥输入框 -->
-    <div v-if="currentMethod === 'aes'" class="mb-4">
-      <label class="block mb-2">密钥:</label>
-      <input
-        v-model="aesKey"
-        type="text"
-        placeholder="请输入AES密钥"
-        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-
-    <!-- 输入区域 -->
-    <div class="mb-6">
-      <label class="block mb-2">
-        {{ operationType === 'encrypt' ? '待加密内容:' : '待解密内容:' }}
-      </label>
-      <textarea
-        v-model="inputText"
-        :placeholder="operationType === 'encrypt' ? '请输入要加密的内容' : '请输入要解密的内容'"
-        rows="4"
-        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-      ></textarea>
-    </div>
-
-    <!-- 结果展示 -->
-    <div class="bg-gray-50 p-4 rounded-lg">
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="font-medium">
-          {{ operationType === 'encrypt' ? '加密结果:' : '解密结果:' }}
-        </h3>
-        <button
-          @click="copyToClipboard(result)"
-          class="text-blue-500 hover:text-blue-600"
-        >
-          复制
-        </button>
-      </div>
-      <div class="bg-white p-3 rounded border break-all min-h-[60px]">
-        {{ result || '等待输入...' }}
-      </div>
-    </div>
-
-    <!-- 提示消息 -->
-    <div 
-      v-if="message.show"
-      :class="[
-        'fixed top-4 right-4 px-4 py-2 rounded shadow-lg transition-opacity duration-300',
-        message.type === 'success' ? 'bg-green-500' : 'bg-red-500',
-        'text-white'
-      ]"
-    >
-      {{ message.text }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { base64, md5, aes, urlSafeBase64 } from '../utils/crypto'
+import { ref, computed } from 'vue';
+import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64 } from '../utils/crypto';
 
-const inputText = ref('')
-const aesKey = ref('your-secret-key')
-const operationType = ref<'encrypt' | 'decrypt'>('encrypt')
-const currentMethod = ref<'base64' | 'urlSafeBase64' | 'md5' | 'aes'>('base64')
+const selectedType = ref('hash');
+const selectedAlgorithm = ref('MD5');
+const inputText = ref('');
+const key = ref('');
+const result = ref('');
 
-const message = ref({
-  show: false,
-  text: '',
-  type: 'success'
-})
-
-const methods = [
+const encryptionTypes = [
+  { label: '哈希函数', value: 'hash' },
+  { label: '对称加密', value: 'symmetric' },
+  { label: '非对称加密', value: 'asymmetric' },
+  { label: '密码哈希', value: 'password' },
   { label: 'Base64', value: 'base64' },
-  { label: 'URL Safe Base64', value: 'urlSafeBase64' },
-  { label: 'MD5', value: 'md5' },
-  { label: 'AES', value: 'aes' }
-]
+];
 
-const result = computed(() => {
-  if (!inputText.value) return ''
-  
+const algorithms = {
+  hash: ['MD5', 'SHA-256', 'SHA-512', 'SHA3', 'SM3', 'RIPEMD160'],
+  symmetric: ['AES', 'DES', 'Triple DES'],
+  asymmetric: ['RSA'],
+  password: ['Bcrypt'],
+  base64: ['Base64'],
+};
+
+const needsKey = computed(() => {
+  return ['symmetric', 'asymmetric'].includes(selectedType.value);
+});
+
+const canDecrypt = computed(() => {
+  return ['symmetric', 'asymmetric', 'base64'].includes(selectedType.value);
+});
+
+const getButtonText = computed(() => {
+  if (selectedType.value === 'hash' || selectedType.value === 'password') {
+    return '计算哈希';
+  }
+  return '加密';
+});
+
+const getInputPlaceholder = computed(() => {
+  switch (selectedType.value) {
+    case 'hash':
+      return '输入要计算哈希的文本';
+    case 'password':
+      return '输入要哈希的密码';
+    case 'base64':
+      return '输入要编码/解码的文本';
+    default:
+      return '输入要加密的文本';
+  }
+});
+
+const getKeyPlaceholder = computed(() => {
+  switch (selectedType.value) {
+    case 'symmetric':
+      return '输入加密密钥';
+    case 'asymmetric':
+      return selectedAlgorithm.value === 'RSA' ? '输入公钥(加密)/私钥(解密)' : '输入密钥';
+    default:
+      return '输入密钥';
+  }
+});
+
+async function processText() {
   try {
-    if (operationType.value === 'encrypt') {
-      switch (currentMethod.value) {
-        case 'base64':
-          return base64.encode(inputText.value)
-        case 'urlSafeBase64':
-          return urlSafeBase64.encode(inputText.value)
-        case 'md5':
-          return md5(inputText.value)
-        case 'aes':
-          return aes.encrypt(inputText.value, aesKey.value)
-        default:
-          return ''
-      }
-    } else {
-      if (currentMethod.value === 'md5') {
-        return 'MD5是单向加密,无法解密'
-      }
-      switch (currentMethod.value) {
-        case 'base64':
-          return base64.decode(inputText.value)
-        case 'urlSafeBase64':
-          return urlSafeBase64.decode(inputText.value)
-        case 'aes':
-          return aes.decrypt(inputText.value, aesKey.value)
-        default:
-          return ''
-      }
+    switch (selectedType.value) {
+      case 'hash':
+        processHash();
+        break;
+      case 'symmetric':
+        processSymmetric(true);
+        break;
+      case 'asymmetric':
+        processAsymmetric(true);
+        break;
+      case 'password':
+        await processPassword();
+        break;
+      case 'base64':
+        processBase64(true);
+        break;
     }
-  } catch (e) {
-    return operationType.value === 'encrypt' ? '加密失败' : '解密失败'
+  } catch (error) {
+    result.value = `错误: ${error.message}`;
   }
-})
-
-function showMessage(text: string, type: 'success' | 'error' = 'success') {
-  message.value = {
-    show: true,
-    text,
-    type
-  }
-  setTimeout(() => {
-    message.value.show = false
-  }, 2000)
 }
 
-async function copyToClipboard(text: string) {
+async function decrypt() {
   try {
-    await navigator.clipboard.writeText(text)
-    showMessage('复制成功')
-  } catch (err) {
-    showMessage('复制失败', 'error')
+    switch (selectedType.value) {
+      case 'symmetric':
+        processSymmetric(false);
+        break;
+      case 'asymmetric':
+        processAsymmetric(false);
+        break;
+      case 'base64':
+        processBase64(false);
+        break;
+    }
+  } catch (error) {
+    result.value = `解密错误: ${error.message}`;
   }
 }
-</script> 
+
+function processHash() {
+  switch (selectedAlgorithm.value) {
+    case 'MD5':
+      result.value = HashFunctions.md5(inputText.value);
+      break;
+    case 'SHA-256':
+      result.value = HashFunctions.sha256(inputText.value);
+      break;
+    case 'SHA-512':
+      result.value = HashFunctions.sha512(inputText.value);
+      break;
+    case 'SHA3':
+      result.value = HashFunctions.sha3(inputText.value);
+      break;
+    case 'SM3':
+      result.value = HashFunctions.sm3(inputText.value);
+      break;
+    case 'RIPEMD160':
+      result.value = HashFunctions.ripemd160(inputText.value);
+      break;
+  }
+}
+
+function processSymmetric(encrypt: boolean) {
+  if (!key.value) {
+    throw new Error('请输入密钥');
+  }
+
+  switch (selectedAlgorithm.value) {
+    case 'AES':
+      result.value = encrypt
+        ? SymmetricEncryption.aesEncrypt(inputText.value, key.value)
+        : SymmetricEncryption.aesDecrypt(inputText.value, key.value);
+      break;
+    case 'DES':
+      result.value = encrypt
+        ? SymmetricEncryption.desEncrypt(inputText.value, key.value)
+        : SymmetricEncryption.desDecrypt(inputText.value, key.value);
+      break;
+    case 'Triple DES':
+      result.value = encrypt
+        ? SymmetricEncryption.tripleDesEncrypt(inputText.value, key.value)
+        : SymmetricEncryption.tripleDesDecrypt(inputText.value, key.value);
+      break;
+  }
+}
+
+function processAsymmetric(encrypt: boolean) {
+  if (!key.value) {
+    throw new Error('请输入密钥');
+  }
+
+  if (selectedAlgorithm.value === 'RSA') {
+    result.value = encrypt
+      ? AsymmetricEncryption.rsaEncrypt(inputText.value, key.value)
+      : AsymmetricEncryption.rsaDecrypt(inputText.value, key.value);
+  }
+}
+
+async function processPassword() {
+  if (selectedAlgorithm.value === 'Bcrypt') {
+    result.value = await PasswordHashing.bcryptHash(inputText.value);
+  }
+}
+
+function processBase64(encode: boolean) {
+  result.value = encode
+    ? Base64.encode(inputText.value)
+    : Base64.decode(inputText.value);
+}
+
+async function copyResult() {
+  try {
+    await navigator.clipboard.writeText(result.value);
+    // 可以添加一个提示消息
+    alert('复制成功');
+  } catch (err) {
+    alert('复制失败');
+  }
+}
+</script>
+
+<style scoped>
+.tab-active {
+  @apply border-b-2 border-blue-500 text-blue-600;
+}
+</style> 
