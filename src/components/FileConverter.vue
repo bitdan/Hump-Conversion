@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { convertFile } from '../utils/fileConverter'
+import { FileConverter } from '../utils/fileConverter'
 
 interface FormatOption {
   value: string
@@ -21,39 +21,6 @@ const formatOptions: FormatOption[] = [
   { value: 'properties', label: 'Properties' }
 ]
 
-function detectFormat(content: string): string {
-  content = content.trim()
-  if (!content) return ''
-  
-  // 检测 JSON
-  if ((content.startsWith('{') && content.endsWith('}')) || 
-      (content.startsWith('[') && content.endsWith(']'))) {
-    try {
-      JSON.parse(content)
-      return 'json'
-    } catch {
-      // 继续检测其他格式
-    }
-  }
-  
-  // 检测 XML
-  if (content.startsWith('<?xml') || (content.startsWith('<') && content.endsWith('>'))) {
-    return 'xml'
-  }
-  
-  // 检测 YAML
-  if (content.includes('---') || content.includes(':')) {
-    return 'yaml'
-  }
-  
-  // 检测 Properties
-  if (content.split('\n').some(line => line.includes('='))) {
-    return 'properties'
-  }
-  
-  return ''
-}
-
 async function handleConvert() {
   error.value = ''
   isLoading.value = true
@@ -63,7 +30,7 @@ async function handleConvert() {
       throw new Error('无法识别输入格式')
     }
 
-    const result = await convertFile({
+    const result = await FileConverter.convert({
       content: inputContent.value,
       fromFormat: detectedFormat.value,
       toFormat: selectedOutputFormat.value
@@ -78,7 +45,7 @@ async function handleConvert() {
 
 // 监听输入内容变化，自动检测格式并转换
 watch([inputContent, selectedOutputFormat], async ([newContent]) => {
-  detectedFormat.value = detectFormat(newContent)
+  detectedFormat.value = FileConverter.detectFormat(newContent)
   if (detectedFormat.value && newContent) {
     await handleConvert()
   } else {

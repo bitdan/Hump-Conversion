@@ -196,51 +196,70 @@ function convertToJSON(data: any): string {
   }
 }
 
-// 在 detectFormat 函数中添加 JSON 检测
-function detectFormat(content: string): string {
-  content = content.trim()
-  if (!content) return ''
-  
-  // 检测 JSON
-  if ((content.startsWith('{') && content.endsWith('}')) || 
-      (content.startsWith('[') && content.endsWith(']'))) {
+// 定义支持的格式类型
+export type FileFormat = 'json' | 'xml' | 'yaml' | 'properties' | ''
+
+// 文件转换器类
+export class FileConverter {
+  // 格式检测
+  static detectFormat(content: string): FileFormat {
+    content = content.trim()
+    if (!content) return ''
+    
+    // 检测 JSON
+    if ((content.startsWith('{') && content.endsWith('}')) || 
+        (content.startsWith('[') && content.endsWith(']'))) {
+      try {
+        JSON.parse(content)
+        return 'json'
+      } catch {
+        // 继续检测其他格式
+      }
+    }
+    
+    // 检测 XML
+    if (content.startsWith('<?xml') || (content.startsWith('<') && content.endsWith('>'))) {
+      return 'xml'
+    }
+    
+    // 检测 YAML
+    if (content.includes('---') || content.includes(':')) {
+      return 'yaml'
+    }
+    
+    // 检测 Properties
+    if (content.split('\n').some(line => line.includes('='))) {
+      return 'properties'
+    }
+    
+    return ''
+  }
+
+  // 统一的转换接口
+  static async convert({ content, fromFormat, toFormat }: ConversionParams): Promise<string> {
     try {
-      JSON.parse(content)
-      return 'json'
-    } catch {
-      // 如果解析失败，继续检测其他格式
+      if (!content.trim()) {
+        throw new Error('请输入需要转换的内容')
+      }
+
+      // Parse input
+      const { parsedData, comments } = await this.parseInput(content, fromFormat)
+
+      // Convert to output format
+      return this.convertToFormat(parsedData, toFormat, comments)
+    } catch (error) {
+      throw error instanceof Error 
+        ? error 
+        : new Error('转换失败')
     }
   }
-  
-  // 检测 XML
-  if (content.startsWith('<?xml') || (content.startsWith('<') && content.endsWith('>'))) {
-    return 'xml'
-  }
-  
-  // 检测 YAML
-  if (content.includes('---') || content.includes(':')) {
-    return 'yaml'
-  }
-  
-  // 检测 Properties
-  if (content.split('\n').some(line => line.includes('='))) {
-    return 'properties'
-  }
-  
-  return ''
-}
 
-export async function convertFile({ content, fromFormat, toFormat }: ConversionParams): Promise<string> {
-  try {
-    if (!content.trim()) {
-      throw new Error('请输入需要转换的内容')
-    }
-
-    // Parse input
+  // 私有方法：解析输入
+  private static async parseInput(content: string, format: string): Promise<{ parsedData: any, comments: string[] }> {
     let parsedData: any
     let comments: string[] = []
     
-    switch (fromFormat) {
+    switch (format) {
       case 'xml':
         parsedData = await parseXML(content)
         break
@@ -259,25 +278,25 @@ export async function convertFile({ content, fromFormat, toFormat }: ConversionP
         throw new Error('不支持的输入格式')
     }
 
-    // Convert to output format
-    switch (toFormat) {
+    return { parsedData, comments }
+  }
+
+  // 私有方法：转换为目标格式
+  private static convertToFormat(data: any, format: string, comments: string[] = []): string {
+    switch (format) {
       case 'xml':
-        return convertToXML(parsedData)
+        return convertToXML(data)
       case 'yaml':
-        return dump(parsedData, {
+        return dump(data, {
           indent: 2,
           lineWidth: -1
         })
       case 'properties':
-        return convertToProperties(parsedData, comments)
+        return convertToProperties(data, comments)
       case 'json':
-        return convertToJSON(parsedData)
+        return convertToJSON(data)
       default:
         throw new Error('不支持的输出格式')
     }
-  } catch (error) {
-    throw error instanceof Error 
-      ? error 
-      : new Error('转换失败')
   }
 } 
