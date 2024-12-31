@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { convertFile } from '../utils/fileConverter'
 
 interface FormatOption {
@@ -7,28 +7,66 @@ interface FormatOption {
   label: string
 }
 
-const inputFormat = ref<string>('xml')
-const outputFormat = ref<string>('yaml')
 const inputContent = ref<string>('')
 const outputContent = ref<string>('')
 const error = ref<string>('')
 const isLoading = ref<boolean>(false)
+const detectedFormat = ref<string>('')
+const selectedOutputFormat = ref<string>('json')
 
 const formatOptions: FormatOption[] = [
+  { value: 'json', label: 'JSON' },
   { value: 'xml', label: 'XML' },
   { value: 'yaml', label: 'YAML' },
-  { value: 'properties', label: 'properties' }
+  { value: 'properties', label: 'Properties' }
 ]
+
+function detectFormat(content: string): string {
+  content = content.trim()
+  if (!content) return ''
+  
+  // 检测 JSON
+  if ((content.startsWith('{') && content.endsWith('}')) || 
+      (content.startsWith('[') && content.endsWith(']'))) {
+    try {
+      JSON.parse(content)
+      return 'json'
+    } catch {
+      // 继续检测其他格式
+    }
+  }
+  
+  // 检测 XML
+  if (content.startsWith('<?xml') || (content.startsWith('<') && content.endsWith('>'))) {
+    return 'xml'
+  }
+  
+  // 检测 YAML
+  if (content.includes('---') || content.includes(':')) {
+    return 'yaml'
+  }
+  
+  // 检测 Properties
+  if (content.split('\n').some(line => line.includes('='))) {
+    return 'properties'
+  }
+  
+  return ''
+}
 
 async function handleConvert() {
   error.value = ''
   isLoading.value = true
   
   try {
+    if (!detectedFormat.value) {
+      throw new Error('无法识别输入格式')
+    }
+
     const result = await convertFile({
       content: inputContent.value,
-      fromFormat: inputFormat.value,
-      toFormat: outputFormat.value
+      fromFormat: detectedFormat.value,
+      toFormat: selectedOutputFormat.value
     })
     outputContent.value = result
   } catch (e) {
@@ -37,66 +75,66 @@ async function handleConvert() {
     isLoading.value = false
   }
 }
+
+// 监听输入内容变化，自动检测格式并转换
+watch([inputContent, selectedOutputFormat], async ([newContent]) => {
+  detectedFormat.value = detectFormat(newContent)
+  if (detectedFormat.value && newContent) {
+    await handleConvert()
+  } else {
+    outputContent.value = ''
+  }
+})
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-4 space-y-6">
-    <div class="flex flex-col sm:flex-row gap-4">
-      <div class="flex-1">
-        <label class="block text-sm font-medium text-gray-700 mb-2">输入格式</label>
-        <v-select
-          v-model="inputFormat"
-          :items="formatOptions"
-          item-title="label"
-          item-value="value"
-          variant="outlined"
-          density="comfortable"
-        />
-      </div>
-      <div class="flex-1">
-        <label class="block text-sm font-medium text-gray-700 mb-2">输出格式</label>
-        <v-select
-          v-model="outputFormat"
-          :items="formatOptions"
-          item-title="label"
-          item-value="value"
-          variant="outlined"
-          density="comfortable"
-        />
+  <div class="max-w-7xl mx-auto p-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span v-if="detectedFormat" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+          输入格式: {{ formatOptions.find(f => f.value === detectedFormat)?.label }}
+        </span>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600">输出格式:</span>
+          <v-select
+            v-model="selectedOutputFormat"
+            :items="formatOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="w-32"
+          />
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-2 gap-4">
+      <!-- 左侧输入 -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">输入内容</label>
         <v-textarea
           v-model="inputContent"
-          rows="10"
+          rows="25"
           variant="outlined"
-          placeholder="在此粘贴要转换的内容..."
+          placeholder="在此粘贴要转换的内容，将自动识别格式..."
+          class="font-mono"
+          hide-details
         />
       </div>
+
+      <!-- 右侧输出 -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">输出内容</label>
         <v-textarea
           v-model="outputContent"
-          rows="10"
+          rows="25"
           variant="outlined"
           readonly
           placeholder="转换结果将显示在这里..."
+          class="font-mono"
+          hide-details
         />
       </div>
-    </div>
-
-    <div class="flex justify-center">
-      <v-btn
-        color="primary"
-        :loading="isLoading"
-        :disabled="!inputContent"
-        @click="handleConvert"
-      >
-        转换
-      </v-btn>
     </div>
 
     <v-alert
@@ -107,5 +145,19 @@ async function handleConvert() {
     >
       {{ error }}
     </v-alert>
+
+    <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="64"
+      ></v-progress-circular>
+    </div>
   </div>
-</template> 
+</template>
+
+<style scoped>
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+</style> 
