@@ -15,39 +15,55 @@ const routes = [
         path: '/home',
         name: 'Home',
         component: Home,
-        meta: { title: '首页' }
+        meta: { 
+            title: '首页',
+            icon: 'mdi-home'
+        }
     },
     {
         path: '/case-converter',
         name: 'CaseConverter',
         component: CaseConverter,
-        meta: { title: '驼峰转换' }  
+        meta: { 
+            title: '驼峰转换',
+            icon: 'mdi-format-text'
+        }
     },
     {
         path: '/string-generator',
         name: 'StringGenerator',
         component: StringGenerator,
-        meta: { title: '字符串生成' }  
+        meta: { 
+            title: '字符串生成',
+            icon: 'mdi-format-letter-case'
+        }
     },
     {
         path: '/timestamp',
         name: 'timestamp',
         component: TimestampTool,
         meta: {
-            title: '时间戳工具'
+            title: '时间戳工具',
+            icon: 'mdi-clock-outline'
         }
     },
     {
         path: '/ticTacToe',
         name: 'TicTacToe',
         component: TicTacToe,
-        meta: { title: '井字棋' }  
+        meta: { 
+            title: '井字棋',
+            icon: 'mdi-grid'
+        }
     },
     {
         path: '/data-encryption',
         name: 'DataEncryption',
         component: DataEncryption,
-        meta: { title: '数据加密解密' }
+        meta: { 
+            title: '数据加密解密',
+            icon: 'mdi-shield-lock-outline'
+        }
     }
 ]
 
