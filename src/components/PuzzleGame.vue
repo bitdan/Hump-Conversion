@@ -92,6 +92,15 @@
             v-if="isPlaying"
             :config="stageConfig"
           >
+            <!-- 添加背景网格层 -->
+            <v-layer>
+              <v-rect
+                v-for="(grid, index) in gridLines"
+                :key="`grid-${index}`"
+                :config="grid"
+              />
+            </v-layer>
+            
             <v-layer ref="layer">
               <v-image
                 v-for="piece in pieces"
@@ -99,7 +108,12 @@
                 :config="{
                   ...piece,
                   draggable: true,
-                  onDragend: () => handleDragEnd(piece)
+                  onDragend: () => handleDragEnd(piece),
+                  onDragmove: () => handleDragMove(piece),
+                  shadowColor: 'rgba(0,0,0,0.3)',
+                  shadowBlur: 6,
+                  shadowOffset: { x: 2, y: 2 },
+                  shadowOpacity: 0.4
                 }"
               />
             </v-layer>
@@ -250,25 +264,91 @@
     pieces.value = newPieces
   }
   
-  // 处理拖动结束
+  // 网格线配置
+  const gridLines = computed(() => {
+    const lines: any[] = []
+    const gridSize = difficulty.value
+    const cellWidth = stageConfig.value.width / gridSize
+    const cellHeight = stageConfig.value.height / gridSize
+
+    // 创建网格背景
+    for (let row = 0; row <= gridSize; row++) {
+      for (let col = 0; col <= gridSize; col++) {
+        // 添加单元格背景
+        if (row < gridSize && col < gridSize) {
+          lines.push({
+            x: col * cellWidth,
+            y: row * cellHeight,
+            width: cellWidth,
+            height: cellHeight,
+            fill: '#f3f4f6',
+            stroke: '#e5e7eb',
+            strokeWidth: 1,
+            opacity: 0.5
+          })
+        }
+      }
+    }
+    return lines
+  })
+  
+  // 处理拖动过程
+  function handleDragMove(piece: any) {
+    const pieceWidth = stageConfig.value.width / difficulty.value
+    const pieceHeight = stageConfig.value.height / difficulty.value
+    const tolerance = 30 // 吸附判定范围
+
+    // 计算最近的网格位置
+    const gridX = Math.round(piece.x / pieceWidth) * pieceWidth
+    const gridY = Math.round(piece.y / pieceHeight) * pieceHeight
+
+    // 如果接近网格线,显示对齐辅助线
+    if (Math.abs(piece.x - gridX) < tolerance || Math.abs(piece.y - gridY) < tolerance) {
+      piece.shadowColor = 'rgba(59, 130, 246, 0.5)' // 蓝色阴影提示
+      piece.shadowBlur = 10
+      layer.value.draw()
+    } else {
+      piece.shadowColor = 'rgba(0,0,0,0.3)'
+      piece.shadowBlur = 6
+      layer.value.draw()
+    }
+  }
+  
+  // 更新拖动结束处理
   function handleDragEnd(piece: any) {
     moves.value++
     
     const pieceWidth = stageConfig.value.width / difficulty.value
     const pieceHeight = stageConfig.value.height / difficulty.value
-    const tolerance = 20 // 吸附容差
-  
-    // 检查是否接近正确位置
+    const tolerance = 30 // 增大吸附容差
+
+    // 计算最近的网格位置
+    const gridX = Math.round(piece.x / pieceWidth) * pieceWidth
+    const gridY = Math.round(piece.y / pieceHeight) * pieceHeight
+
+    // 检查是否接近正确位置或任意网格线
     if (
-      Math.abs(piece.x - piece.originalPos.x) < tolerance &&
-      Math.abs(piece.y - piece.originalPos.y) < tolerance
+      (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
+       Math.abs(piece.y - piece.originalPos.y) < tolerance) ||
+      (Math.abs(piece.x - gridX) < tolerance &&
+       Math.abs(piece.y - gridY) < tolerance)
     ) {
-      // 吸附到正确位置
-      piece.x = piece.originalPos.x
-      piece.y = piece.originalPos.y
+      // 如果是正确位置,吸附到正确位置
+      if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
+          Math.abs(piece.y - piece.originalPos.y) < tolerance) {
+        piece.x = piece.originalPos.x
+        piece.y = piece.originalPos.y
+        piece.shadowColor = 'rgba(34, 197, 94, 0.5)' // 正确位置显示绿色阴影
+      } else {
+        // 吸附到最近的网格线
+        piece.x = gridX
+        piece.y = gridY
+        piece.shadowColor = 'rgba(0,0,0,0.3)'
+      }
+      piece.shadowBlur = 6
       layer.value.draw()
     }
-  
+
     // 检查是否完成
     checkCompletion()
   }
