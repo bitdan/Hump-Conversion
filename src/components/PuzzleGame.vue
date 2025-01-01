@@ -247,6 +247,10 @@
           y: Math.random() * (stageConfig.value.height - pieceHeight),
           width: pieceWidth,
           height: pieceHeight,
+          dragBoundFunc: (pos: {x: number, y: number}) => ({
+            x: Math.max(0, Math.min(pos.x, stageConfig.value.width - pieceWidth)),
+            y: Math.max(0, Math.min(pos.y, stageConfig.value.height - pieceHeight))
+          }),
           crop: {
             x: col * (image.width / gridSize),
             y: row * (image.height / gridSize),
@@ -294,24 +298,18 @@
   
   // 处理拖动过程
   function handleDragMove(piece: any) {
-    const pieceWidth = stageConfig.value.width / difficulty.value
-    const pieceHeight = stageConfig.value.height / difficulty.value
-    const tolerance = 30 // 吸附判定范围
+    const tolerance = stageConfig.value.width / difficulty.value * 0.2
 
-    // 计算最近的网格位置
-    const gridX = Math.round(piece.x / pieceWidth) * pieceWidth
-    const gridY = Math.round(piece.y / pieceHeight) * pieceHeight
-
-    // 如果接近网格线,显示对齐辅助线
-    if (Math.abs(piece.x - gridX) < tolerance || Math.abs(piece.y - gridY) < tolerance) {
+    // 只在接近正确位置时显示提示
+    if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
+        Math.abs(piece.y - piece.originalPos.y) < tolerance) {
       piece.shadowColor = 'rgba(59, 130, 246, 0.5)' // 蓝色阴影提示
       piece.shadowBlur = 10
-      layer.value.draw()
     } else {
       piece.shadowColor = 'rgba(0,0,0,0.3)'
       piece.shadowBlur = 6
-      layer.value.draw()
     }
+    layer.value.draw()
   }
   
   // 更新拖动结束处理
@@ -320,31 +318,15 @@
     
     const pieceWidth = stageConfig.value.width / difficulty.value
     const pieceHeight = stageConfig.value.height / difficulty.value
-    const tolerance = 30 // 增大吸附容差
+    const tolerance = pieceWidth * 0.2 // 使用相对大小作为容差
 
-    // 计算最近的网格位置
-    const gridX = Math.round(piece.x / pieceWidth) * pieceWidth
-    const gridY = Math.round(piece.y / pieceHeight) * pieceHeight
-
-    // 检查是否接近正确位置或任意网格线
-    if (
-      (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
-       Math.abs(piece.y - piece.originalPos.y) < tolerance) ||
-      (Math.abs(piece.x - gridX) < tolerance &&
-       Math.abs(piece.y - gridY) < tolerance)
-    ) {
-      // 如果是正确位置,吸附到正确位置
-      if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
-          Math.abs(piece.y - piece.originalPos.y) < tolerance) {
-        piece.x = piece.originalPos.x
-        piece.y = piece.originalPos.y
-        piece.shadowColor = 'rgba(34, 197, 94, 0.5)' // 正确位置显示绿色阴影
-      } else {
-        // 吸附到最近的网格线
-        piece.x = gridX
-        piece.y = gridY
-        piece.shadowColor = 'rgba(0,0,0,0.3)'
-      }
+    // 检查是否接近正确位置
+    if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
+        Math.abs(piece.y - piece.originalPos.y) < tolerance) {
+      // 直接吸附到正确位置
+      piece.x = piece.originalPos.x
+      piece.y = piece.originalPos.y
+      piece.shadowColor = 'rgba(34, 197, 94, 0.5)' // 正确位置显示绿色阴影
       piece.shadowBlur = 6
       layer.value.draw()
     }
