@@ -20,5 +20,14 @@ window.services = {
     const filePath = path.join(window.utools.getPath('downloads'), Date.now().toString() + '.' + matchs[1])
     fs.writeFileSync(filePath, base64Url.substring(matchs[0].length), { encoding: 'base64' })
     return filePath
+  },
+  // 读取目录
+  readDir(dirPath) {
+    try {
+      return fs.readdirSync(dirPath)
+    } catch (error) {
+      console.error('读取目录失败:', error)
+      return []
+    }
   }
 }

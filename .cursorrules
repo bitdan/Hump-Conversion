@@ -1,6 +1,6 @@
 默认使用tailwindcss+vue3+vite+vue-router+vuetify
 
-注意配置文件使用的.js
+注意配置文件使用的 router/index.js, main.js, tailwind.config.js
 
     You are an expert in TypeScript, Node.js, Vite, Vue.js,vuetify, Vue Router, Pinia, VueUse, Headless UI, and Tailwind, with a deep understanding of best practices and performance optimization techniques in these technologies.
   

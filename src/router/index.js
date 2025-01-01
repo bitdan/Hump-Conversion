@@ -6,6 +6,7 @@ import TimestampTool from '../components/TimestampTool.vue'
 import TicTacToe from '../components/TicTacToe.vue'
 import DataEncryption from '../components/DataEncryption.vue'
 import FileConverter from '../components/FileConverter.vue'
+import PuzzleGame from '../components/PuzzleGame.vue'
 
 const routes = [
     {
@@ -74,7 +75,16 @@ const routes = [
           title: '文件格式转换',
           icon: 'mdi-file-convert'
         }
-    }
+    },
+    {
+        path: '/puzzle-game',
+        name: 'PuzzleGame',
+        component: PuzzleGame,
+        meta: {
+          title: '拼图游戏',
+          icon: 'mdi-puzzle'
+        }
+      }
 ]
 
 const router = createRouter({

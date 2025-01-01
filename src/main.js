@@ -8,6 +8,7 @@ import './assets/tailwind.css'
 import '@mdi/font/css/materialdesignicons.css'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import VueKonva from 'vue-konva'
 
 const vuetify = createVuetify({
   components,
@@ -25,7 +26,7 @@ const vuetify = createVuetify({
   },
 })
 const app = createApp(App)
-
+app.use(VueKonva) 
 app.use(router)
 app.use(vuetify)
 app.mount('#app')
