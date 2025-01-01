@@ -298,11 +298,21 @@
   
   // 处理拖动过程
   function handleDragMove(piece: any) {
-    const tolerance = stageConfig.value.width / difficulty.value * 0.2
+    const pieceWidth = stageConfig.value.width / difficulty.value
+    const pieceHeight = stageConfig.value.height / difficulty.value
+    
+    // 计算中心点
+    const pieceCenterX = piece.x + pieceWidth / 2
+    const pieceCenterY = piece.y + pieceHeight / 2
+    const targetCenterX = piece.originalPos.x + pieceWidth / 2
+    const targetCenterY = piece.originalPos.y + pieceHeight / 2
+    
+    // 设置容差为屏幕宽度的1%
+    const tolerance = stageConfig.value.width * 0.1
 
     // 只在接近正确位置时显示提示
-    if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
-        Math.abs(piece.y - piece.originalPos.y) < tolerance) {
+    if (Math.abs(pieceCenterX - targetCenterX) < tolerance &&
+        Math.abs(pieceCenterY - targetCenterY) < tolerance) {
       piece.shadowColor = 'rgba(59, 130, 246, 0.5)' // 蓝色阴影提示
       piece.shadowBlur = 10
     } else {
@@ -318,11 +328,21 @@
     
     const pieceWidth = stageConfig.value.width / difficulty.value
     const pieceHeight = stageConfig.value.height / difficulty.value
-    const tolerance = pieceWidth * 0.2 // 使用相对大小作为容差
-
-    // 检查是否接近正确位置
-    if (Math.abs(piece.x - piece.originalPos.x) < tolerance &&
-        Math.abs(piece.y - piece.originalPos.y) < tolerance) {
+    
+    // 计算拼图块的中心点
+    const pieceCenterX = piece.x + pieceWidth / 2
+    const pieceCenterY = piece.y + pieceHeight / 2
+    
+    // 计算目标位置的中心点
+    const targetCenterX = piece.originalPos.x + pieceWidth / 2
+    const targetCenterY = piece.originalPos.y + pieceHeight / 2
+    
+    // 设置容差为屏幕宽度的1%
+    const tolerance = stageConfig.value.width * 0.1
+    
+    // 检查中心点是否在容差范围内
+    if (Math.abs(pieceCenterX - targetCenterX) < tolerance &&
+        Math.abs(pieceCenterY - targetCenterY) < tolerance) {
       // 直接吸附到正确位置
       piece.x = piece.originalPos.x
       piece.y = piece.originalPos.y
@@ -337,11 +357,22 @@
   
   // 检查是否完成拼图
   function checkCompletion() {
-    const isComplete = pieces.value.every(piece => 
-      piece.x === piece.originalPos.x && 
-      piece.y === piece.originalPos.y
-    )
-  
+    const pieceWidth = stageConfig.value.width / difficulty.value
+    const pieceHeight = stageConfig.value.height / difficulty.value
+    const tolerance = stageConfig.value.width * 0.1 // 使用相同的容差值
+
+    const isComplete = pieces.value.every(piece => {
+      // 计算中心点
+      const pieceCenterX = piece.x + pieceWidth / 2
+      const pieceCenterY = piece.y + pieceHeight / 2
+      const targetCenterX = piece.originalPos.x + pieceWidth / 2
+      const targetCenterY = piece.originalPos.y + pieceHeight / 2
+
+      // 使用中心点判断
+      return Math.abs(pieceCenterX - targetCenterX) < tolerance &&
+             Math.abs(pieceCenterY - targetCenterY) < tolerance
+    })
+
     if (isComplete) {
       stopTimer()
       showComplete.value = true
