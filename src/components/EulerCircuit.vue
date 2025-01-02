@@ -6,37 +6,37 @@
       <!-- 图的输入区域 -->
       <div class="w-full max-w-2xl mb-6">
         <v-textarea
-          v-model="graphInput"
-          label="输入邻接表 (每行格式: 顶点 相邻顶点1,相邻顶点2,...)"
-          placeholder="示例:
+            v-model="graphInput"
+            label="输入邻接表 (每行格式: 顶点 相邻顶点1,相邻顶点2,...)"
+            placeholder="示例:
 1 2,3
 2 1,3,4
 3 1,2,4
 4 2,3"
-          rows="6"
-          class="font-mono"
-          :error-messages="inputError"
+            rows="6"
+            class="font-mono"
+            :error-messages="inputError"
         />
       </div>
 
       <!-- 控制按钮 -->
       <div class="flex gap-4 mb-6">
         <v-btn
-          color="primary"
-          @click="checkAndFindCircuit"
-          :loading="processing"
+            color="primary"
+            @click="checkAndFindCircuit"
+            :loading="processing"
         >
           检查并求解
         </v-btn>
         <v-btn
-          color="secondary"
-          @click="useExample"
+            color="secondary"
+            @click="useExample"
         >
           使用示例
         </v-btn>
         <v-btn
-          color="error"
-          @click="clearGraph"
+            color="error"
+            @click="clearGraph"
         >
           清除
         </v-btn>
@@ -122,14 +122,14 @@ function clearGraph() {
 function parseGraph(input: string): Graph {
   const graph: Graph = {}
   const lines = input.trim().split('\n')
-  
+
   for (const line of lines) {
     const [vertex, neighbors] = line.trim().split(/\s+/)
     const v = parseInt(vertex)
     if (isNaN(v)) {
       throw new Error(`无效的顶点: ${vertex}`)
     }
-    
+
     graph[v] = neighbors.split(',').map(n => {
       const neighbor = parseInt(n)
       if (isNaN(neighbor)) {
@@ -138,7 +138,7 @@ function parseGraph(input: string): Graph {
       return neighbor
     })
   }
-  
+
   return graph
 }
 
@@ -146,7 +146,7 @@ function parseGraph(input: string): Graph {
 function isConnected(graph: Graph): boolean {
   const visited = new Set<number>()
   const vertices = Object.keys(graph).map(Number)
-  
+
   function dfs(vertex: number) {
     visited.add(vertex)
     for (const neighbor of graph[vertex]) {
@@ -155,7 +155,7 @@ function isConnected(graph: Graph): boolean {
       }
     }
   }
-  
+
   dfs(vertices[0])
   return visited.size === vertices.length
 }
@@ -175,21 +175,21 @@ function checkDegrees(graph: Graph): boolean {
 function findEulerCircuit(graph: Graph): number[] {
   const circuit: number[] = []
   const edges = new Map<number, Set<number>>()
-  
+
   // 构建边集
   for (const vertex in graph) {
     const v = parseInt(vertex)
     edges.set(v, new Set(graph[v]))
   }
-  
+
   function dfs(vertex: number) {
     const stack: number[] = [vertex]
     const path: number[] = []
-    
+
     while (stack.length > 0) {
       const current = stack[stack.length - 1]
       const neighbors = edges.get(current)!
-      
+
       if (neighbors.size === 0) {
         path.push(stack.pop()!)
       } else {
@@ -199,10 +199,10 @@ function findEulerCircuit(graph: Graph): number[] {
         stack.push(next)
       }
     }
-    
+
     return path
   }
-  
+
   // 从第一个顶点开始
   const start = parseInt(Object.keys(graph)[0])
   return dfs(start).reverse()
@@ -216,15 +216,15 @@ async function checkAndFindCircuit() {
   hasEulerCircuit.value = false
   eulerCircuit.value = []
   reason.value = ''
-  
+
   try {
     const graph = parseGraph(graphInput.value)
-    
+
     // 检查图是否为空
     if (Object.keys(graph).length === 0) {
       throw new Error('图不能为空')
     }
-    
+
     // 检查连通性
     if (!isConnected(graph)) {
       reason.value = '图不是连通的'
@@ -238,7 +238,7 @@ async function checkAndFindCircuit() {
       hasEulerCircuit.value = true
       eulerCircuit.value = findEulerCircuit(graph)
     }
-    
+
     result.value = true
     visualizeGraph(graph)
   } catch (error) {
@@ -251,24 +251,24 @@ async function checkAndFindCircuit() {
 // 可视化图
 function visualizeGraph(graph: Graph) {
   if (!graphContainer.value) return
-  
+
   const nodes = new DataSet(
-    Object.keys(graph).map(vertex => ({
-      id: parseInt(vertex),
-      label: vertex
-    }))
-  )
-  
-  const edges = new DataSet(
-    Object.entries(graph).flatMap(([vertex, neighbors]) =>
-      neighbors.map(neighbor => ({
-        from: parseInt(vertex),
-        to: neighbor,
-        arrows: 'to,from'
+      Object.keys(graph).map(vertex => ({
+        id: parseInt(vertex),
+        label: vertex
       }))
-    )
   )
-  
+
+  const edges = new DataSet(
+      Object.entries(graph).flatMap(([vertex, neighbors]) =>
+          neighbors.map(neighbor => ({
+            from: parseInt(vertex),
+            to: neighbor,
+            arrows: 'to,from'
+          }))
+      )
+  )
+
   const data = { nodes, edges }
   const options = {
     nodes: {
@@ -301,7 +301,7 @@ function visualizeGraph(graph: Graph) {
       }
     }
   }
-  
+
   if (network) {
     network.destroy()
   }

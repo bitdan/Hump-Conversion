@@ -9,6 +9,7 @@ import FileConverter from '../components/FileConverter.vue'
 import PuzzleGame from '../components/PuzzleGame.vue'
 import JsonToEntity from '../components/JsonToEntity.vue'
 import Gomoku from '../components/Gomoku.vue'
+import EulerCircuit from '../components/EulerCircuit.vue'
 
 const routes = [
     {
@@ -19,7 +20,7 @@ const routes = [
         path: '/home',
         name: 'Home',
         component: Home,
-        meta: { 
+        meta: {
             title: '首页',
             icon: 'mdi-home'
         }
@@ -28,7 +29,7 @@ const routes = [
         path: '/case-converter',
         name: 'CaseConverter',
         component: CaseConverter,
-        meta: { 
+        meta: {
             title: '驼峰转换',
             icon: 'mdi-format-text'
         }
@@ -37,7 +38,7 @@ const routes = [
         path: '/string-generator',
         name: 'StringGenerator',
         component: StringGenerator,
-        meta: { 
+        meta: {
             title: '字符串生成',
             icon: 'mdi-format-letter-case'
         }
@@ -55,7 +56,7 @@ const routes = [
         path: '/ticTacToe',
         name: 'TicTacToe',
         component: TicTacToe,
-        meta: { 
+        meta: {
             title: '井字棋',
             icon: 'mdi-grid'
         }
@@ -64,7 +65,7 @@ const routes = [
         path: '/data-encryption',
         name: 'DataEncryption',
         component: DataEncryption,
-        meta: { 
+        meta: {
             title: '数据加密解密',
             icon: 'mdi-shield-lock-outline'
         }
@@ -74,8 +75,8 @@ const routes = [
         name: 'FileConverter',
         component: FileConverter,
         meta: {
-          title: '文件格式转换',
-          icon: 'mdi-file-convert'
+            title: '文件格式转换',
+            icon: 'mdi-file-convert'
         }
     },
     {
@@ -83,28 +84,37 @@ const routes = [
         name: 'PuzzleGame',
         component: PuzzleGame,
         meta: {
-          title: '拼图游戏',
-          icon: 'mdi-puzzle'
+            title: '拼图游戏',
+            icon: 'mdi-puzzle'
         }
-      },
-  {
-    path: '/json-to-entity',
-    name: 'JsonToEntity',
-    component: JsonToEntity,
-    meta: {
-      title: 'JSON转实体类',
-      icon: 'mdi-code-json'
+    },
+    {
+        path: '/json-to-entity',
+        name: 'JsonToEntity',
+        component: JsonToEntity,
+        meta: {
+            title: 'JSON转实体类',
+            icon: 'mdi-code-json'
+        }
+    },
+    {
+        path: '/euler-circuit',
+        name: 'EulerCircuit',
+        component: EulerCircuit,
+        meta: {
+            title: '欧拉回路求解',
+            icon: 'mdi-graph'
+        }
+    },
+    {
+        path: '/gomoku',
+        name: 'Gomoku',
+        component: Gomoku,
+        meta: {
+            title: '五子棋',
+            icon: 'mdi-chess-queen'
+        }
     }
-  },
-  {
-    path: '/euler-circuit',
-    name: 'EulerCircuit',
-    component: EulerCircuit,
-    meta: {
-        title: '欧拉回路求解',
-        icon: 'mdi-graph'
-    }
-  }
 ]
 
 const router = createRouter({
