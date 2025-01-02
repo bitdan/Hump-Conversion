@@ -55,56 +55,70 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col py-4 px-4">
+    <div class="w-full max-w-[90rem] mx-auto bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6">
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
           文件格式转换
         </h1>
       </div>
 
-      <!-- 转换选项 -->
-      <div class="bg-white/80 rounded-xl p-6 mb-6">
-        <div class="grid grid-cols-2 gap-4">
-          <v-select
-            v-model="sourceFormat"
-            :items="formats"
-            label="源格式"
-            variant="outlined"
-            density="comfortable"
-            class="bg-white rounded-lg"
-          />
-          <v-select
-            v-model="targetFormat"
-            :items="formats"
-            label="目标格式"
-            variant="outlined"
-            density="comfortable"
-            class="bg-white rounded-lg"
-          />
+      <!-- 格式选择区域 -->
+      <div class="bg-white/80 rounded-xl p-4 mb-4">
+        <div class="flex items-center gap-6">
+          <!-- 检测到的输入格式 -->
+          <div class="flex-1">
+            <div class="text-sm font-medium text-gray-600 mb-2">检测到的格式</div>
+            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium">
+              {{ detectedFormat ? formatOptions.find(f => f.value === detectedFormat)?.label : '未检测到格式' }}
+            </div>
+          </div>
+
+          <!-- 输出格式选择 -->
+          <div class="flex-1">
+            <div class="text-sm font-medium text-gray-600 mb-2">目标格式</div>
+            <v-select
+              v-model="selectedOutputFormat"
+              :items="formatOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              class="bg-white rounded-lg"
+            />
+          </div>
         </div>
       </div>
 
       <!-- 输入输出区域 -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <v-textarea
-          v-model="inputContent"
-          variant="outlined"
-          placeholder="在此粘贴要转换的内容，将自动识别格式..."
-          class="font-mono bg-white/80 rounded-xl"
-          rows="20"
-          hide-details
-        />
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-sm font-medium text-gray-600 mb-2">输入内容</div>
+          <v-textarea
+            v-model="inputContent"
+            variant="outlined"
+            placeholder="在此粘贴要转换的内容，将自动识别格式..."
+            class="font-mono bg-white/80 rounded-xl"
+            :rows="30"
+            auto-grow
+            hide-details
+          />
+        </div>
         
-        <v-textarea
-          v-model="outputContent"
-          variant="outlined"
-          readonly
-          placeholder="转换结果将显示在这里..."
-          class="font-mono bg-white/80 rounded-xl"
-          rows="20"
-          hide-details
-        />
+        <div>
+          <div class="text-sm font-medium text-gray-600 mb-2">转换结果</div>
+          <v-textarea
+            v-model="outputContent"
+            variant="outlined"
+            readonly
+            placeholder="转换结果将显示在这里..."
+            class="font-mono bg-white/80 rounded-xl"
+            :rows="30"
+            auto-grow
+            hide-details
+          />
+        </div>
       </div>
 
       <!-- 错误提示 -->
