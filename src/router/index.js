@@ -7,6 +7,7 @@ import TicTacToe from '../components/TicTacToe.vue'
 import DataEncryption from '../components/DataEncryption.vue'
 import FileConverter from '../components/FileConverter.vue'
 import PuzzleGame from '../components/PuzzleGame.vue'
+import JsonToEntity from '../components/JsonToEntity.vue'
 
 const routes = [
     {
@@ -84,7 +85,16 @@ const routes = [
           title: '拼图游戏',
           icon: 'mdi-puzzle'
         }
-      }
+      },
+  {
+    path: '/json-to-entity',
+    name: 'JsonToEntity',
+    component: JsonToEntity,
+    meta: {
+      title: 'JSON转实体类',
+      icon: 'mdi-code-json'
+    }
+  }
 ]
 
 const router = createRouter({
