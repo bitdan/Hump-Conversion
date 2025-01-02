@@ -9,13 +9,25 @@ interface ConversionParams {
 
 function parseXML(content: string): Promise<any> {
   const parser = new Parser({
-    explicitArray: false,
-    trim: true,
-    explicitRoot: false
+    explicitArray: false,  // 不要将单个元素转换为数组
+    trim: true,           // 修剪空白
+    explicitRoot: false,  // 不包含根元素
+    mergeAttrs: true,     // 合并属性
+    normalizeTags: true,  // 标准化标签名称
+    strict: false         // 允许 DOCTYPE
   })
   
   return parser.parseStringPromise(content)
-    .catch(() => {
+    .then(result => {
+      // 如果解析结果是一个只有一个键的对象，直接返回该键的值
+      const keys = Object.keys(result)
+      if (keys.length === 1) {
+        return result[keys[0]]
+      }
+      return result
+    })
+    .catch((error) => {
+      console.error('XML parsing error:', error)
       throw new Error('XML 格式无效')
     })
 }
@@ -167,15 +179,25 @@ function convertToProperties(data: any, comments: string[] = []): string {
 function convertToXML(data: any): string {
   try {
     const builder = new Builder({
-      renderOpts: { pretty: true, indent: '  ' },
-      headless: false,  // 添加 XML 声明
+      renderOpts: { 
+        pretty: true, 
+        indent: '  ',
+        newline: '\n'
+      },
+      xmldec: { 
+        version: '1.0', 
+        encoding: 'UTF-8', 
+        standalone: true 
+      },
+      headless: false,
       rootName: 'root'
     })
     
-    // 确保数据有一个根节点
-    const wrappedData = { root: data }
+    // 如果数据已经有根节点，就直接使用
+    const wrappedData = data.root ? data : { root: data }
     return builder.buildObject(wrappedData)
   } catch (error) {
+    console.error('XML conversion error:', error)
     throw new Error('转换为 XML 格式失败')
   }
 }
@@ -227,36 +249,8 @@ export class FileConverter {
 
   // 检测 XML 格式
   private static isXML(content: string): boolean {
-    // 移除开头的空白字符
-    const trimmedContent = content.trim()
-    
-    // 检查是否有完整的 XML 结构
-    const hasCompleteXmlStructure = (
-      // 必须有开始和结束标签
-      /^\s*(?:<\?xml[^>]*\?>)?\s*<([^!?\s\/][^>]*)>[\s\S]*<\/\1>\s*$/i.test(trimmedContent)
-    )
-    
-    if (!hasCompleteXmlStructure) {
-      return false
-    }
-
-    try {
-      const parser = new Parser({
-        explicitArray: false,
-        trim: true,
-        explicitRoot: true,
-        strict: true,
-        async: false
-      })
-      
-      // 使用同步方法进行解析尝试
-      parser.parseString(content, (error: Error | null) => {
-        if (error) throw error
-      })
-      return true
-    } catch {
-      return false
-    }
+    // 移除开头的空白字符并转换为小写进行检查
+    return content.trim().toLowerCase().startsWith('<?xml')
   }
 
   // 检测 YAML 格式
