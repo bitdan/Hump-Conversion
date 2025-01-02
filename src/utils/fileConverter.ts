@@ -226,28 +226,53 @@ export class FileConverter {
       }
     }
     
-    // 检测 Properties
-    const propertiesPattern = /^([a-zA-Z0-9._-]+)\s*[=:]\s*(.*)$/m
-    const hasComments = content.split('\n').some(line => line.trim().startsWith('#'))
-    const hasProperties = content.split('\n').some(line => propertiesPattern.test(line.trim()))
-    if (hasProperties || (hasComments && !content.includes(':'))) {
-      return 'properties'
-    }
+
     
     // 检测 YAML
     try {
-      load(content)
-      // 额外检查，避免与 properties 格式冲突
-      if (content.includes(':') && !propertiesPattern.test(content)) {
-        return 'yaml'
+      const result = load(content)
+      // 确保解析结果不为空且是一个对象或数组
+      if (result && (typeof result === 'object' || Array.isArray(result))) {
+        // 额外检查，避免与 properties 格式冲突
+        // 如果内容包含缩进或YAML特有的语法标记，则更可能是YAML
+        const hasYamlFeatures = content.includes(':') && (
+          content.includes('  ') || // 包含缩进
+          content.includes('- ') || // 列表标记
+          content.includes(': |') || // 多行文本标记
+          content.includes(': >') || // 折叠文本标记
+          /:\s*\[.*\]/.test(content) || // 行内数组
+          /:\s*\{.*\}/.test(content) // 行内对象
+        )
+        
+        if (hasYamlFeatures) {
+          return 'yaml'
+        }
       }
     } catch {
       // 如果不是有效的 YAML，继续检测
     }
+
+    // 检测 Properties
+    const propertiesPattern = /^([a-zA-Z0-9._-]+)\s*[=:]\s*(.*)$/m
+    const lines = content.split('\n')
+    const hasComments = lines.some(line => line.trim().startsWith('#'))
+    const hasProperties = lines.some(line => propertiesPattern.test(line.trim()))
     
-    // 如果之前检测到了类似 properties 的格式，返回 properties
     if (hasProperties) {
-      return 'properties'
+      // 计算包含多个点号的行数
+      const multiDotLines = lines.filter(line => {
+        const match = line.match(propertiesPattern)
+        if (match) {
+          const key = match[1]
+          return (key.match(/\./g) || []).length >= 2 // 检查是否包含2个或更多的点号
+        }
+        return false
+      }).length
+
+      // 如果有多个包含多点号的行，更可能是 Properties 格式
+      if (multiDotLines > 0 || (hasComments && !content.includes(':'))) {
+        return 'properties'
+      }
     }
     
     return ''
