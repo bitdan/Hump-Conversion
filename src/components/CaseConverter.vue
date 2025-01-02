@@ -1,29 +1,42 @@
 <template>
-  <div class="container mx-auto p-5 bg-white rounded-lg shadow-md">
-    <h1 class="text-2xl text-gray-800 py-5">驼峰转换工具</h1>
-    <div class="flex gap-3 items-center mb-5">
-      <input
-          type="text"
-          v-model="inputText"
-          placeholder="输入文本，自动识别格式并转换"
-          class="flex-1 p-2 text-lg border border-gray-300 rounded-md"
-      />
-      <span class="text-gray-500">当前格式：{{ currentTypeLabel }}</span>
-    </div>
-    <div class="space-y-3 pb-5">
-      <div
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
+    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+          驼峰转换工具
+        </h1>
+      </div>
+
+      <!-- 输入区域 -->
+      <div class="space-y-4 mb-8">
+        <div class="flex gap-4 items-center">
+          <v-text-field
+            v-model="inputText"
+            placeholder="输入文本，自动识别格式并转换"
+            variant="outlined"
+            class="flex-1 bg-white/80 rounded-xl"
+            hide-details
+          />
+          <span class="text-gray-600 font-medium">当前格式：{{ currentTypeLabel }}</span>
+        </div>
+      </div>
+
+      <!-- 转换结果 -->
+      <div class="grid gap-4">
+        <div
           v-for="(result, index) in convertedResults"
           :key="index"
-          class="p-3 border border-gray-300 rounded-md cursor-pointer transition-all relative hover:bg-gray-100"
-          :class="{ 'bg-green-100 border-green-400': copiedIndex === index }"
           @click="copyToClipboard(result.value, index)"
-      >
-        <div class="text-sm text-gray-500 mb-2">{{ result.label }}</div>
-        <div>{{ result.value }}</div>
-        <span
+          class="bg-white/80 backdrop-blur-sm rounded-xl p-6 transition-all duration-300 hover:shadow-lg cursor-pointer relative group"
+          :class="{ 'ring-2 ring-blue-500 bg-blue-50': copiedIndex === index }"
+        >
+          <div class="text-sm font-medium text-gray-600 mb-2">{{ result.label }}</div>
+          <div class="font-mono text-lg text-gray-800">{{ result.value }}</div>
+          <span
             v-if="copiedIndex === index"
-            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 text-sm"
-        >已复制</span>
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 font-medium"
+          >已复制</span>
+        </div>
       </div>
     </div>
   </div>

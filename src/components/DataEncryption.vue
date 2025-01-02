@@ -1,104 +1,88 @@
 <template>
-  <v-container>
-    <v-card class="pa-4">
-      <v-card-title class="text-h4 mb-4">加密工具</v-card-title>
-      
-      <!-- 算法类型选择 (Tab) -->
-      <v-tabs v-model="selectedType" class="mb-6">
-        <v-tab v-for="type in encryptionTypes" :key="type.value" :value="type.value">
-          {{ type.label }}
-        </v-tab>
-      </v-tabs>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
+    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+          数据加密工具
+        </h1>
+      </div>
 
-      <!-- 具体算法选择 -->
-      <v-select
-        v-model="selectedAlgorithm"
-        :items="algorithms[selectedType]"
-        label="选择具体算法"
-        class="mb-4"
-        variant="outlined"
-      ></v-select>
+      <!-- 算法选择区域 -->
+      <div class="bg-white/80 rounded-xl p-6 mb-6">
+        <v-tabs v-model="selectedType" class="mb-4" density="comfortable">
+          <v-tab v-for="type in encryptionTypes" :key="type.value" :value="type.value">
+            {{ type.label }}
+          </v-tab>
+        </v-tabs>
 
-      <!-- 输入区域 -->
-      <v-textarea
-        v-model="inputText"
-        :label="getInputPlaceholder"
-        rows="4"
-        class="mb-4"
-        variant="outlined"
-        clearable
-      ></v-textarea>
+        <v-select
+          v-model="selectedAlgorithm"
+          :items="algorithms[selectedType]"
+          label="选择具体算法"
+          variant="outlined"
+          density="comfortable"
+          class="bg-white rounded-lg"
+        />
+      </div>
 
-      <!-- 密钥输入 (对称/非对称加密) -->
-      <v-text-field
-        v-if="needsKey"
-        v-model="key"
-        :label="getKeyPlaceholder"
-        class="mb-4"
-        variant="outlined"
-        clearable
-        :type="showPassword ? 'text' : 'password'"
-        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-        @click:append-inner="showPassword = !showPassword"
-      ></v-text-field>
+      <!-- 输入输出区域 -->
+      <div class="grid gap-6">
+        <v-textarea
+          v-model="inputText"
+          :label="getInputPlaceholder"
+          variant="outlined"
+          class="bg-white/80 rounded-xl"
+          rows="4"
+        />
 
-      <!-- 操作按钮 -->
-      <v-row class="mb-4">
-        <v-col cols="auto">
+        <v-text-field
+          v-if="needsKey"
+          v-model="key"
+          :label="getKeyPlaceholder"
+          variant="outlined"
+          class="bg-white/80 rounded-xl"
+          :type="showPassword ? 'text' : 'password'"
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+          @click:append-inner="showPassword = !showPassword"
+        />
+
+        <!-- 操作按钮 -->
+        <div class="flex gap-4">
           <v-btn
             color="primary"
             @click="processText"
             :loading="processing"
             prepend-icon="mdi-lock"
+            class="flex-1"
           >
             {{ getButtonText }}
           </v-btn>
-        </v-col>
-        <v-col cols="auto" v-if="canDecrypt">
+          
           <v-btn
-            color="success"
+            v-if="canDecrypt"
+            color="secondary"
             @click="decrypt"
             :loading="processing"
             prepend-icon="mdi-lock-open"
+            class="flex-1"
           >
             解密
           </v-btn>
-        </v-col>
-      </v-row>
+        </div>
 
-      <!-- 输出结果 -->
-      <v-textarea
-        v-model="result"
-        label="结果"
-        rows="4"
-        readonly
-        class="mb-4"
-        variant="outlined"
-        persistent-hint
-        hint="点击结果可复制到剪贴板"
-        @click="copyText(result)"
-      ></v-textarea>
-
-      <!-- 复制成功提示 -->
-      <v-snackbar
-        v-model="showCopyTip"
-        :timeout="1500"
-        color="success"
-        location="bottom"
-      >
-        已复制到剪贴板
-        <template v-slot:actions>
-          <v-btn
-            color="white"
-            variant="text"
-            @click="showCopyTip = false"
-          >
-            关闭
-          </v-btn>
-        </template>
-      </v-snackbar>
-    </v-card>
-  </v-container>
+        <!-- 结果区域 -->
+        <v-textarea
+          v-model="result"
+          label="结果"
+          variant="outlined"
+          class="bg-white/80 rounded-xl"
+          rows="4"
+          readonly
+          @click="copyText(result)"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

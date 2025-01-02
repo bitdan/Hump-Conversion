@@ -55,70 +55,72 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-4">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <span v-if="detectedFormat" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-          输入格式: {{ formatOptions.find(f => f.value === detectedFormat)?.label }}
-        </span>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600">输出格式:</span>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
+    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+          文件格式转换
+        </h1>
+      </div>
+
+      <!-- 转换选项 -->
+      <div class="bg-white/80 rounded-xl p-6 mb-6">
+        <div class="grid grid-cols-2 gap-4">
           <v-select
-            v-model="selectedOutputFormat"
-            :items="formatOptions"
-            item-title="label"
-            item-value="value"
+            v-model="sourceFormat"
+            :items="formats"
+            label="源格式"
             variant="outlined"
             density="comfortable"
-            hide-details
-            class="w-32"
+            class="bg-white rounded-lg"
+          />
+          <v-select
+            v-model="targetFormat"
+            :items="formats"
+            label="目标格式"
+            variant="outlined"
+            density="comfortable"
+            class="bg-white rounded-lg"
           />
         </div>
       </div>
-    </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <!-- 左侧输入 -->
-      <div>
+      <!-- 输入输出区域 -->
+      <div class="grid md:grid-cols-2 gap-6">
         <v-textarea
           v-model="inputContent"
-          rows="25"
           variant="outlined"
           placeholder="在此粘贴要转换的内容，将自动识别格式..."
-          class="font-mono"
+          class="font-mono bg-white/80 rounded-xl"
+          rows="20"
           hide-details
         />
-      </div>
-
-      <!-- 右侧输出 -->
-      <div>
+        
         <v-textarea
           v-model="outputContent"
-          rows="25"
           variant="outlined"
           readonly
           placeholder="转换结果将显示在这里..."
-          class="font-mono"
+          class="font-mono bg-white/80 rounded-xl"
+          rows="20"
           hide-details
         />
       </div>
+
+      <!-- 错误提示 -->
+      <v-alert
+        v-if="error"
+        type="error"
+        variant="tonal"
+        class="mt-4"
+      >
+        {{ error }}
+      </v-alert>
     </div>
 
-    <v-alert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      class="mt-4"
-    >
-      {{ error }}
-    </v-alert>
-
-    <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        size="64"
-      ></v-progress-circular>
+    <!-- 加载动画 -->
+    <div v-if="isLoading" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+      <v-progress-circular indeterminate color="primary" size="64" />
     </div>
   </div>
 </template>
