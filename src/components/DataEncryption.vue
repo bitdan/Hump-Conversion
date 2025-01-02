@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../utils/crypto';
 
 // 基础状态
@@ -302,6 +302,14 @@ function processBase64(encode: boolean) {
     ? Base64.encode(inputText.value)
     : Base64.decode(inputText.value);
 }
+
+// 添加 watch 来监听 selectedType 的变化
+watch(selectedType, (newType) => {
+  // 当类型改变时，将算法设置为该类型下的第一个选项
+  if (algorithms[newType] && algorithms[newType].length > 0) {
+    selectedAlgorithm.value = algorithms[newType][0];
+  }
+});
 </script>
 
 <style scoped>
