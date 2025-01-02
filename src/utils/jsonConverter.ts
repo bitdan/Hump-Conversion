@@ -35,7 +35,7 @@ export function convertJsonToJava(json: any, rootClassName: string): string {
         return { type: 'String', imports: [] }
       case 'number':
         return Number.isInteger(value) 
-          ? { type: 'Integer', imports: [] }
+          ? { type: 'Long', imports: [] }
           : { type: 'Double', imports: [] }
       case 'boolean':
         return { type: 'Boolean', imports: [] }
@@ -54,28 +54,28 @@ export function convertJsonToJava(json: any, rootClassName: string): string {
 
   function generateJavaClass(obj: any, className: string): void {
     const fields: string[] = []
-    const imports = new Set<string>()
+    const imports = new Set<string>([
+      'import lombok.Data;',
+      'import lombok.NoArgsConstructor;',
+      'import lombok.AllArgsConstructor;'
+    ])
     const innerClasses: string[] = []
 
+    // 添加类注解
+    fields.push('@Data')
+    fields.push('@NoArgsConstructor')
+    fields.push('@AllArgsConstructor')
+    fields.push(`public class ${className} {`)
+    fields.push('')
+
+    // 生成字段
     for (const [key, value] of Object.entries(obj)) {
       const { type, imports: fieldImports } = getJavaType(value, key)
       fieldImports.forEach(imp => imports.add(imp))
-
-      // 生成字段
       fields.push(`    private ${type} ${key};`)
-
-      // 生成 getter
-      fields.push(`    public ${type} get${capitalizeFirst(key)}() {`)
-      fields.push(`        return ${key};`)
-      fields.push('    }')
-      fields.push('')
-
-      // 生成 setter
-      fields.push(`    public void set${capitalizeFirst(key)}(${type} ${key}) {`)
-      fields.push(`        this.${key} = ${key};`)
-      fields.push('    }')
-      fields.push('')
     }
+
+    fields.push('}')
 
     classes.push({
       className,
@@ -93,9 +93,8 @@ export function convertJsonToJava(json: any, rootClassName: string): string {
     const importStatements = Array.from(classInfo.imports).sort().join('\n')
     
     return `${importStatements}
-${importStatements ? '\n' : ''}public class ${classInfo.className} {
+
 ${classInfo.fields.join('\n')}
-}
 ${classInfo.innerClasses.join('\n\n')}`
   }).join('\n\n')
 } 
