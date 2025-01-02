@@ -11,7 +11,7 @@
         </p>
         <router-link
             to="/case-converter"
-            class="inline-block px-8 py-4 bg-white text-purple-600 rounded-full font-semibold
+            class="inline-block px-8 py-4 bg-white text-purple-600 rounded-2xl font-semibold
                  shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
         >
           开始使用 →
@@ -22,9 +22,12 @@
       <div class="grid md:grid-cols-3 gap-8 animate-fade-in-up">
         <div v-for="(feature, index) in features"
              :key="index"
-             class="bg-white/10 backdrop-blur-lg rounded-xl p-6 transform hover:scale-105 transition-all duration-300"
+             class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 transform hover:scale-105 transition-all duration-300
+                    border border-white/20 shadow-xl hover:shadow-2xl"
         >
-          <div class="text-3xl mb-4">{{ feature.icon }}</div>
+          <div class="text-4xl mb-4 bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center">
+            {{ feature.icon }}
+          </div>
           <h3 class="text-xl font-semibold text-white mb-2">{{ feature.title }}</h3>
           <p class="text-white/80">{{ feature.description }}</p>
         </div>
