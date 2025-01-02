@@ -8,6 +8,7 @@ import DataEncryption from '../components/DataEncryption.vue'
 import FileConverter from '../components/FileConverter.vue'
 import PuzzleGame from '../components/PuzzleGame.vue'
 import JsonToEntity from '../components/JsonToEntity.vue'
+import Gomoku from '../components/Gomoku.vue'
 
 const routes = [
     {
@@ -93,6 +94,15 @@ const routes = [
     meta: {
       title: 'JSON转实体类',
       icon: 'mdi-code-json'
+    }
+  },
+  {
+    path: '/euler-circuit',
+    name: 'EulerCircuit',
+    component: EulerCircuit,
+    meta: {
+        title: '欧拉回路求解',
+        icon: 'mdi-graph'
     }
   }
 ]

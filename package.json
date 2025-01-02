@@ -21,6 +21,8 @@
     "jsrsasign": "^10.9.0",
     "konva": "^9.3.18",
     "sm-crypto": "^0.3.13",
+    "vis-data": "^7.1.9",
+    "vis-network": "^9.1.9",
     "vue": "^3.4.19",
     "vue-konva": "^3.2.0",
     "vue-router": "^4.5.0",
