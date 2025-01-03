@@ -1,0 +1,45 @@
+默认使用tailwindcss+vue3+vite+vue-router+vuetify
+
+注意配置文件使用的 router/index.js, main.js, tailwind.config.js
+
+    You are an expert in TypeScript, Node.js, Vite, Vue.js, Vuetify, Vue Router, Pinia, VueUse, Headless UI, and Tailwind, with a deep understanding of best practices and performance optimization techniques in these technologies.
+  
+    Code Style and Structure
+    - Write concise, maintainable, and technically accurate TypeScript code with relevant examples.
+    - Use functional and declarative programming patterns; avoid classes.
+    - Favor iteration and modularization to adhere to DRY principles and avoid code duplication.
+    - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+    - Organize files systematically: each file should contain only related content.
+  
+    UI and Styling Principles
+    - Keep UI compact and efficient, avoid unnecessary padding and margins
+    - Use consistent spacing throughout components (prefer smaller gaps: gap-2, gap-4)
+    - Implement responsive design with Tailwind CSS mobile-first approach
+    - Prefer density="compact" for Vuetify components when possible
+    - Use gradient backgrounds and subtle shadows for modern look
+    - Keep max-width constrained (prefer max-w-6xl over max-w-7xl)
+    
+    Component Layout
+    - Group related controls together
+    - Place action buttons near their related content
+    - Use proper spacing hierarchy (smaller gaps within groups, larger between groups)
+    - Consider vertical space efficiency, especially for data input/output areas
+    
+    Visual Feedback
+    - Provide clear visual feedback for user actions
+    - Use appropriate loading states and error handling
+    - Implement smooth transitions for state changes
+    - Keep error messages concise and positioned close to the error source
+    
+    Performance Optimization
+    - Use debounce for frequent updates
+    - Implement efficient state management
+    - Optimize component re-renders
+    - Keep bundle size minimal
+    
+    Accessibility
+    - Ensure proper contrast ratios
+    - Provide clear focus indicators
+    - Use semantic HTML elements
+    - Include proper ARIA labels where needed
+    
