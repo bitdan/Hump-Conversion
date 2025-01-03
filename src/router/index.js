@@ -54,15 +54,6 @@ const routes = [
         }
     },
     {
-        path: '/ticTacToe',
-        name: 'TicTacToe',
-        component: TicTacToe,
-        meta: { 
-            title: '井字棋',
-            icon: 'mdi-grid'
-        }
-    },
-    {
         path: '/data-encryption',
         name: 'DataEncryption',
         component: DataEncryption,
@@ -81,15 +72,6 @@ const routes = [
         }
     },
     {
-        path: '/puzzle-game',
-        name: 'PuzzleGame',
-        component: PuzzleGame,
-        meta: {
-          title: '拼图游戏',
-          icon: 'mdi-puzzle'
-        }
-    },
-    {
         path: '/json-to-entity',
         name: 'JsonToEntity',
         component: JsonToEntity,
@@ -98,6 +80,25 @@ const routes = [
             icon: 'mdi-code-json'
         }
     },
+    {
+        path: '/ticTacToe',
+        name: 'TicTacToe',
+        component: TicTacToe,
+        meta: { 
+            title: '井字棋',
+            icon: 'mdi-grid'
+        }
+    },
+    {
+        path: '/puzzle-game',
+        name: 'PuzzleGame',
+        component: PuzzleGame,
+        meta: {
+          title: '拼图游戏',
+          icon: 'mdi-puzzle'
+        }
+    },
+
     {
         path: '/euler-circuit',
         name: 'EulerCircuit',
