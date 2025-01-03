@@ -8,6 +8,7 @@ import DataEncryption from '../components/DataEncryption.vue'
 import FileConverter from '../components/FileConverter.vue'
 import PuzzleGame from '../components/PuzzleGame.vue'
 import JsonToEntity from '../components/JsonToEntity.vue'
+import DiceRoller from '../components/DiceRoller.vue'
 
 const routes = [
     {
@@ -93,6 +94,15 @@ const routes = [
     meta: {
       title: 'JSON转实体类',
       icon: 'mdi-code-json'
+    }
+  },
+  {
+    path: '/dice-roller',
+    name: 'DiceRoller',
+    component: DiceRoller,
+    meta: {
+      title: '投色子',
+      icon: 'mdi-dice-6'
     }
   }
 ]
