@@ -12,7 +12,7 @@ import Gomoku from '../views/games/Gomoku.vue'
 import EulerCircuit from '../views/games/EulerCircuit.vue'
 import DiceRoller from '../views/games/DiceRoller.vue'
 
-const routes = [
+export const routes = [
     {
         path: '/',
         redirect: '/case-converter'
@@ -27,104 +27,123 @@ const routes = [
         }
     },
     {
-        path: '/case-converter',
-        name: 'CaseConverter',
-        component: CaseConverter,
-        meta: { 
-            title: '驼峰转换',
-            icon: 'mdi-format-text'
-        }
-    },
-    {
-        path: '/string-generator',
-        name: 'StringGenerator',
-        component: StringGenerator,
-        meta: { 
-            title: '字符串生成',
-            icon: 'mdi-format-letter-case'
-        }
-    },
-    {
-        path: '/timestamp',
-        name: 'timestamp',
-        component: TimestampTool,
+        path: '/tools',
+        name: 'Tools',
         meta: {
-            title: '时间戳工具',
-            icon: 'mdi-clock-outline'
-        }
+            title: '工具',
+            icon: 'mdi-tools'
+        },
+        children: [
+            {
+                path: '/case-converter',
+                name: 'CaseConverter',
+                component: CaseConverter,
+                meta: { 
+                    title: '驼峰转换',
+                    icon: 'mdi-format-text'
+                }
+            },
+            {
+                path: '/string-generator',
+                name: 'StringGenerator',
+                component: StringGenerator,
+                meta: { 
+                    title: '字符串生成',
+                    icon: 'mdi-format-letter-case'
+                }
+            },
+            {
+                path: '/timestamp',
+                name: 'timestamp',
+                component: TimestampTool,
+                meta: {
+                    title: '时间戳工具',
+                    icon: 'mdi-clock-outline'
+                }
+            },
+            {
+                path: '/data-encryption',
+                name: 'DataEncryption',
+                component: DataEncryption,
+                meta: { 
+                    title: '数据加密解密',
+                    icon: 'mdi-shield-lock-outline'
+                }
+            },
+            {
+                path: '/file-converter',
+                name: 'FileConverter',
+                component: FileConverter,
+                meta: {
+                    title: '文件格式转换',
+                    icon: 'mdi-file-sync'
+                }
+            },
+            {
+                path: '/json-to-entity',
+                name: 'JsonToEntity',
+                component: JsonToEntity,
+                meta: {
+                    title: 'JSON转实体类',
+                    icon: 'mdi-code-json'
+                }
+            }
+        ]
     },
     {
-        path: '/data-encryption',
-        name: 'DataEncryption',
-        component: DataEncryption,
-        meta: { 
-            title: '数据加密解密',
-            icon: 'mdi-shield-lock-outline'
-        }
-    },
-    {
-        path: '/file-converter',
-        name: 'FileConverter',
-        component: FileConverter,
+        path: '/games',
+        name: 'Games',
         meta: {
-          title: '文件格式转换',
-          icon: 'mdi-file-convert'
-        }
-    },
-    {
-        path: '/json-to-entity',
-        name: 'JsonToEntity',
-        component: JsonToEntity,
-        meta: {
-            title: 'JSON转实体类',
-            icon: 'mdi-code-json'
-        }
-    },
-    {
-        path: '/ticTacToe',
-        name: 'TicTacToe',
-        component: TicTacToe,
-        meta: { 
-            title: '井字棋',
-            icon: 'mdi-grid'
-        }
-    },
-    {
-        path: '/puzzle-game',
-        name: 'PuzzleGame',
-        component: PuzzleGame,
-        meta: {
-          title: '拼图游戏',
-          icon: 'mdi-puzzle'
-        }
-    },
-
-    {
-        path: '/euler-circuit',
-        name: 'EulerCircuit',
-        component: EulerCircuit,
-        meta: {
-            title: '欧拉回路求解',
-            icon: 'mdi-graph'
-        }
-    },
-    {
-        path: '/gomoku',
-        name: 'Gomoku',
-        component: Gomoku,
-        meta: {
-            title: '五子棋',
-            icon: 'mdi-chess-queen'
-        }
-    },
-    {
-        path: '/dice-roller',
-        name: 'DiceRoller',
-        component: DiceRoller,
-        meta: {
-            title: '投色子',
-            icon: 'mdi-dice-6'
-        }
+            title: '游戏',
+            icon: 'mdi-gamepad-variant'
+        },
+        children: [
+            {
+                path: '/games/tic-tac-toe',
+                name: 'TicTacToe',
+                component: TicTacToe,
+                meta: { 
+                    title: '井字棋',
+                    icon: 'mdi-grid'
+                }
+            },
+            {
+                path: '/games/puzzle',
+                name: 'PuzzleGame',
+                component: PuzzleGame,
+                meta: {
+                    title: '拼图游戏',
+                    icon: 'mdi-puzzle'
+                }
+            },
+            {
+                path: '/games/euler-circuit',
+                name: 'EulerCircuit',
+                component: EulerCircuit,
+                meta: {
+                    title: '欧拉回路求解',
+                    icon: 'mdi-graph'
+                }
+            },
+            {
+                path: '/games/gomoku',
+                name: 'Gomoku',
+                component: Gomoku,
+                meta: {
+                    title: '五子棋',
+                    icon: 'mdi-chess-queen'
+                }
+            },
+            {
+                path: '/games/dice-roller',
+                name: 'DiceRoller',
+                component: DiceRoller,
+                meta: {
+                    title: '投色子',
+                    icon: 'mdi-dice-6'
+                }
+            }
+        ]
     }
 ]
 
