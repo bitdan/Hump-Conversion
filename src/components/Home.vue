@@ -10,7 +10,7 @@
           您的日常任务终极开发者工具包
         </p>
         <router-link
-            to="/case-converter"
+            to="/tools/case-converter"
             class="inline-block px-8 py-4 bg-white text-purple-600 rounded-2xl font-semibold
                  shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
         >

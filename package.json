@@ -20,6 +20,7 @@
     "js-yaml": "^4.1.0",
     "jsrsasign": "^10.9.0",
     "konva": "^9.3.18",
+    "pinia": "^2.3.0",
     "sm-crypto": "^0.3.13",
     "vis-data": "^7.1.9",
     "vis-network": "^9.1.9",

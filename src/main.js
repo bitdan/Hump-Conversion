@@ -1,4 +1,5 @@
 import {createApp} from "vue";
+import {createPinia} from 'pinia';
 import {createVuetify} from "vuetify";
 import "vuetify/styles";
 import "./main.css";
@@ -25,7 +26,11 @@ const vuetify = createVuetify({
     },
   },
 })
+
 const app = createApp(App)
+const pinia = createPinia()
+
+app.use(pinia)
 app.use(VueKonva) 
 app.use(router)
 app.use(vuetify)

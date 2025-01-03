@@ -35,16 +35,16 @@ export const routes = [
         },
         children: [
             {
-                path: '/case-converter',
+                path: '/tools/case-converter',
                 name: 'CaseConverter',
                 component: CaseConverter,
                 meta: { 
                     title: '驼峰转换',
-                    icon: 'mdi-format-text'
+                    icon: 'mdi-format-letter-case'
                 }
             },
             {
-                path: '/string-generator',
+                path: '/tools/string-generator',
                 name: 'StringGenerator',
                 component: StringGenerator,
                 meta: { 
@@ -53,7 +53,7 @@ export const routes = [
                 }
             },
             {
-                path: '/timestamp',
+                path: '/tools/timestamp',
                 name: 'timestamp',
                 component: TimestampTool,
                 meta: {
@@ -62,7 +62,7 @@ export const routes = [
                 }
             },
             {
-                path: '/data-encryption',
+                path: '/tools/data-encryption',
                 name: 'DataEncryption',
                 component: DataEncryption,
                 meta: { 
@@ -71,7 +71,7 @@ export const routes = [
                 }
             },
             {
-                path: '/file-converter',
+                path: '/tools/file-converter',
                 name: 'FileConverter',
                 component: FileConverter,
                 meta: {
@@ -80,7 +80,7 @@ export const routes = [
                 }
             },
             {
-                path: '/json-to-entity',
+                path: '/tools/json-to-entity',
                 name: 'JsonToEntity',
                 component: JsonToEntity,
                 meta: {

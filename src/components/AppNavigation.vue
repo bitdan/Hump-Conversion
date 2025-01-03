@@ -14,18 +14,30 @@
       nav
     >
       <template v-slot:append>
-        <v-btn
-          variant="text"
-          :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-          @click.stop="rail = !rail"
-        ></v-btn>
+        <div class="d-flex align-center">
+          <v-btn
+            v-if="!rail"
+            variant="text"
+            size="small"
+            :prepend-icon="'mdi-view-grid'"
+            class="mr-2"
+            @click="toggleNavMode"
+          >
+            {{ isTopNav ? '侧边导航' : '顶部导航' }}
+          </v-btn>
+          <v-btn
+            variant="text"
+            :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+            @click.stop="rail = !rail"
+          ></v-btn>
+        </div>
       </template>
     </v-list-item>
 
     <v-divider></v-divider>
 
     <v-list density="compact" nav>
-      <template v-for="item in routes" :key="item.name">
+      <template v-for="item in unifiedRoutes" :key="item.name">
         <!-- 没有子路由的菜单项 -->
         <v-list-item
           v-if="!item.children"
@@ -44,7 +56,6 @@
           @mouseenter="handleGroupHover(item.name)"
           @mouseleave="handleGroupLeave"
         >
-          <!-- 收起状态只显示父级图标 -->
           <v-list-item
             v-if="rail"
             :prepend-icon="item.meta?.icon"
@@ -52,7 +63,6 @@
             :class="{ 'active-route': isGroupActive(item) }"
           ></v-list-item>
 
-          <!-- 展开状态显示完整菜单组 -->
           <v-list-group
             v-else
             :value="isGroupActive(item)"
@@ -79,7 +89,6 @@
             ></v-list-item>
           </v-list-group>
 
-          <!-- 悬浮显示的子菜单 -->
           <div 
             v-if="rail" 
             class="submenu-container"
@@ -106,16 +115,25 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNavStore } from '@/stores/nav'
 
 const router = useRouter()
 const route = useRoute()
 const drawer = ref(true)
 const rail = ref(false)
-const hoveredGroup = ref(null)
+const navStore = useNavStore()
 
-const routes = computed(() => 
+// 添加导航模式计算属性和切换方法
+const isTopNav = computed(() => navStore.mode === 'top')
+
+// Unified routes for both top and side navigation
+const unifiedRoutes = computed(() => 
   router.options.routes.filter(route => route.name && route.path !== '/')
 )
+
+const toggleNavMode = () => {
+  navStore.toggleMode()
+}
 
 const isCurrentRoute = (path) => {
   return route.path === path
@@ -321,5 +339,10 @@ const handleGroupLeave = () => {
 /* 过渡动画 */
 .v-navigation-drawer {
   transition: width 0.2s ease;
+}
+
+/* 添加按钮样式 */
+.v-btn--size-small {
+  font-size: 0.875rem;
 }
 </style> 

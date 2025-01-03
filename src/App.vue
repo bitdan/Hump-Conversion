@@ -1,7 +1,9 @@
 <template>
   <v-app>
-    <app-navigation />
-    <v-main class="bg-gray-100">
+    <!-- 根据导航模式显示对应的导航组件 -->
+    <component :is="currentNav" />
+
+    <v-main :class="{ 'bg-gray-100': true, 'pt-16': navMode === 'top' }">
       <v-container>
         <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border border-gray-200">
           <router-view v-slot="{ Component }">
@@ -16,7 +18,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import AppNavigation from '@/components/AppNavigation.vue'
+import AppTopNavigation from '@/components/AppTopNavigation.vue'
+import { useNavStore } from '@/stores/nav'
+
+const navStore = useNavStore()
+const navMode = computed(() => navStore.mode)
+
+// 根据导航模式计算当前应该显示的导航组件
+const currentNav = computed(() => 
+  navMode.value === 'side' ? AppNavigation : AppTopNavigation
+)
 </script>
 
 <style>
@@ -38,5 +51,10 @@ import AppNavigation from '@/components/AppNavigation.vue'
 
 .v-main {
   padding-top: 1rem !important;
+}
+
+/* 顶部导航模式下的内容区域调整 */
+.v-main.pt-16 {
+  padding-top: 5rem !important;
 }
 </style>
