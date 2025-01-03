@@ -95,8 +95,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { convertJsonToJava } from '../utils/jsonConverter'
-import { debounce } from '../utils/helpers'
+import { convertJsonToJava } from '../../utils/jsonConverter'
+import { debounce } from '../../utils/helpers'
 
 // 状态定义
 const inputJson = ref('')

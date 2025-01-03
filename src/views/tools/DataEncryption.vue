@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../utils/crypto';
+import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../../utils/crypto';
 
 // 基础状态
 const selectedType = ref('hash');

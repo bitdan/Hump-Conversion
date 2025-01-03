@@ -1,16 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/Home.vue'
-import CaseConverter from '../components/CaseConverter.vue'
-import StringGenerator from "../components/StringGenerator.vue";
-import TimestampTool from '../components/TimestampTool.vue'
-import TicTacToe from '../components/TicTacToe.vue'
-import DataEncryption from '../components/DataEncryption.vue'
-import FileConverter from '../components/FileConverter.vue'
-import PuzzleGame from '../components/PuzzleGame.vue'
-import JsonToEntity from '../components/JsonToEntity.vue'
-import Gomoku from '../components/Gomoku.vue'
-import EulerCircuit from '../components/EulerCircuit.vue'
-import DiceRoller from '../components/DiceRoller.vue'
+import CaseConverter from '../views/tools/CaseConverter.vue'
+import StringGenerator from "../views/tools/StringGenerator.vue";
+import TimestampTool from '../views/tools/TimestampTool.vue'
+import TicTacToe from '../views/games/TicTacToe.vue'
+import DataEncryption from '../views/tools/DataEncryption.vue'
+import FileConverter from '../views/tools/FileConverter.vue'
+import PuzzleGame from '../views/games/PuzzleGame.vue'
+import JsonToEntity from '../views/tools/JsonToEntity.vue'
+import Gomoku from '../views/games/Gomoku.vue'
+import EulerCircuit from '../views/games/EulerCircuit.vue'
+import DiceRoller from '../views/games/DiceRoller.vue'
 
 const routes = [
     {

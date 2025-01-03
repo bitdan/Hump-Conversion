@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { FileConverter } from '../utils/fileConverter'
+import { FileConverter } from '../../utils/fileConverter'
 
 interface FormatOption {
   value: string
