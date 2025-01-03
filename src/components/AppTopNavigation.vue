@@ -225,49 +225,155 @@ const toggleNavMode = () => {
   z-index: 100;
 }
 
+.v-app-bar {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+}
+
 :deep(.v-tab) {
   text-transform: none;
   font-weight: 500;
   letter-spacing: 0;
   min-width: unset;
+  border-radius: 8px;
+  margin: 0 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.v-tab:hover) {
+  background: rgba(79, 70, 229, 0.05);
+  transform: translateY(-1px);
 }
 
 :deep(.v-tab--selected) {
   color: #4f46e5;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
 }
 
-:deep(.v-tabs__bar) {
-  height: 2px;
+:deep(.v-tab__slider) {
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  height: 3px;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 下拉菜单样式 */
+/* App bar title */
+.v-app-bar-title {
+  font-weight: 600;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+/* Menu styles */
 :deep(.v-menu > .v-overlay__content) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.1);
+  padding: 8px;
+  min-width: 220px;
+}
+
+:deep(.v-list-item) {
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  min-width: 200px;
+  margin: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 确保导航栏在其他元素之上 */
-.v-app-bar {
-  z-index: 1000;
+:deep(.v-list-item:hover) {
+  background: rgba(79, 70, 229, 0.05);
+  transform: translateX(4px);
 }
 
-/* 响应式调整 */
+:deep(.v-list-item--active) {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+/* Navigation mode toggle button */
+.v-btn {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.v-btn:hover {
+  background: rgba(79, 70, 229, 0.05);
+  transform: translateY(-1px);
+}
+
+/* Mobile menu button */
+.v-app-bar-nav-icon {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.v-app-bar-nav-icon:hover {
+  background: rgba(79, 70, 229, 0.05);
+  transform: scale(1.1);
+}
+
+/* Mobile drawer */
+:deep(.v-navigation-drawer) {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Custom scrollbar */
+:deep(::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(::-webkit-scrollbar-track) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:deep(::-webkit-scrollbar-thumb) {
+  background: rgba(79, 70, 229, 0.2);
+  border-radius: 3px;
+}
+
+:deep(::-webkit-scrollbar-thumb:hover) {
+  background: rgba(79, 70, 229, 0.3);
+}
+
+/* Animations */
+.scale-transition-enter-active,
+.scale-transition-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-transition-enter-from,
+.scale-transition-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+}
+
+/* Icon animations */
+:deep(.v-icon) {
+  transition: transform 0.3s ease;
+}
+
+:deep(.v-list-item:hover .v-icon) {
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .v-btn {
     min-width: unset;
+    padding: 0 12px;
   }
-}
-
-/* 添加过渡动画 */
-:deep(.scale-transition-enter-active),
-:deep(.scale-transition-leave-active) {
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-:deep(.scale-transition-enter-from),
-:deep(.scale-transition-leave-to) {
-  opacity: 0;
-  transform: scale(0.95);
+  
+  :deep(.v-tab) {
+    padding: 0 12px;
+  }
 }
 </style> 

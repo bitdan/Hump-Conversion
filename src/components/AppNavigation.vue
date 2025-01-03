@@ -154,195 +154,137 @@ const handleGroupLeave = () => {
 
 <style scoped>
 .v-list-item--active {
-  background: #4f46e5 !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
   color: white !important;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  transform: translateX(4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .active-route {
-  background: rgba(79, 70, 229, 0.1);
-  border-radius: 8px;
-}
-
-.v-list-group__items .v-list-item {
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  margin: 2px 0;
-}
-
-.v-list-group__items .v-list-item:hover {
-  background: rgba(79, 70, 229, 0.05);
-}
-
-.v-navigation-drawer {
-  transition: width 0.2s ease;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.v-list-group {
-  margin-bottom: 4px;
+  background: rgba(79, 70, 229, 0.08);
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
 .v-list-item {
-  margin: 2px 8px;
-  padding: 0 12px;
-  min-height: 40px;
-}
-
-.v-list-group__items .v-list-item {
-  margin-left: 12px;
-  margin-right: 12px;
-}
-
-/* 添加子菜单容器样式 */
-.submenu-container {
-  position: relative;
-}
-
-/* 收起状态下的子菜单样式 */
-.v-navigation-drawer--rail .submenu-container {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  min-width: 200px;
-  background: white;
-  border-radius: 0 8px 8px 0;
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  z-index: 100;
-  padding: 4px;
-}
-
-/* 收起状态下显示子菜单 */
-.v-navigation-drawer--rail .show-submenu .submenu-container {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* 确保图标在收起状态下完整显示 */
-.v-navigation-drawer--rail .v-list-item {
-  padding-left: 12px !important;
-  padding-right: 12px !important;
-  min-width: 56px;
-  justify-content: center;
-}
-
-.v-navigation-drawer--rail .v-list-item__prepend {
-  margin-inline-end: 0;
-}
-
-/* 优化子菜单项样式 */
-.submenu-item {
-  padding: 8px 16px;
-  white-space: nowrap;
-  width: 100%;
-}
-
-/* 展开状态下的子菜单样式 */
-.v-navigation-drawer:not(.v-navigation-drawer--rail) .submenu-container {
-  position: static;
-  width: auto;
-  box-shadow: none;
-  opacity: 1;
-  visibility: visible;
-  padding: 0;
-}
-
-/* 确保图标在展开状态下对齐 */
-.v-list-item__prepend {
-  margin-right: 8px;
-}
-
-/* 优化菜单组间距 */
-.v-list-group {
-  margin: 2px 0;
-}
-
-/* 确保子菜单项对齐 */
-.v-list-group__items .v-list-item {
-  padding-left: 16px;
-}
-
-/* 修改菜单组样式 */
-.menu-group {
-  position: relative;
-}
-
-/* 收起状态下的父级图标样式 */
-.parent-icon {
-  cursor: pointer;
   margin: 4px 8px;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  padding: 0 16px;
+  min-height: 44px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 收起状态下的子菜单容器 */
+.v-list-item:hover:not(.v-list-item--active) {
+  background: rgba(79, 70, 229, 0.05);
+  transform: translateX(2px);
+}
+
+.v-navigation-drawer {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
 .submenu-container {
   position: absolute;
   left: 100%;
   top: 0;
-  min-width: 200px;
-  background: white;
-  border-radius: 0 8px 8px 0;
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transform: translateX(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
-  padding: 4px;
+  padding: 8px;
 }
 
 .show-submenu {
   opacity: 1;
   visibility: visible;
+  transform: translateX(0);
 }
 
-/* 收起状态下的图标居中显示 */
+.v-list-group__items .v-list-item {
+  margin-left: 16px;
+  padding-left: 20px;
+  border-left: 2px solid rgba(79, 70, 229, 0.1);
+}
+
+.v-list-group__items .v-list-item:hover {
+  border-left: 2px solid rgba(79, 70, 229, 0.5);
+}
+
+.v-list-item__prepend {
+  margin-right: 12px;
+}
+
+.v-list-group {
+  margin: 4px 0;
+}
+
+/* Avatar and title section */
+.v-list-item:first-child {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+  margin-bottom: 8px;
+  border: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+/* Divider styling */
+.v-divider {
+  border-color: rgba(79, 70, 229, 0.1);
+  margin: 8px 0;
+}
+
+/* Icon animations */
+.v-list-item__prepend .v-icon {
+  transition: transform 0.3s ease;
+}
+
+.v-list-item:hover .v-list-item__prepend .v-icon {
+  transform: scale(1.1);
+}
+
+/* Rail mode specific styles */
 .v-navigation-drawer--rail .v-list-item {
-  padding: 12px !important;
-  min-width: 56px;
   justify-content: center;
+  padding: 12px !important;
+  margin: 4px;
 }
 
 .v-navigation-drawer--rail .v-list-item__prepend {
   margin-inline-end: 0;
 }
 
-/* 展开状态下的样式 */
-.v-navigation-drawer:not(.v-navigation-drawer--rail) .v-list-item {
-  padding: 0 12px;
+/* Toggle button animation */
+.v-btn--icon {
+  transition: transform 0.3s ease;
 }
 
-.v-list-group__items .v-list-item {
-  padding-left: 16px !important;
+.v-btn--icon:hover {
+  transform: scale(1.1);
 }
 
-/* 激活状态样式 */
-.active-route {
-  background: #4f46e5 !important;
-  color: white !important;
+/* Custom scrollbar */
+.v-navigation-drawer ::-webkit-scrollbar {
+  width: 6px;
 }
 
-.v-list-group__items .active-route {
-  background: rgba(79, 70, 229, 0.1) !important;
-  color: inherit !important;
+.v-navigation-drawer ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
 }
 
-/* 菜单组样式 */
-.menu-group {
-  position: relative;
+.v-navigation-drawer ::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.2);
+  border-radius: 3px;
 }
 
-/* 过渡动画 */
-.v-navigation-drawer {
-  transition: width 0.2s ease;
-}
-
-/* 添加按钮样式 */
-.v-btn--size-small {
-  font-size: 0.875rem;
+.v-navigation-drawer ::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.3);
 }
 </style> 
