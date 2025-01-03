@@ -8,6 +8,8 @@ import DataEncryption from '../components/DataEncryption.vue'
 import FileConverter from '../components/FileConverter.vue'
 import PuzzleGame from '../components/PuzzleGame.vue'
 import JsonToEntity from '../components/JsonToEntity.vue'
+import Gomoku from '../components/Gomoku.vue'
+import EulerCircuit from '../components/EulerCircuit.vue'
 import DiceRoller from '../components/DiceRoller.vue'
 
 const routes = [
@@ -86,25 +88,43 @@ const routes = [
           title: '拼图游戏',
           icon: 'mdi-puzzle'
         }
-      },
-  {
-    path: '/json-to-entity',
-    name: 'JsonToEntity',
-    component: JsonToEntity,
-    meta: {
-      title: 'JSON转实体类',
-      icon: 'mdi-code-json'
+    },
+    {
+        path: '/json-to-entity',
+        name: 'JsonToEntity',
+        component: JsonToEntity,
+        meta: {
+            title: 'JSON转实体类',
+            icon: 'mdi-code-json'
+        }
+    },
+    {
+        path: '/euler-circuit',
+        name: 'EulerCircuit',
+        component: EulerCircuit,
+        meta: {
+            title: '欧拉回路求解',
+            icon: 'mdi-graph'
+        }
+    },
+    {
+        path: '/gomoku',
+        name: 'Gomoku',
+        component: Gomoku,
+        meta: {
+            title: '五子棋',
+            icon: 'mdi-chess-queen'
+        }
+    },
+    {
+        path: '/dice-roller',
+        name: 'DiceRoller',
+        component: DiceRoller,
+        meta: {
+            title: '投色子',
+            icon: 'mdi-dice-6'
+        }
     }
-  },
-  {
-    path: '/dice-roller',
-    name: 'DiceRoller',
-    component: DiceRoller,
-    meta: {
-      title: '投色子',
-      icon: 'mdi-dice-6'
-    }
-  }
 ]
 
 const router = createRouter({
