@@ -11,6 +11,7 @@ import JsonToEntity from '../views/tools/JsonToEntity.vue'
 import Gomoku from '../views/games/Gomoku.vue'
 import EulerCircuit from '../views/games/EulerCircuit.vue'
 import DiceRoller from '../views/games/DiceRoller.vue'
+import Go from '../views/games/Go.vue'
 
 export const routes = [
     {
@@ -141,6 +142,15 @@ export const routes = [
                 meta: {
                     title: '投色子',
                     icon: 'mdi-dice-6'
+                }
+            },
+            {
+                path: '/games/go',
+                name: 'Go',
+                component: Go,
+                meta: {
+                    title: '围棋',
+                    icon: 'mdi-circle-outline'
                 }
             }
         ]
