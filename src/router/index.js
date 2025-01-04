@@ -162,6 +162,15 @@ export const routes = [
                     title: '中国象棋',
                     icon: 'mdi-chess-king'
                 }
+            },
+            {
+                path: '/games/snake',
+                name: 'Snake',
+                component: () => import('@/views/games/Snake.vue'),
+                meta: {
+                    title: '贪吃蛇',
+                    icon: 'mdi-snake'
+                }
             }
         ]
     }
