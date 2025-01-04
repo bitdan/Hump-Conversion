@@ -189,6 +189,15 @@ export const routes = [
                     title: '2048',
                     icon: 'mdi-numeric-2-box'
                 }
+            },
+            {
+                path: '/games/pacman',
+                name: 'Pacman',
+                component: () => import('@/views/games/Pacman.vue'),
+                meta: {
+                    title: '吃豆人',
+                    icon: 'mdi-pac-man'
+                }
             }
         ]
     }
