@@ -198,6 +198,15 @@ export const routes = [
                     title: '吃豆人',
                     icon: 'mdi-pac-man'
                 }
+            },
+            {
+                path: '/games/link-game',
+                name: 'LinkGame',
+                component: () => import('@/views/games/LinkGame.vue'),
+                meta: {
+                    title: '连连看',
+                    icon: 'mdi-puzzle-outline'
+                }
             }
         ]
     }
