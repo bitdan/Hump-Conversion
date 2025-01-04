@@ -171,6 +171,15 @@ export const routes = [
                     title: '贪吃蛇',
                     icon: 'mdi-snake'
                 }
+            },
+            {
+                path: '/games/tetris',
+                name: 'Tetris',
+                component: () => import('@/views/games/Tetris.vue'),
+                meta: {
+                    title: '俄罗斯方块',
+                    icon: 'mdi-view-grid'
+                }
             }
         ]
     }
