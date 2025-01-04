@@ -180,6 +180,15 @@ export const routes = [
                     title: '俄罗斯方块',
                     icon: 'mdi-view-grid'
                 }
+            },
+            {
+                path: '/games/2048',
+                name: 'Game2048',
+                component: () => import('@/views/games/Game2048.vue'),
+                meta: {
+                    title: '2048',
+                    icon: 'mdi-numeric-2-box'
+                }
             }
         ]
     }
