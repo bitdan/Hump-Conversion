@@ -12,6 +12,7 @@ import Gomoku from '../views/games/Gomoku.vue'
 import EulerCircuit from '../views/games/EulerCircuit.vue'
 import DiceRoller from '../views/games/DiceRoller.vue'
 import Go from '../views/games/Go.vue'
+import ChineseChess from '../views/games/ChineseChess.vue'
 
 export const routes = [
     {
@@ -100,6 +101,15 @@ export const routes = [
         },
         children: [
             {
+                path: '/games/dice-roller',
+                name: 'DiceRoller',
+                component: DiceRoller,
+                meta: {
+                    title: '投色子',
+                    icon: 'mdi-dice-6'
+                }
+            },
+            {
                 path: '/games/tic-tac-toe',
                 name: 'TicTacToe',
                 component: TicTacToe,
@@ -136,21 +146,21 @@ export const routes = [
                 }
             },
             {
-                path: '/games/dice-roller',
-                name: 'DiceRoller',
-                component: DiceRoller,
-                meta: {
-                    title: '投色子',
-                    icon: 'mdi-dice-6'
-                }
-            },
-            {
                 path: '/games/go',
                 name: 'Go',
                 component: Go,
                 meta: {
                     title: '围棋',
                     icon: 'mdi-circle-outline'
+                }
+            },
+            {
+                path: '/games/chinese-chess',
+                name: 'ChineseChess',
+                component: ChineseChess,
+                meta: {
+                    title: '中国象棋',
+                    icon: 'mdi-chess-king'
                 }
             }
         ]
