@@ -20,6 +20,9 @@
              'text-black': currentPlayer === 'black'
            }">
         {{ gameOver ? '游戏结束' : `当前回合: ${currentPlayer === 'red' ? '红方' : '黑方'}` }}
+        <span v-if="isCheck" class="ml-2 text-red-600 animate-pulse">
+          将军！
+        </span>
       </div>
 
       <!-- 棋盘容器 -->
@@ -64,6 +67,11 @@ const boardCanvas = ref<HTMLCanvasElement | null>(null)
 const boardContainer = ref<HTMLElement | null>(null)
 const canUndo = ref(false)
 const moveHistory = ref<Piece[][]>([])
+const checkSound = new Audio('/sounds/check.wav') // 需要添加音效文件
+const captureSound = new Audio('/sounds/capture.wav') // 可选的吃子音效
+
+// 添加将军状态
+const isCheck = ref(false)
 
 // 计算棋盘总大小
 const BOARD_WIDTH = CELL_SIZE * (BOARD_SIZE.cols - 1) + BOARD_PADDING * 2
@@ -293,6 +301,24 @@ function getBoardPosition(clientX: number, clientY: number): Position | null {
   return null
 }
 
+// 添加检查将军的函数
+function checkForCheck(player: Player): boolean {
+  // 找到对方的将/帅
+  const king = pieces.value.find(p => 
+    p.player !== player && (p.type === '将' || p.type === '帅')
+  )
+  if (!king) return false
+
+  // 检查所有己方棋子是否可以吃到对方的将/帅
+  return pieces.value.some(piece => {
+    if (piece.player === player) {
+      const moves = getValidMoves(piece)
+      return moves.some(move => move.row === king.row && move.col === king.col)
+    }
+    return false
+  })
+}
+
 // 处理点击事件
 function handleClick(event: MouseEvent) {
   if (gameOver.value) return
@@ -314,6 +340,7 @@ function handleClick(event: MouseEvent) {
       if (targetPiece) {
         // 吃子
         pieces.value = pieces.value.filter(p => p !== targetPiece)
+        captureSound.play().catch(() => {}) // 播放吃子音效
         
         // 检查是否将军
         if (targetPiece.type === '将' || targetPiece.type === '帅') {
@@ -324,8 +351,16 @@ function handleClick(event: MouseEvent) {
       selectedPiece.value.row = pos.row
       selectedPiece.value.col = pos.col
       
+      // 检查是否将军
+      const nextPlayer = currentPlayer.value === 'red' ? 'black' : 'red'
+      isCheck.value = checkForCheck(currentPlayer.value)
+      
+      if (isCheck.value) {
+        checkSound.play().catch(() => {}) // 播放将军音效
+      }
+      
       // 切换玩家
-      currentPlayer.value = currentPlayer.value === 'red' ? 'black' : 'red'
+      currentPlayer.value = nextPlayer
       canUndo.value = true
       
       // 清除选中状态和有效移动
@@ -429,9 +464,9 @@ function addHorseMoves(piece: Piece, moves: Position[]) {
     
     if (newRow >= 0 && newRow < BOARD_SIZE.rows && 
         newCol >= 0 && newCol < BOARD_SIZE.cols) {
-      // 检查蹩马腿
-      const legRow = piece.row + Math.sign(dy)
-      const legCol = piece.col + Math.sign(dx)
+      // 修正蹩马腿的检查逻辑
+      const legRow = piece.row + (Math.abs(dy) === 2 ? Math.sign(dy) : 0)
+      const legCol = piece.col + (Math.abs(dx) === 2 ? Math.sign(dx) : 0)
       const legPiece = pieces.value.find(p => p.row === legRow && p.col === legCol)
       
       if (!legPiece) {
