@@ -66,6 +66,49 @@
 
         <!-- 图的可视化 -->
         <div ref="graphContainer" class="w-full h-[400px] border rounded-lg"></div>
+
+        <div v-if="hasEulerCircuit && solvingSteps.length > 0" class="mt-4">
+          <v-card>
+            <v-card-text>
+              <div class="font-bold mb-2">求解过程：</div>
+              <div class="flex items-center gap-4 mb-4">
+                <v-btn
+                  color="primary"
+                  :disabled="isPlayingAnimation"
+                  @click="playAnimation"
+                >
+                  播放过程
+                </v-btn>
+                <div class="text-sm text-gray-600">
+                  步骤 {{ currentStepIndex + 1 }} / {{ solvingSteps.length }}
+                </div>
+              </div>
+              
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="mb-2">
+                  <span class="font-semibold">当前顶点：</span>
+                  {{ solvingSteps[currentStepIndex].currentVertex }}
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">当前路径：</span>
+                  <span class="font-mono">
+                    {{ solvingSteps[currentStepIndex].path.join(' → ') || '暂无' }}
+                  </span>
+                </div>
+                <div>
+                  <span class="font-semibold">剩余边：</span>
+                  <div class="font-mono text-sm">
+                    {{ Array.from(solvingSteps[currentStepIndex].remainingEdges.entries())
+                        .filter(([_, neighbors]) => neighbors.size > 0)
+                        .map(([vertex, neighbors]) => 
+                          `${vertex}: [${Array.from(neighbors).join(', ')}]`
+                        ).join('\n') || '无' }}
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </div>
       </div>
     </div>
   </div>
@@ -86,6 +129,9 @@ const eulerCircuit = ref<number[]>([])
 const reason = ref('')
 const graphContainer = ref<HTMLElement | null>(null)
 let network: Network | null = null
+const solvingSteps = ref<CircuitStep[]>([])
+const currentStepIndex = ref(0)
+const isPlayingAnimation = ref(false)
 
 // 图数据结构
 interface Graph {
@@ -171,9 +217,16 @@ function checkDegrees(graph: Graph): boolean {
   return true
 }
 
-// Hierholzer 算法求欧拉回路
-function findEulerCircuit(graph: Graph): number[] {
-  const circuit: number[] = []
+// 添加新的类型定义
+interface CircuitStep {
+  path: number[]
+  currentVertex: number
+  remainingEdges: Map<number, Set<number>>
+}
+
+// 修改 Hierholzer 算法求欧拉回路
+function findEulerCircuit(graph: Graph): { circuit: number[], steps: CircuitStep[] } {
+  const steps: CircuitStep[] = []
   const edges = new Map<number, Set<number>>()
 
   // 构建边集
@@ -190,6 +243,13 @@ function findEulerCircuit(graph: Graph): number[] {
       const current = stack[stack.length - 1]
       const neighbors = edges.get(current)!
 
+      // 记录当前步骤
+      steps.push({
+        path: [...path],
+        currentVertex: current,
+        remainingEdges: new Map(Array.from(edges.entries()).map(([k, v]) => [k, new Set(v)]))
+      })
+
       if (neighbors.size === 0) {
         path.push(stack.pop()!)
       } else {
@@ -205,7 +265,34 @@ function findEulerCircuit(graph: Graph): number[] {
 
   // 从第一个顶点开始
   const start = parseInt(Object.keys(graph)[0])
-  return dfs(start).reverse()
+  const circuit = dfs(start).reverse()
+  
+  // 添加最终结果作为最后一步
+  steps.push({
+    path: circuit,
+    currentVertex: circuit[circuit.length - 1],
+    remainingEdges: new Map()
+  })
+
+  return { circuit, steps }
+}
+
+// 添加控制动画的函数
+function playAnimation() {
+  if (isPlayingAnimation.value) return
+  isPlayingAnimation.value = true
+  currentStepIndex.value = 0
+  
+  function nextStep() {
+    if (currentStepIndex.value < solvingSteps.value.length - 1) {
+      currentStepIndex.value++
+      setTimeout(nextStep, 1000) // 每步延迟1秒
+    } else {
+      isPlayingAnimation.value = false
+    }
+  }
+  
+  nextStep()
 }
 
 // 检查并求解欧拉回路
@@ -216,6 +303,8 @@ async function checkAndFindCircuit() {
   hasEulerCircuit.value = false
   eulerCircuit.value = []
   reason.value = ''
+  solvingSteps.value = []
+  currentStepIndex.value = 0
 
   try {
     const graph = parseGraph(graphInput.value)
@@ -236,7 +325,9 @@ async function checkAndFindCircuit() {
     }
     else {
       hasEulerCircuit.value = true
-      eulerCircuit.value = findEulerCircuit(graph)
+      const { circuit, steps } = findEulerCircuit(graph)
+      eulerCircuit.value = circuit
+      solvingSteps.value = steps
     }
 
     result.value = true
