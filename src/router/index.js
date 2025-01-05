@@ -207,6 +207,15 @@ export const routes = [
                     title: '连连看',
                     icon: 'mdi-puzzle-outline'
                 }
+            },
+            {
+                path: '/games/minesweeper',
+                name: 'Minesweeper',
+                component: () => import('@/views/games/Minesweeper.vue'),
+                meta: {
+                    title: '扫雷',
+                    icon: 'mdi-mine'
+                }
             }
         ]
     }
