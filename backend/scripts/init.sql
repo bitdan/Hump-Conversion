@@ -28,4 +28,19 @@ CREATE TABLE IF NOT EXISTS game_records (
     FOREIGN KEY (player1_id) REFERENCES users(id),
     FOREIGN KEY (player2_id) REFERENCES users(id),
     FOREIGN KEY (winner) REFERENCES users(id)
+);
+
+-- 游戏房间表
+CREATE TABLE IF NOT EXISTS game_rooms (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    game_type VARCHAR(50) NOT NULL,
+    room_code VARCHAR(6) NOT NULL UNIQUE,
+    host_id BIGINT UNSIGNED NOT NULL,
+    guest_id BIGINT UNSIGNED,
+    status VARCHAR(20) NOT NULL DEFAULT 'waiting', -- waiting, playing, finished
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (host_id) REFERENCES users(id),
+    FOREIGN KEY (guest_id) REFERENCES users(id)
 ); 

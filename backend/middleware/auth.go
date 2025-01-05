@@ -1,60 +1,42 @@
 package middleware
 
 import (
-	"fmt"
+	"log"
 	"strings"
 
-	"github.com/bitdan/Hump-Conversion/backend/internal/redis"
+	"github.com/bitdan/Hump-Conversion/backend/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Printf("Auth middleware processing request: %s %s", c.Request.Method, c.Request.URL.Path)
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(401, gin.H{"error": "No authorization header"})
+			log.Printf("No Authorization header found")
+			c.JSON(401, gin.H{"error": "Authorization header is required"})
 			c.Abort()
 			return
 		}
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("your-secret-key"), nil
-		})
+		log.Printf("Token received: %s", tokenString)
 
-		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"error": "Invalid token"})
+		userID, err := utils.ValidateToken(tokenString)
+		if err != nil {
+			log.Printf("Token validation failed: %v", err)
+			if err.Error() == "token has expired" {
+				c.JSON(401, gin.H{"error": "Token has expired"})
+			} else {
+				c.JSON(401, gin.H{"error": "Invalid token"})
+			}
 			c.Abort()
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-		userId := uint(claims["user_id"].(float64))
-
-		// 验证Redis中的token
-		if !redis.IsTokenValid(fmt.Sprintf("%d", userId), tokenString) {
-			c.JSON(401, gin.H{"error": "Token expired or invalid"})
-			c.Abort()
-			return
-		}
-
-		c.Set("userID", userId)
-		c.Next()
-	}
-}
-
-func CORS() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
+		log.Printf("Token validated successfully for user ID: %d", userID)
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

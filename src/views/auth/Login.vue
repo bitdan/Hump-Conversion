@@ -66,12 +66,14 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
 const loading = ref(false)
 const showError = ref(false)
 const errorMessage = ref('')
 const showPassword = ref(false)
+const userStore = useUserStore()
 
 const form = ref({
   username: '',
@@ -81,30 +83,27 @@ const form = ref({
 const handleLogin = async () => {
   try {
     loading.value = true
-    const response = await axios.post('/api/auth/login', form.value)
+    console.log('Attempting login with:', {
+      username: form.value.username,
+      password: form.value.password
+    })
+
+    const response = await axios.post('/api/auth/login', {
+      username: form.value.username,
+      password: form.value.password
+    })
+    
+    console.log('Login response:', response.data)
     
     if (response.data.token) {
-      // 保存token和用户信息
-      localStorage.setItem('token', response.data.token)
-      // 确保正确保存用户信息
-      const userData = {
-        id: response.data.user.id,
-        username: response.data.user.username,
-        email: response.data.user.email
-      }
-      localStorage.setItem('user', JSON.stringify(userData))
-      
-      // 设置axios默认header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
-      
-      // 获取重定向地址
-      const redirect = router.currentRoute.value.query.redirect || '/home'
-      router.push(redirect)
+      console.log('Login successful, token:', response.data.token)
+      await userStore.setToken(response.data.token)
+      router.push('/home')
     } else {
-      throw new Error('登录失败：未获取到token')
+      throw new Error('Login response missing token')
     }
   } catch (error) {
-    console.error('Login error:', error)
+    console.error('Login failed:', error)
     errorMessage.value = error.response?.data?.error || '登录失败'
     showError.value = true
   } finally {

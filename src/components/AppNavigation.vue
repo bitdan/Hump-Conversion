@@ -116,6 +116,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavStore } from '@/stores/nav'
 import { getCurrentUser, logout } from '@/utils/auth'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -123,6 +124,7 @@ const drawer = ref(true)
 const rail = ref(false)
 const navStore = useNavStore()
 const openedGroup = ref(null)
+const userStore = useUserStore()
 
 // 导航模式相关
 const isTopNav = computed(() => navStore.mode === 'top')
@@ -178,6 +180,9 @@ watch(
   },
   { immediate: true }
 )
+
+// 使用 userInfo 而不是直接使用 user
+const username = computed(() => userStore.userInfo?.username)
 </script>
 
 <style scoped>

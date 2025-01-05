@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -71,22 +72,29 @@ func (h *Handler) Register(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Invalid login request: %v", err)
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
 
+	log.Printf("Login attempt for user: %s", req.Username)
+
 	// 查找用户
 	var user models.User
 	if result := h.db.Where("username = ?", req.Username).First(&user); result.Error != nil {
+		log.Printf("User not found: %s", req.Username)
 		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
 	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		log.Printf("Password verification failed for user: %s", req.Username)
 		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
+
+	log.Printf("Password verified for user: %s", req.Username)
 
 	// 生成token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -96,16 +104,22 @@ func (h *Handler) Login(c *gin.Context) {
 
 	tokenString, err := token.SignedString([]byte("your-secret-key"))
 	if err != nil {
+		log.Printf("Failed to generate token: %v", err)
 		c.JSON(500, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	// 将token存入Redis，设置24小时过期
+	log.Printf("Token generated for user: %s", req.Username)
+
+	// 将token存入Redis
 	err = redis.SetToken(fmt.Sprintf("%d", user.ID), tokenString, 24*time.Hour)
 	if err != nil {
+		log.Printf("Failed to store token in Redis: %v", err)
 		c.JSON(500, gin.H{"error": "Failed to store token"})
 		return
 	}
+
+	log.Printf("Login successful for user: %s", req.Username)
 
 	c.JSON(200, gin.H{
 		"token": tokenString,
