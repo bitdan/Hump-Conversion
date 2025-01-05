@@ -23,9 +23,9 @@
         <v-btn
           color="primary"
           @click="startGame"
-          :disabled="isPlaying"
+          :disabled="false"
         >
-          开始游戏
+          重新开始
         </v-btn>
         <v-btn
           color="error"
@@ -198,23 +198,6 @@ const draw = () => {
   }
 }
 
-// 检查两点是否可以连接
-const canConnect = (x1: number, y1: number, x2: number, y2: number): boolean => {
-  // 检查是否是同一个图标
-  if (board.value[y1][x1] !== board.value[y2][x2]) return false
-  
-  // 检查直线连接
-  if (canDirectConnect(x1, y1, x2, y2)) return true
-  
-  // 检查一次转弯
-  if (canOneCornerConnect(x1, y1, x2, y2)) return true
-  
-  // 检查两次转弯
-  if (canTwoCornerConnect(x1, y1, x2, y2)) return true
-  
-  return false
-}
-
 // 检查是否可以直线连接
 const canDirectConnect = (x1: number, y1: number, x2: number, y2: number): boolean => {
   // 如果在同一行
@@ -242,54 +225,6 @@ const canDirectConnect = (x1: number, y1: number, x2: number, y2: number): boole
   return false
 }
 
-// 检查是否可以一次转弯连接
-const canOneCornerConnect = (x1: number, y1: number, x2: number, y2: number): boolean => {
-  // 检查转角点(x1,y2)
-  if (board.value[y2][x1] === -1 && 
-      canDirectConnect(x1, y1, x1, y2) && 
-      canDirectConnect(x1, y2, x2, y2)) {
-    return true
-  }
-  
-  // 检查转角点(x2,y1)
-  if (board.value[y1][x2] === -1 && 
-      canDirectConnect(x1, y1, x2, y1) && 
-      canDirectConnect(x2, y1, x2, y2)) {
-    return true
-  }
-  
-  return false
-}
-
-// 检查是否可以两次转弯连接
-const canTwoCornerConnect = (x1: number, y1: number, x2: number, y2: number): boolean => {
-  // 检查所有可能的中间点
-  for (let x = -1; x <= GRID_SIZE; x++) {
-    // 检查通过点(x,y1)和(x,y2)的连接
-    if (x !== x1 && x !== x2) {
-      if (canDirectConnect(x1, y1, x, y1) && 
-          board.value[y1][x] === -1 && 
-          canDirectConnect(x, y1, x, y2) && 
-          canDirectConnect(x, y2, x2, y2)) {
-        return true
-      }
-    }
-  }
-  
-  for (let y = -1; y <= GRID_SIZE; y++) {
-    // 检查通过点(x1,y)和(x2,y)的连接
-    if (y !== y1 && y !== y2) {
-      if (canDirectConnect(x1, y1, x1, y) && 
-          board.value[y][x1] === -1 && 
-          canDirectConnect(x1, y, x2, y) && 
-          canDirectConnect(x2, y, x2, y2)) {
-        return true
-      }
-    }
-  }
-  
-  return false
-}
 
 
 // 处理点击事件
@@ -352,18 +287,20 @@ const formatTime = (seconds: number): string => {
 
 // 开始游戏
 const startGame = () => {
-  if (isPlaying.value) return
-  
   isPlaying.value = true
   isPaused.value = false
   score.value = 0
   remainingTime.value = 300
   selectedCell.value = null
+  currentPath.value = null
   
   initializeBoard()
   draw()
   
+  // 清除之前的计时器
   if (timerInterval) clearInterval(timerInterval)
+  
+  // 开始新的计时
   timerInterval = setInterval(() => {
     if (!isPaused.value) {
       remainingTime.value--
@@ -372,7 +309,6 @@ const startGame = () => {
       }
     }
   }, 1000)
-  currentPath.value = null
 }
 
 // 暂停游戏
@@ -408,7 +344,8 @@ const endGame = (win: boolean) => {
 
 // 生命周期钩子
 onMounted(() => {
-  draw()
+  // 自动开始新游戏
+  startGame()
 })
 
 onUnmounted(() => {
