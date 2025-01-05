@@ -225,6 +225,15 @@ export const routes = [
                     title: '打砖块',
                     icon: 'mdi-wall'
                 }
+            },
+            {
+                path: '/games/bubble-shooter',
+                name: 'BubbleShooter',
+                component: () => import('@/views/games/BubbleShooter.vue'),
+                meta: {
+                    title: '泡泡龙',
+                    icon: 'mdi-circle-multiple'
+                }
             }
         ]
     }
