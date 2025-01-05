@@ -2,6 +2,24 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 export const routes = [
     {
+        path: '/auth',
+        component: () => import('@/layouts/auth/Auth.vue'),
+        children: [
+            {
+                path: 'login',
+                name: 'Login',
+                component: () => import('@/views/auth/Login.vue'),
+                meta: { title: '登录' }
+            },
+            {
+                path: 'register',
+                name: 'Register', 
+                component: () => import('@/views/auth/Register.vue'),
+                meta: { title: '注册' }
+            }
+        ]
+    },
+    {
         path: '/',
         redirect: '/case-converter'
     },
@@ -237,6 +255,33 @@ export const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+router.beforeEach((to, from, next) => {
+    const publicPages = ['/auth/login', '/auth/register', '/home', '/']
+    const isPublicPage = publicPages.includes(to.path) || to.path.startsWith('/home')
+    const isAuthenticated = !!localStorage.getItem('token')
+
+    console.log('Route check:', {
+        path: to.path,
+        isPublicPage,
+        isAuthenticated
+    })
+
+    if (!isPublicPage && !isAuthenticated) {
+        console.log('Redirecting to login')
+        return next({
+            path: '/auth/login',
+            query: { redirect: to.fullPath }
+        })
+    }
+
+    if (isAuthenticated && (to.path === '/auth/login' || to.path === '/auth/register')) {
+        console.log('Redirecting authenticated user from auth pages')
+        return next('/home')
+    }
+
+    next()
 })
 
 export default router

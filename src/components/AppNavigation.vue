@@ -10,11 +10,12 @@
   >
     <v-list-item
       prepend-avatar="https://s2.loli.net/2025/01/03/FcBEJdh1YvOSWpK.jpg"
-      :title="rail ? '' : '开发者工具'"
+      :title="rail ? '' : getUserTitle"
       nav
     >
       <template v-slot:append>
         <div class="d-flex align-center">
+          <!-- 导航模式切换按钮 -->
           <v-btn
             v-if="!rail"
             variant="text"
@@ -25,6 +26,30 @@
           >
             {{ isTopNav ? '侧边导航' : '顶部导航' }}
           </v-btn>
+
+          <!-- 登录/退出按钮 -->
+          <v-btn
+            v-if="!rail && isAuthenticated"
+            variant="text"
+            size="small"
+            color="error"
+            class="mr-2"
+            @click="handleLogout"
+          >
+            退出
+          </v-btn>
+          <v-btn
+            v-if="!rail && !isAuthenticated"
+            variant="text"
+            size="small"
+            color="primary"
+            class="mr-2"
+            to="/auth/login"
+          >
+            登录
+          </v-btn>
+
+          <!-- 展开/收起按钮 -->
           <v-btn
             variant="text"
             :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
@@ -90,6 +115,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavStore } from '@/stores/nav'
+import { getCurrentUser, logout } from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -98,17 +124,35 @@ const rail = ref(false)
 const navStore = useNavStore()
 const openedGroup = ref(null)
 
-// 添加导航模式计算属性和切换方法
+// 导航模式相关
 const isTopNav = computed(() => navStore.mode === 'top')
+const toggleNavMode = () => {
+  navStore.toggleMode()
+}
+
+// 认证状态相关
+const isAuthenticated = computed(() => !!localStorage.getItem('token'))
+const currentUser = computed(() => getCurrentUser())
+const getUserTitle = computed(() => {
+  console.log('Auth status:', isAuthenticated.value)
+  console.log('Current user:', currentUser.value)
+  return isAuthenticated.value ? currentUser.value?.username : '开发者工具'
+})
+
+// 处理登出
+const handleLogout = async () => {
+  try {
+    await logout()
+    router.push('/auth/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
+}
 
 // Unified routes for both top and side navigation
 const unifiedRoutes = computed(() => 
   router.options.routes.filter(route => route.name && route.path !== '/')
 )
-
-const toggleNavMode = () => {
-  navStore.toggleMode()
-}
 
 const isCurrentRoute = (path) => {
   return route.path === path
@@ -364,5 +408,42 @@ watch(
 :deep(.v-list-group__items) {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 添加一些新的样式 */
+.v-list-item__prepend > .v-avatar {
+  transition: all 0.3s ease;
+}
+
+.v-navigation-drawer--rail .v-list-item__prepend > .v-avatar {
+  margin-inline-end: 0;
+}
+
+.v-btn.v-btn--size-small {
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0 12px;
+}
+
+.v-btn.v-btn--size-small:hover {
+  opacity: 0.9;
+}
+
+.error {
+  color: #ef4444;
+}
+
+.primary {
+  color: #4f46e5;
+}
+
+/* 按钮组样式 */
+.d-flex.align-center {
+  gap: 4px;
+}
+
+/* 确保按钮在收起状态下正确隐藏 */
+.v-navigation-drawer--rail .v-btn:not(.v-btn--icon) {
+  display: none;
 }
 </style> 

@@ -92,6 +92,16 @@
         class="md:hidden"
         @click="drawer = !drawer"
       ></v-app-bar-nav-icon>
+
+      <div v-if="isAuthenticated" class="d-flex align-center">
+        <span class="mr-4">{{ currentUser?.username }}</span>
+        <v-btn
+          variant="text"
+          @click="handleLogout"
+        >
+          退出登录
+        </v-btn>
+      </div>
     </v-app-bar>
 
     <!-- 移动端抽屉菜单 -->
@@ -141,6 +151,7 @@
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavStore } from '@/stores/nav'
+import { getCurrentUser, logout } from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -216,6 +227,18 @@ const toggleDrawer = () => {
 
 const toggleNavMode = () => {
   navStore.toggleMode()
+}
+
+const isAuthenticated = computed(() => !!localStorage.getItem('token'))
+const currentUser = computed(() => getCurrentUser())
+
+const handleLogout = async () => {
+  try {
+    await logout() // 调用后端登出接口
+    router.push('/auth/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
 }
 </script>
 
