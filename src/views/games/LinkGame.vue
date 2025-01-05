@@ -55,9 +55,18 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 // 游戏常量
 const CANVAS_SIZE = 600
-const GRID_SIZE = 8
-const CELL_SIZE = CANVAS_SIZE / GRID_SIZE
+const BOARD_SIZE = 10 // 整个棋盘大小
+const GRID_SIZE = 8  // 图标区域大小
+const CELL_SIZE = CANVAS_SIZE / BOARD_SIZE
 const ICON_SIZE = CELL_SIZE * 0.8
+const PADDING = 1   // 图标区域的偏移量
+const INFINITY = 10000
+const DIRECTIONS = [
+  { dx: 0, dy: 1 }, // 下
+  { dx: 0, dy: -1 }, // 上
+  { dx: 1, dy: 0 }, // 右
+  { dx: -1, dy: 0 } // 左
+]
 
 // 游戏状态
 const gameCanvas = ref<HTMLCanvasElement | null>(null)
@@ -79,6 +88,9 @@ const icons = [
   '⭐', '🌙', '☀️', '🌈', '🌸', '🌺', '🌻', '🌹'
 ]
 
+// 添加一个新的状态来存储当前的连接线
+const currentPath = ref<{ x: number; y: number }[] | null>(null)
+
 // 初始化游戏板
 const initializeBoard = () => {
   const pairs = []
@@ -94,14 +106,15 @@ const initializeBoard = () => {
     ;[pairs[i], pairs[j]] = [pairs[j], pairs[i]]
   }
   
-  // 填充游戏板
-  board.value = []
-  for (let i = 0; i < GRID_SIZE; i++) {
-    const row = []
-    for (let j = 0; j < GRID_SIZE; j++) {
-      row.push(pairs[i * GRID_SIZE + j])
+  // 填充游戏板 (10x10, 中间8x8放图标)
+  board.value = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(-1))
+  let pairIndex = 0
+  
+  // 只在中间8x8区域放置图标
+  for (let i = PADDING; i < PADDING + GRID_SIZE; i++) {
+    for (let j = PADDING; j < PADDING + GRID_SIZE; j++) {
+      board.value[i][j] = pairs[pairIndex++]
     }
-    board.value.push(row)
   }
 }
 
@@ -114,9 +127,9 @@ const draw = () => {
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
 
-  // 绘制网格和图标
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
+  // 绘制网格
+  for (let i = 0; i < BOARD_SIZE; i++) {
+    for (let j = 0; j < BOARD_SIZE; j++) {
       const x = j * CELL_SIZE
       const y = i * CELL_SIZE
       
@@ -124,8 +137,10 @@ const draw = () => {
       ctx.strokeStyle = '#e5e7eb'
       ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE)
       
-      // 如果有图标，绘制图标
-      if (board.value[i][j] !== -1) {
+      // 如果在图标区域且有图标，绘制图标
+      if (i >= PADDING && i < PADDING + GRID_SIZE && 
+          j >= PADDING && j < PADDING + GRID_SIZE && 
+          board.value[i][j] !== -1) {
         // 绘制背景
         if (selectedCell.value?.x === j && selectedCell.value?.y === i) {
           ctx.fillStyle = '#e5e7eb'
@@ -137,27 +152,16 @@ const draw = () => {
         ctx.font = `${ICON_SIZE}px Arial`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(
-          icon,
-          x + CELL_SIZE / 2,
-          y + CELL_SIZE / 2
-        )
+        ctx.fillText(icon, x + CELL_SIZE / 2, y + CELL_SIZE / 2)
         
         // 添加选中效果
         if (selectedCell.value?.x === j && selectedCell.value?.y === i) {
           ctx.strokeStyle = '#4f46e5'
           ctx.lineWidth = 3
           ctx.beginPath()
-          ctx.roundRect(
-            x + 2,
-            y + 2,
-            CELL_SIZE - 4,
-            CELL_SIZE - 4,
-            8
-          )
+          ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, 8)
           ctx.stroke()
           
-          // 添加发光效果
           ctx.shadowColor = '#4f46e5'
           ctx.shadowBlur = 10
           ctx.stroke()
@@ -165,6 +169,32 @@ const draw = () => {
         }
       }
     }
+  }
+
+  // 绘制连接线
+  if (currentPath.value) {
+    ctx.strokeStyle = '#4f46e5'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(
+      currentPath.value[0].x * CELL_SIZE + CELL_SIZE / 2,
+      currentPath.value[0].y * CELL_SIZE + CELL_SIZE / 2
+    )
+
+    for (let i = 1; i < currentPath.value.length; i++) {
+      ctx.lineTo(
+        currentPath.value[i].x * CELL_SIZE + CELL_SIZE / 2,
+        currentPath.value[i].y * CELL_SIZE + CELL_SIZE / 2
+      )
+    }
+    
+    // 添加线条动画效果
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.shadowColor = '#4f46e5'
+    ctx.shadowBlur = 5
+    ctx.stroke()
+    ctx.shadowBlur = 0
   }
 }
 
@@ -261,91 +291,6 @@ const canTwoCornerConnect = (x1: number, y1: number, x2: number, y2: number): bo
   return false
 }
 
-// 获取连接路径
-const getConnectPath = (x1: number, y1: number, x2: number, y2: number): { x: number; y: number }[] | null => {
-  if (!canConnect(x1, y1, x2, y2)) return null
-  
-  const path = [{ x: x1, y: y1 }]
-  
-  // 直线连接
-  if (canDirectConnect(x1, y1, x2, y2)) {
-    path.push({ x: x2, y: y2 })
-    return path
-  }
-  
-  // 一次转弯
-  // 检查转角点(x1,y2)
-  if (board.value[y2][x1] === -1 && 
-      canDirectConnect(x1, y1, x1, y2) && 
-      canDirectConnect(x1, y2, x2, y2)) {
-    path.push({ x: x1, y: y2 })
-    path.push({ x: x2, y: y2 })
-    return path
-  }
-  
-  // 检查转角点(x2,y1)
-  if (board.value[y1][x2] === -1 && 
-      canDirectConnect(x1, y1, x2, y1) && 
-      canDirectConnect(x2, y1, x2, y2)) {
-    path.push({ x: x2, y: y1 })
-    path.push({ x: x2, y: y2 })
-    return path
-  }
-  
-  // 两次转弯
-  for (let x = -1; x <= GRID_SIZE; x++) {
-    if (x !== x1 && x !== x2) {
-      if (canDirectConnect(x1, y1, x, y1) && 
-          board.value[y1][x] === -1 && 
-          canDirectConnect(x, y1, x, y2) && 
-          canDirectConnect(x, y2, x2, y2)) {
-        path.push({ x, y: y1 })
-        path.push({ x, y: y2 })
-        path.push({ x: x2, y: y2 })
-        return path
-      }
-    }
-  }
-  
-  for (let y = -1; y <= GRID_SIZE; y++) {
-    if (y !== y1 && y !== y2) {
-      if (canDirectConnect(x1, y1, x1, y) && 
-          board.value[y][x1] === -1 && 
-          canDirectConnect(x1, y, x2, y) && 
-          canDirectConnect(x2, y, x2, y2)) {
-        path.push({ x: x1, y })
-        path.push({ x: x2, y })
-        path.push({ x: x2, y: y2 })
-        return path
-      }
-    }
-  }
-  
-  return null
-}
-
-// 绘制连接路径
-const drawPath = (path: { x: number; y: number }[]) => {
-  const ctx = gameCanvas.value?.getContext('2d')
-  if (!ctx) return
-
-  ctx.strokeStyle = '#4f46e5'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(
-    path[0].x * CELL_SIZE + CELL_SIZE / 2,
-    path[0].y * CELL_SIZE + CELL_SIZE / 2
-  )
-
-  for (let i = 1; i < path.length; i++) {
-    ctx.lineTo(
-      path[i].x * CELL_SIZE + CELL_SIZE / 2,
-      path[i].y * CELL_SIZE + CELL_SIZE / 2
-    )
-  }
-  
-  ctx.stroke()
-}
 
 // 处理点击事件
 const handleClick = (event: MouseEvent) => {
@@ -359,32 +304,34 @@ const handleClick = (event: MouseEvent) => {
   
   if (!selectedCell.value) {
     selectedCell.value = { x, y }
+    currentPath.value = null  // 清除之前的连接线
   } else {
     if (selectedCell.value.x === x && selectedCell.value.y === y) {
       selectedCell.value = null
-    } else if (canConnect(selectedCell.value.x, selectedCell.value.y, x, y)) {
-      // 获取连接路径并显示
-      const path = getConnectPath(selectedCell.value.x, selectedCell.value.y, x, y)
-      if (path) {
-        drawPath(path)
-      }
-      
-      // 添加消除动画
-      setTimeout(() => {
-        // 消除配对
-        board.value[selectedCell.value.y][selectedCell.value.x] = -1
-        board.value[y][x] = -1
-        selectedCell.value = null
-        score.value += 10
-        
-        // 检查游戏是否结束
-        if (isGameComplete()) {
-          endGame(true)
-        }
-        draw()
-      }, 200)
+      currentPath.value = null
     } else {
-      selectedCell.value = { x, y }
+      const path = findPath(selectedCell.value.x, selectedCell.value.y, x, y)
+      if (path) {
+        currentPath.value = path  // 保存新的连接线
+        draw()  // 立即绘制连接线
+
+        // 添加消除动画
+        setTimeout(() => {
+          board.value[selectedCell.value.y][selectedCell.value.x] = -1
+          board.value[y][x] = -1
+          selectedCell.value = null
+          currentPath.value = null  // 清除连接线
+          score.value += 10
+
+          if (isGameComplete()) {
+            endGame(true)
+          }
+          draw()
+        }, 300)  // 延长显示时间以便看清连接线
+      } else {
+        selectedCell.value = { x, y }
+        currentPath.value = null
+      }
     }
   }
   
@@ -425,6 +372,7 @@ const startGame = () => {
       }
     }
   }, 1000)
+  currentPath.value = null
 }
 
 // 暂停游戏
@@ -466,5 +414,115 @@ onMounted(() => {
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
 })
+
+// 替换原有的路径查找相关函数
+interface PathNode {
+  x: number
+  y: number
+  distance: number
+  turns: number
+  prev: PathNode | null
+  direction: number // 0:下, 1:上, 2:右, 3:左, -1:起点
+}
+
+// 检查两点是否可以连接并返回路径
+const findPath = (x1: number, y1: number, x2: number, y2: number): { x: number; y: number }[] | null => {
+  if (board.value[y1][x1] !== board.value[y2][x2]) return null
+  
+  // 创建访问数组 (10x10)
+  const visited = Array(BOARD_SIZE).fill(0).map(() => 
+    Array(BOARD_SIZE).fill(0).map(() => 
+      Array(4).fill(0).map(() => ({
+        distance: INFINITY,
+        turns: INFINITY
+      }))
+    )
+  )
+  
+  const queue: PathNode[] = []
+  
+  // 初始化起点
+  for (let i = 0; i < 4; i++) {
+    const node: PathNode = {
+      x: x1,
+      y: y1,
+      distance: 0,
+      turns: 0,
+      prev: null,
+      direction: -1
+    }
+    queue.push(node)
+    visited[y1][x1][i].distance = 0
+    visited[y1][x1][i].turns = 0
+  }
+  
+  let result: PathNode | null = null
+  
+  while (queue.length > 0) {
+    // 获取距离最小的节点
+    const current = queue.reduce((min, node, index) => 
+      node.distance < queue[min].distance ? index : min, 0)
+    const node = queue.splice(current, 1)[0]
+    
+    // 到达终点
+    if (node.x === x2 && node.y === y2 && node.turns <= 2) {
+      result = node
+      break
+    }
+    
+    // 遍历四个方向
+    for (let i = 0; i < 4; i++) {
+      const { dx, dy } = DIRECTIONS[i]
+      const newX = node.x + dx
+      const newY = node.y + dy
+      
+      // 检查边界
+      if (newX < 0 || newX >= BOARD_SIZE || newY < 0 || newY >= BOARD_SIZE) continue
+      
+      // 检查是否是有效路径（可以经过空白区域或终点）
+      if (board.value[newY][newX] !== -1 && !(newX === x2 && newY === y2)) continue
+      
+      // 计算转弯数
+      const newTurns = node.direction === -1 ? 0 : 
+                      node.direction === i ? node.turns : 
+                      node.turns + 1
+                      
+      if (newTurns > 2) continue
+      
+      // 计算新距离
+      const newDistance = node.distance + 1
+      
+      // 更新最短路径
+      if (newDistance < visited[newY][newX][i].distance || 
+          (newDistance === visited[newY][newX][i].distance && newTurns < visited[newY][newX][i].turns)) {
+        visited[newY][newX][i].distance = newDistance
+        visited[newY][newX][i].turns = newTurns
+        
+        const newNode: PathNode = {
+          x: newX,
+          y: newY,
+          distance: newDistance,
+          turns: newTurns,
+          prev: node,
+          direction: i
+        }
+        queue.push(newNode)
+      }
+    }
+  }
+  
+  // 重建路径
+  if (!result) return null
+  
+  const path: { x: number; y: number }[] = []
+  let current: PathNode | null = result
+  
+  while (current) {
+    path.unshift({ x: current.x, y: current.y })
+    current = current.prev
+  }
+  
+  return path
+}
 </script> 
 
