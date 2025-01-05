@@ -73,7 +73,7 @@ const gameCanvas = ref<HTMLCanvasElement | null>(null)
 const isPlaying = ref(false)
 const isPaused = ref(false)
 const score = ref(0)
-const remainingTime = ref(300) // 5分钟
+const remainingTime = ref(180) // 3分钟
 let gameLoop: number | null = null
 let timerInterval: ReturnType<typeof setInterval> | null = null
 
@@ -90,6 +90,17 @@ const icons = [
 
 // 添加一个新的状态来存储当前的连接线
 const currentPath = ref<{ x: number; y: number }[] | null>(null)
+
+// 添加新的动画相关状态
+const confettiParticles = ref<Array<{
+  x: number,
+  y: number,
+  color: string,
+  speed: number,
+  angle: number,
+  size: number,
+  rotation: number
+}>>([])
 
 // 初始化游戏板
 const initializeBoard = () => {
@@ -263,17 +274,16 @@ const startGame = () => {
   isPlaying.value = true
   isPaused.value = false
   score.value = 0
-  remainingTime.value = 300
+  remainingTime.value = 180 // 3分钟
   selectedCell.value = null
   currentPath.value = null
+  confettiParticles.value = []
   
   initializeBoard()
   draw()
   
-  // 清除之前的计时器
   if (timerInterval) clearInterval(timerInterval)
   
-  // 开始新的计时
   timerInterval = setInterval(() => {
     if (!isPaused.value) {
       remainingTime.value--
@@ -295,23 +305,53 @@ const endGame = (win: boolean) => {
   if (timerInterval) clearInterval(timerInterval)
   
   const ctx = gameCanvas.value?.getContext('2d')
-  if (ctx) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+  if (!ctx) return
+
+  if (win) {
+    // 创建胜利动画
+    createConfetti()
+    
+    const animate = () => {
+      // 创建半透明叠加效果
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
+      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+      
+      // 更新和绘制粒子
+      updateConfetti(ctx)
+      
+      // 绘制胜利文字
+      ctx.fillStyle = '#4f46e5'
+      ctx.font = 'bold 48px Arial'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+      ctx.shadowBlur = 10
+      ctx.fillText('恭喜过关!', CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 40)
+      
+      ctx.font = 'bold 32px Arial'
+      ctx.fillText(`得分: ${score.value}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 20)
+      ctx.fillText(`剩余时间: ${formatTime(remainingTime.value)}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 70)
+      
+      // 继续动画
+      if (confettiParticles.value.length > 0) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    animate()
+  } else {
+    // 游戏失败效果
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+    
     ctx.fillStyle = '#fff'
-    ctx.font = '48px Arial'
+    ctx.font = 'bold 48px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText(
-      win ? '恭喜过关!' : '游戏结束!',
-      CANVAS_SIZE / 2,
-      CANVAS_SIZE / 2 - 30
-    )
-    ctx.font = '24px Arial'
-    ctx.fillText(
-      `最终得分: ${score.value}`,
-      CANVAS_SIZE / 2,
-      CANVAS_SIZE / 2 + 30
-    )
+    ctx.textBaseline = 'middle'
+    ctx.fillText('游戏结束', CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 40)
+    
+    ctx.font = 'bold 32px Arial'
+    ctx.fillText(`最终得分: ${score.value}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 20)
   }
 }
 
@@ -433,6 +473,42 @@ const findPath = (x1: number, y1: number, x2: number, y2: number): { x: number; 
   }
   
   return path
+}
+
+// 添加粒子动画相关函数
+const createConfetti = () => {
+  const colors = ['#FF69B4', '#4169E1', '#FFD700', '#98FB98', '#DDA0DD']
+  for (let i = 0; i < 100; i++) {
+    confettiParticles.value.push({
+      x: CANVAS_SIZE / 2,
+      y: CANVAS_SIZE / 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speed: Math.random() * 8 + 2,
+      angle: Math.random() * Math.PI * 2,
+      size: Math.random() * 10 + 5,
+      rotation: Math.random() * Math.PI * 2
+    })
+  }
+}
+
+const updateConfetti = (ctx: CanvasRenderingContext2D) => {
+  confettiParticles.value = confettiParticles.value.filter(particle => {
+    // 更新位置
+    particle.x += Math.cos(particle.angle) * particle.speed
+    particle.y += Math.sin(particle.angle) * particle.speed + 1 // 添加重力效果
+    particle.rotation += 0.1 // 旋转效果
+    
+    // 绘制五彩纸屑
+    ctx.save()
+    ctx.translate(particle.x, particle.y)
+    ctx.rotate(particle.rotation)
+    ctx.fillStyle = particle.color
+    ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size)
+    ctx.restore()
+    
+    // 当粒子超出画布时移除
+    return particle.y < CANVAS_SIZE && particle.x > 0 && particle.x < CANVAS_SIZE
+  })
 }
 </script> 
 
