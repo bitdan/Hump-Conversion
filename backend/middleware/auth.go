@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/bitdan/Hump-Conversion/backend/internal/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"strings"
 )
 
 func Auth() gin.HandlerFunc {
@@ -17,7 +20,7 @@ func Auth() gin.HandlerFunc {
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("your-secret-key"), nil // 使用配置中的密钥
+			return []byte("your-secret-key"), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -27,7 +30,16 @@ func Auth() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		c.Set("userID", uint(claims["user_id"].(float64)))
+		userId := uint(claims["user_id"].(float64))
+
+		// 验证Redis中的token
+		if !redis.IsTokenValid(fmt.Sprintf("%d", userId), tokenString) {
+			c.JSON(401, gin.H{"error": "Token expired or invalid"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", userId)
 		c.Next()
 	}
 }
@@ -45,4 +57,4 @@ func CORS() gin.HandlerFunc {
 
 		c.Next()
 	}
-} 
+}

@@ -1,14 +1,16 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 
 	"github.com/bitdan/Hump-Conversion/backend/game"
 	"github.com/bitdan/Hump-Conversion/backend/handlers"
 	"github.com/bitdan/Hump-Conversion/backend/internal/config"
+	"github.com/bitdan/Hump-Conversion/backend/internal/redis"
 	"github.com/bitdan/Hump-Conversion/backend/middleware"
 	"github.com/bitdan/Hump-Conversion/backend/models"
 )
@@ -16,6 +18,14 @@ import (
 func main() {
 	// 加载配置
 	cfg := config.Load()
+
+	// 打印Redis配置信息
+	log.Printf("Redis configuration - Addr: %s, DB: %d", cfg.Redis.Addr, cfg.Redis.DB)
+
+	// 初始化Redis
+	if err := redis.Init(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB); err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
 
 	// 连接数据库
 	dsn := cfg.GetDSN()
@@ -50,6 +60,7 @@ func main() {
 		{
 			auth.POST("/register", h.Register)
 			auth.POST("/login", h.Login)
+			auth.POST("/logout", middleware.Auth(), h.Logout)
 		}
 
 		// 需要认证的路由
@@ -61,6 +72,7 @@ func main() {
 			protected.POST("/games/match/:gameType", h.MatchGame)
 			protected.GET("/games/status/:gameId", h.GetGameStatus)
 			protected.PUT("/games/status/:gameId", h.UpdateGameStatus)
+			protected.GET("/user/info", h.GetUserInfo)
 		}
 	}
 
@@ -72,4 +84,4 @@ func main() {
 	if err := r.Run(cfg.Server.Address); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
-} 
+}

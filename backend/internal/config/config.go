@@ -3,46 +3,52 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-}
-
-type ServerConfig struct {
-	Address string
-}
-
-type DatabaseConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-}
-
-type JWTConfig struct {
-	Secret string
+	Server struct {
+		Address string
+	}
+	Database struct {
+		Host     string
+		Port     string
+		User     string
+		Password string
+		Name     string
+	}
+	Redis struct {
+		Addr     string
+		Password string
+		DB       int
+	}
+	JWT struct {
+		Secret string
+	}
 }
 
 func Load() *Config {
-	return &Config{
-		Server: ServerConfig{
-			Address: getEnv("SERVER_ADDRESS", ":8080"),
-		},
-		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "43.156.83.246"),
-			Port:     getEnv("DB_PORT", "3306"),
-			User:     getEnv("DB_USER", "root"),
-			Password: getEnv("DB_PASSWORD", "dudu0.0@"),
-			DBName:   getEnv("DB_NAME", "game_db"),
-		},
-		JWT: JWTConfig{
-			Secret: getEnv("JWT_SECRET", "your-secret-key"),
-		},
-	}
+	cfg := &Config{}
+
+	// 加载服务器配置
+	cfg.Server.Address = getEnv("SERVER_ADDRESS", ":8080")
+
+	// 加载数据库配置
+	cfg.Database.Host = getEnv("DB_HOST", "43.156.83.246")
+	cfg.Database.Port = getEnv("DB_PORT", "3306")
+	cfg.Database.User = getEnv("DB_USER", "root")
+	cfg.Database.Password = getEnv("DB_PASSWORD", "dudu0.0@")
+	cfg.Database.Name = getEnv("DB_NAME", "game_db")
+
+	// 加载Redis配置
+	cfg.Redis.Addr = getEnv("REDIS_ADDR", "43.156.83.246:6379")
+	cfg.Redis.Password = getEnv("REDIS_PASSWORD", "dudu0.0@")
+	cfg.Redis.DB, _ = strconv.Atoi(getEnv("REDIS_DB", "1"))
+
+	// 加载JWT配置
+	cfg.JWT.Secret = getEnv("JWT_SECRET", "your-secret-key")
+
+	return cfg
 }
 
 func (c *Config) GetDSN() string {
@@ -51,7 +57,7 @@ func (c *Config) GetDSN() string {
 		c.Database.Password,
 		c.Database.Host,
 		c.Database.Port,
-		c.Database.DBName,
+		c.Database.Name,
 	)
 }
 
@@ -60,4 +66,4 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
-} 
+}
