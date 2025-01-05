@@ -220,6 +220,15 @@ export const routes = [
                     title: '泡泡龙',
                     icon: 'mdi-circle-multiple'
                 }
+            },
+            {
+                path: '/games/zuma',
+                name: 'Zuma',
+                component: () => import('@/views/games/Zuma.vue'),
+                meta: {
+                    title: '祖玛',
+                    icon: 'mdi-dots-circle'
+                }
             }
         ]
     }
