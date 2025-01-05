@@ -1,30 +1,41 @@
 <template>
   <v-app>
-    <!-- 根据导航模式显示对应的导航组件 -->
-    <component :is="currentNav" />
+    <!-- 只在非auth布局时显示导航 -->
+    <template v-if="!isAuthLayout">
+      <component :is="currentNav" />
+      <v-main :class="{ 'bg-gray-100': true, 'pt-16': navMode === 'top' }">
+        <v-container>
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border border-gray-200">
+            <router-view v-slot="{ Component }">
+              <transition name="fade" mode="out-in">
+                <component :is="Component" />
+              </transition>
+            </router-view>
+          </div>
+        </v-container>
+      </v-main>
+    </template>
 
-    <v-main :class="{ 'bg-gray-100': true, 'pt-16': navMode === 'top' }">
-      <v-container>
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border border-gray-200">
-          <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component" />
-            </transition>
-          </router-view>
-        </div>
-      </v-container>
-    </v-main>
+    <!-- auth布局直接显示路由视图 -->
+    <template v-else>
+      <router-view />
+    </template>
   </v-app>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppNavigation from '@/components/AppNavigation.vue'
 import AppTopNavigation from '@/components/AppTopNavigation.vue'
 import { useNavStore } from '@/stores/nav'
 
+const route = useRoute()
 const navStore = useNavStore()
 const navMode = computed(() => navStore.mode)
+
+// 判断是否是auth布局
+const isAuthLayout = computed(() => route.meta.layout === 'auth')
 
 // 根据导航模式计算当前应该显示的导航组件
 const currentNav = computed(() => 

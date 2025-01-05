@@ -1,21 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Auth from '@/layouts/auth/Auth.vue'
 
-export const routes = [
+const routes = [
     {
         path: '/auth',
-        component: () => import('@/layouts/auth/Auth.vue'),
+        component: Auth,
         children: [
             {
                 path: 'login',
                 name: 'Login',
                 component: () => import('@/views/auth/Login.vue'),
-                meta: { title: '登录' }
+                meta: {
+                    layout: 'auth',
+                    requiresAuth: false
+                }
             },
             {
                 path: 'register',
-                name: 'Register', 
+                name: 'Register',
                 component: () => import('@/views/auth/Register.vue'),
-                meta: { title: '注册' }
+                meta: {
+                    layout: 'auth',
+                    requiresAuth: false
+                }
             }
         ]
     },
@@ -258,29 +265,18 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    const publicPages = ['/auth/login', '/auth/register', '/home', '/']
-    const isPublicPage = publicPages.includes(to.path) || to.path.startsWith('/home')
     const isAuthenticated = !!localStorage.getItem('token')
-
-    console.log('Route check:', {
-        path: to.path,
-        isPublicPage,
-        isAuthenticated
-    })
-
-    if (!isPublicPage && !isAuthenticated) {
-        console.log('Redirecting to login')
-        return next({
-            path: '/auth/login',
-            query: { redirect: to.fullPath }
-        })
+    
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        next({ name: 'Login' })
+        return
     }
-
-    if (isAuthenticated && (to.path === '/auth/login' || to.path === '/auth/register')) {
-        console.log('Redirecting authenticated user from auth pages')
-        return next('/home')
+    
+    if (isAuthenticated && to.meta.layout === 'auth') {
+        next({ name: 'Home' })
+        return
     }
-
+    
     next()
 })
 
