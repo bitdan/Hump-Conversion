@@ -1,18 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../components/Home.vue'
-import CaseConverter from '../views/tools/CaseConverter.vue'
-import StringGenerator from "../views/tools/StringGenerator.vue";
-import TimestampTool from '../views/tools/TimestampTool.vue'
-import TicTacToe from '../views/games/TicTacToe.vue'
-import DataEncryption from '../views/tools/DataEncryption.vue'
-import FileConverter from '../views/tools/FileConverter.vue'
-import PuzzleGame from '../views/games/PuzzleGame.vue'
-import JsonToEntity from '../views/tools/JsonToEntity.vue'
-import Gomoku from '../views/games/Gomoku.vue'
-import EulerCircuit from '../views/games/EulerCircuit.vue'
-import DiceRoller from '../views/games/DiceRoller.vue'
-import Go from '../views/games/Go.vue'
-import ChineseChess from '../views/games/ChineseChess.vue'
 
 export const routes = [
     {
@@ -22,7 +8,7 @@ export const routes = [
     {
         path: '/home',
         name: 'Home',
-        component: Home,
+        component: () => import('@/components/Home.vue'),
         meta: { 
             title: '首页',
             icon: 'mdi-home'
@@ -39,7 +25,7 @@ export const routes = [
             {
                 path: '/tools/case-converter',
                 name: 'CaseConverter',
-                component: CaseConverter,
+                component: () => import('@/views/tools/CaseConverter.vue'),
                 meta: { 
                     title: '驼峰转换',
                     icon: 'mdi-format-letter-case'
@@ -48,7 +34,7 @@ export const routes = [
             {
                 path: '/tools/string-generator',
                 name: 'StringGenerator',
-                component: StringGenerator,
+                component: () => import('@/views/tools/StringGenerator.vue'),
                 meta: { 
                     title: '字符串生成',
                     icon: 'mdi-format-letter-case'
@@ -57,7 +43,7 @@ export const routes = [
             {
                 path: '/tools/timestamp',
                 name: 'timestamp',
-                component: TimestampTool,
+                component: () => import('@/views/tools/TimestampTool.vue'),
                 meta: {
                     title: '时间戳工具',
                     icon: 'mdi-clock-outline'
@@ -66,7 +52,7 @@ export const routes = [
             {
                 path: '/tools/data-encryption',
                 name: 'DataEncryption',
-                component: DataEncryption,
+                component: () => import('@/views/tools/DataEncryption.vue'),
                 meta: { 
                     title: '数据加密解密',
                     icon: 'mdi-shield-lock-outline'
@@ -75,7 +61,7 @@ export const routes = [
             {
                 path: '/tools/file-converter',
                 name: 'FileConverter',
-                component: FileConverter,
+                component: () => import('@/views/tools/FileConverter.vue'),
                 meta: {
                     title: '文件格式转换',
                     icon: 'mdi-file-sync'
@@ -84,7 +70,7 @@ export const routes = [
             {
                 path: '/tools/json-to-entity',
                 name: 'JsonToEntity',
-                component: JsonToEntity,
+                component: () => import('@/views/tools/JsonToEntity.vue'),
                 meta: {
                     title: 'JSON转实体类',
                     icon: 'mdi-code-json'
@@ -103,7 +89,7 @@ export const routes = [
             {
                 path: '/games/dice-roller',
                 name: 'DiceRoller',
-                component: DiceRoller,
+                component: () => import('@/views/games/DiceRoller.vue'),
                 meta: {
                     title: '投色子',
                     icon: 'mdi-dice-6'
@@ -112,7 +98,7 @@ export const routes = [
             {
                 path: '/games/tic-tac-toe',
                 name: 'TicTacToe',
-                component: TicTacToe,
+                component: () => import('@/views/games/TicTacToe.vue'),
                 meta: { 
                     title: '井字棋',
                     icon: 'mdi-grid'
@@ -121,7 +107,7 @@ export const routes = [
             {
                 path: '/games/puzzle',
                 name: 'PuzzleGame',
-                component: PuzzleGame,
+                component: () => import('@/views/games/PuzzleGame.vue'),
                 meta: {
                     title: '拼图游戏',
                     icon: 'mdi-puzzle'
@@ -130,7 +116,7 @@ export const routes = [
             {
                 path: '/games/euler-circuit',
                 name: 'EulerCircuit',
-                component: EulerCircuit,
+                component: () => import('@/views/games/EulerCircuit.vue'),
                 meta: {
                     title: '欧拉回路求解',
                     icon: 'mdi-graph'
@@ -139,7 +125,7 @@ export const routes = [
             {
                 path: '/games/gomoku',
                 name: 'Gomoku',
-                component: Gomoku,
+                component: () => import('@/views/games/Gomoku.vue'),
                 meta: {
                     title: '五子棋',
                     icon: 'mdi-chess-queen'
@@ -148,7 +134,7 @@ export const routes = [
             {
                 path: '/games/go',
                 name: 'Go',
-                component: Go,
+                component: () => import('@/views/games/Go.vue'),
                 meta: {
                     title: '围棋',
                     icon: 'mdi-circle-outline'
@@ -157,7 +143,7 @@ export const routes = [
             {
                 path: '/games/chinese-chess',
                 name: 'ChineseChess',
-                component: ChineseChess,
+                component: () => import('@/views/games/ChineseChess.vue'),
                 meta: {
                     title: '中国象棋',
                     icon: 'mdi-chess-king'
