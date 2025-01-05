@@ -198,33 +198,6 @@ const draw = () => {
   }
 }
 
-// 检查是否可以直线连接
-const canDirectConnect = (x1: number, y1: number, x2: number, y2: number): boolean => {
-  // 如果在同一行
-  if (y1 === y2) {
-    const minX = Math.min(x1, x2)
-    const maxX = Math.max(x1, x2)
-    // 检查中间是否有阻碍
-    for (let x = minX + 1; x < maxX; x++) {
-      if (board.value[y1][x] !== -1) return false
-    }
-    return true
-  }
-  
-  // 如果在同一列
-  if (x1 === x2) {
-    const minY = Math.min(y1, y2)
-    const maxY = Math.max(y1, y2)
-    // 检查中间是否有阻碍
-    for (let y = minY + 1; y < maxY; y++) {
-      if (board.value[y][x1] !== -1) return false
-    }
-    return true
-  }
-  
-  return false
-}
-
 
 
 // 处理点击事件
