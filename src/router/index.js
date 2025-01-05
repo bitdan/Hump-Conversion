@@ -216,6 +216,15 @@ export const routes = [
                     title: '扫雷',
                     icon: 'mdi-mine'
                 }
+            },
+            {
+                path: '/games/breakout',
+                name: 'Breakout',
+                component: () => import('@/views/games/Breakout.vue'),
+                meta: {
+                    title: '打砖块',
+                    icon: 'mdi-wall'
+                }
             }
         ]
     }
