@@ -4,7 +4,7 @@ import { createVuetify, type ThemeDefinition } from "vuetify";
 import "vuetify/styles";
 import "./main.css";
 import App from "./App.vue";
-import router from './router'
+import router from './router/index'
 import './assets/tailwind.css'
 import '@mdi/font/css/materialdesignicons.css'
 import * as components from 'vuetify/components'
