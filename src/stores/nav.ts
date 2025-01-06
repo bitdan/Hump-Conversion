@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { NavMode, NavStore } from './nav.d'
+import { ref, type Ref } from 'vue'
+
+export type NavMode = 'side' | 'top'
+
+export interface NavStore {
+  mode: Ref<NavMode>
+  toggleMode: () => void
+}
 
 export const useNavStore = defineStore('nav', (): NavStore => {
   const mode = ref<NavMode>(localStorage.getItem('navMode') as NavMode || 'side')

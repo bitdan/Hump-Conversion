@@ -281,6 +281,7 @@ const toggleNavMode = () => {
   font-weight: 600;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
 }
