@@ -76,57 +76,6 @@ const BOARD_WIDTH = CELL_SIZE * (BOARD_SIZE.cols - 1) + BOARD_PADDING * 2
 const BOARD_HEIGHT = CELL_SIZE * (BOARD_SIZE.rows - 1) + BOARD_PADDING * 2
 
 // 定义红方棋子的初始位置
-type InitialPosition = {
-  row: number
-  col: number
-  type: PieceType
-}
-
-const redInitialPositions: InitialPosition[] = [
-  // 第一排：车马相士帅士相马车
-  { row: 9, col: 0, type: '车' as PieceType },
-  { row: 9, col: 1, type: '马' as PieceType },
-  { row: 9, col: 2, type: '相' as PieceType },
-  { row: 9, col: 3, type: '士' as PieceType },
-  // 帅的位置跳过
-  { row: 9, col: 5, type: '士' as PieceType },
-  { row: 9, col: 6, type: '相' as PieceType },
-  { row: 9, col: 7, type: '马' as PieceType },
-  { row: 9, col: 8, type: '车' as PieceType },
-  // 第三排：炮的位置
-  { row: 7, col: 1, type: '炮' as PieceType },
-  { row: 7, col: 7, type: '炮' as PieceType },
-  // 第四排：兵的位置
-  { row: 6, col: 0, type: '兵' as PieceType },
-  { row: 6, col: 2, type: '兵' as PieceType },
-  { row: 6, col: 4, type: '兵' as PieceType },
-  { row: 6, col: 6, type: '兵' as PieceType },
-  { row: 6, col: 8, type: '兵' as PieceType }
-]
-
-// 定义黑方棋子的初始位置
-const blackInitialPositions: InitialPosition[] = [
-  // 第一排：车马象士将士象马车
-  { row: 0, col: 0, type: '车' as PieceType },
-  { row: 0, col: 1, type: '马' as PieceType },
-  { row: 0, col: 2, type: '象' as PieceType },
-  { row: 0, col: 3, type: '士' as PieceType },
-  // 将的位置跳过
-  { row: 0, col: 5, type: '士' as PieceType },
-  { row: 0, col: 6, type: '象' as PieceType },
-  { row: 0, col: 7, type: '马' as PieceType },
-  { row: 0, col: 8, type: '车' as PieceType },
-  // 第三排：炮的位置
-  { row: 2, col: 1, type: '炮' as PieceType },
-  { row: 2, col: 7, type: '炮' as PieceType },
-  // 第四排：卒的位置
-  { row: 3, col: 0, type: '卒' as PieceType },
-  { row: 3, col: 2, type: '卒' as PieceType },
-  { row: 3, col: 4, type: '卒' as PieceType },
-  { row: 3, col: 6, type: '卒' as PieceType },
-  { row: 3, col: 8, type: '卒' as PieceType }
-]
-
 // 获取有效移动位置
 function getValidMoves(piece: Piece): Position[] {
   const moves: Position[] = []
