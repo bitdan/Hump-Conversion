@@ -127,6 +127,44 @@ const blackInitialPositions: InitialPosition[] = [
   { row: 3, col: 8, type: '卒' as PieceType }
 ]
 
+// 获取有效移动位置
+function getValidMoves(piece: Piece): Position[] {
+  const moves: Position[] = []
+
+  // 如果是暗子，使用原始位置的棋子类型来决定走法
+  // 如果是明子（已翻开），使用实际的棋子类型来决定走法
+  const pieceType = !piece.isRevealed ? piece.originalType : piece.type
+
+  switch (pieceType) {
+    case '车':
+      moves.push(...getRookMoves(piece))
+      break
+    case '马':
+      moves.push(...getKnightMoves(piece))
+      break
+    case '相':
+    case '象':
+      moves.push(...getElephantMoves(piece))
+      break
+    case '士':
+      moves.push(...getAdvisorMoves(piece))
+      break
+    case '帅':
+    case '将':
+      moves.push(...getKingMoves(piece))
+      break
+    case '炮':
+      moves.push(...getCannonMoves(piece))
+      break
+    case '兵':
+    case '卒':
+      moves.push(...getPawnMoves(piece))
+      break
+  }
+
+  return moves
+}
+
 // 初始化棋子位置
 function initializePieces() {
   const initialPieces: Piece[] = [
@@ -136,35 +174,17 @@ function initializePieces() {
     { type: '将', player: 'black', row: 0, col: 4, isRevealed: true }
   ]
 
-  // 创建所有棋子的类型数组（除了将帅）
-  const redPieces: PieceType[] = []
-  // 添加所有红方棋子
-  redPieces.push(
-    '车', '车',           // 2个车
-    '马', '马',           // 2个马
-    '相', '相',           // 2个相
-    '士', '士',           // 2个士
-    '炮', '炮',           // 2个炮
-    '兵', '兵', '兵', '兵', '兵'  // 5个兵
-  )
+  // 创建所有可用的棋子类型数组（除了将帅）
+  const availablePieces: PieceType[] = [
+    '车', '车', '马', '马', '相', '相', '士', '士', '炮', '炮', '兵', '兵', '兵', '兵', '兵',
+    '车', '车', '马', '马', '象', '象', '士', '士', '炮', '炮', '卒', '卒', '卒', '卒', '卒'
+  ]
 
-  const blackPieces: PieceType[] = []
-  // 添加所有黑方棋子
-  blackPieces.push(
-    '车', '车',           // 2个车
-    '马', '马',           // 2个马
-    '象', '象',           // 2个象
-    '士', '士',           // 2个士
-    '炮', '炮',           // 2个炮
-    '卒', '卒', '卒', '卒', '卒'  // 5个卒
-  )
-
-  // 随机打乱棋子类型数组
-  shuffleArray(redPieces)
-  shuffleArray(blackPieces)
+  // 随机打乱所有可用棋子
+  shuffleArray(availablePieces)
+  let pieceIndex = 0
 
   // 添加红方棋子到固定位置
-  let redIndex = 0
   // 第一排（除了帅）
   for (let col = 0; col < 9; col++) {
     if (col !== 4) { // 跳过帅的位置
@@ -176,19 +196,18 @@ function initializePieces() {
       else originalType = '士'
 
       initialPieces.push({
-        type: redPieces[redIndex],
+        type: availablePieces[pieceIndex++],
         player: 'red',
         row: 9,
         col,
         isRevealed: false,
         originalType
       })
-      redIndex++
     }
   }
   // 炮的位置
   initialPieces.push({
-    type: redPieces[redIndex++],
+    type: availablePieces[pieceIndex++],
     player: 'red',
     row: 7,
     col: 1,
@@ -196,7 +215,7 @@ function initializePieces() {
     originalType: '炮'
   })
   initialPieces.push({
-    type: redPieces[redIndex++],
+    type: availablePieces[pieceIndex++],
     player: 'red',
     row: 7,
     col: 7,
@@ -206,7 +225,7 @@ function initializePieces() {
   // 兵的位置
   for (let col = 0; col < 9; col += 2) {
     initialPieces.push({
-      type: redPieces[redIndex++],
+      type: availablePieces[pieceIndex++],
       player: 'red',
       row: 6,
       col,
@@ -216,7 +235,6 @@ function initializePieces() {
   }
 
   // 添加黑方棋子到固定位置
-  let blackIndex = 0
   // 第一排（除了将）
   for (let col = 0; col < 9; col++) {
     if (col !== 4) { // 跳过将的位置
@@ -228,19 +246,18 @@ function initializePieces() {
       else originalType = '士'
 
       initialPieces.push({
-        type: blackPieces[blackIndex],
+        type: availablePieces[pieceIndex++],
         player: 'black',
         row: 0,
         col,
         isRevealed: false,
         originalType
       })
-      blackIndex++
     }
   }
   // 炮的位置
   initialPieces.push({
-    type: blackPieces[blackIndex++],
+    type: availablePieces[pieceIndex++],
     player: 'black',
     row: 2,
     col: 1,
@@ -248,7 +265,7 @@ function initializePieces() {
     originalType: '炮'
   })
   initialPieces.push({
-    type: blackPieces[blackIndex++],
+    type: availablePieces[pieceIndex++],
     player: 'black',
     row: 2,
     col: 7,
@@ -258,7 +275,7 @@ function initializePieces() {
   // 卒的位置
   for (let col = 0; col < 9; col += 2) {
     initialPieces.push({
-      type: blackPieces[blackIndex++],
+      type: availablePieces[pieceIndex++],
       player: 'black',
       row: 3,
       col,
@@ -487,43 +504,6 @@ function movePiece(piece: Piece, target: Position) {
   currentPlayer.value = currentPlayer.value === 'red' ? 'black' : 'red'
 }
 
-// 获取有效移动位置
-function getValidMoves(piece: Piece): Position[] {
-  const moves: Position[] = []
-
-  // 根据棋子类型和是否已翻开获取移动规则
-  const pieceType = piece.isRevealed ? piece.type : piece.originalType
-
-  switch (pieceType) {
-    case '车':
-      moves.push(...getRookMoves(piece))
-      break
-    case '马':
-      moves.push(...getKnightMoves(piece))
-      break
-    case '相':
-    case '象':
-      moves.push(...getElephantMoves(piece))
-      break
-    case '士':
-      moves.push(...getAdvisorMoves(piece))
-      break
-    case '帅':
-    case '将':
-      moves.push(...getKingMoves(piece))
-      break
-    case '炮':
-      moves.push(...getCannonMoves(piece))
-      break
-    case '兵':
-    case '卒':
-      moves.push(...getPawnMoves(piece))
-      break
-  }
-
-  return moves
-}
-
 // 获取车的移动位置
 function getRookMoves(piece: Piece): Position[] {
   const moves: Position[] = []
@@ -564,12 +544,16 @@ function getKnightMoves(piece: Piece): Position[] {
     const newRow = piece.row + dy
 
     if (newCol >= 0 && newCol < BOARD_SIZE.cols && newRow >= 0 && newRow < BOARD_SIZE.rows) {
-      // 检查马腿
-      const legCol = piece.col + Math.sign(dx)
-      const legRow = piece.row + Math.sign(dy)
-      const legPiece = pieces.value.find(p => p.row === legRow && p.col === legCol)
+      // 检查蹩马腿
+      // 对于横向移动（dx = ±2），检查马腿是否被挡住
+      // 对于纵向移动（dy = ±2），检查马腿是否被挡住
+      const blockingRow = piece.row + (Math.abs(dx) > Math.abs(dy) ? 0 : dy > 0 ? 1 : -1)
+      const blockingCol = piece.col + (Math.abs(dx) > Math.abs(dy) ? dx > 0 ? 1 : -1 : 0)
+      
+      // 检查是否有任何棋子（包括暗子和明子）挡住了马腿
+      const blockingPiece = pieces.value.find(p => p.row === blockingRow && p.col === blockingCol)
 
-      if (!legPiece) {
+      if (!blockingPiece) {
         const targetPiece = pieces.value.find(p => p.row === newRow && p.col === newCol)
         if (!targetPiece || targetPiece.player !== piece.player) {
           moves.push({ row: newRow, col: newCol })
