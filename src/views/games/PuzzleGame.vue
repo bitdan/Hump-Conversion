@@ -12,7 +12,7 @@
                 v-bind="props"
                 :loading="isLoading"
               >
-                选择图片
+                上传图片
               </v-btn>
             </template>
             
@@ -22,23 +22,44 @@
               </v-card-title>
               
               <v-card-text>
-                <div class="grid grid-cols-2 gap-4">
-                  <div
-                    v-for="(image, index) in availableImages"
-                    :key="index"
-                    class="relative cursor-pointer rounded-lg overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all"
-                    :class="{'ring-2 ring-blue-500': selectedImageIndex === index}"
-                    @click="selectImage(index)"
+                <div class="flex flex-col gap-4">
+                  <!-- 文件上传区域 -->
+                  <div 
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                    @click="triggerFileInput"
+                    @dragover.prevent
+                    @drop.prevent="handleFileDrop"
                   >
-                    <img
-                      :src="image.url"
-                      class="w-full h-40 object-cover"
-                      :alt="image.name"
+                    <input
+                      type="file"
+                      ref="fileInput"
+                      class="hidden"
+                      accept="image/*"
+                      @change="handleFileSelect"
                     />
-                    <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
-                      {{ image.name }}
-                    </div>
+                    <v-icon icon="mdi-upload" size="32" class="mb-2"></v-icon>
+                    <p class="text-gray-600">点击或拖拽图片到此处上传</p>
+                    <p class="text-sm text-gray-500 mt-1">支持 jpg、png 格式</p>
                   </div>
+
+                  <!-- 预览区域 -->
+                  <div v-if="uploadedImage" class="mt-4">
+                    <img
+                      :src="uploadedImage"
+                      class="w-full max-h-[300px] object-contain rounded-lg"
+                      alt="预览图"
+                    />
+                  </div>
+
+                  <!-- 错误提示 -->
+                  <v-alert
+                    v-if="uploadError"
+                    type="error"
+                    class="mt-2"
+                    density="compact"
+                  >
+                    {{ uploadError }}
+                  </v-alert>
                 </div>
               </v-card-text>
               
@@ -47,7 +68,7 @@
                 <v-btn
                   color="primary"
                   @click="confirmImageSelection"
-                  :disabled="selectedImageIndex === -1"
+                  :disabled="!uploadedImage"
                 >
                   确认选择
                 </v-btn>
@@ -164,6 +185,9 @@
   const gameContainer = ref<HTMLElement | null>(null)
   const layer = ref<any>(null)
   const fileInput = ref<HTMLInputElement | null>(null)
+  const uploadedImage = ref<string>('')
+  const uploadError = ref<string>('')
+  const showImageSelector = ref(false)
   
   // 难度设置
   const difficulty = ref(3)
@@ -179,42 +203,59 @@
     height: 600
   }))
   
-  // 获取所有图片
-  const puzzleImages = import.meta.glob('/public/puzzle/*.{jpg,jpeg,png}', {
-    eager: true,
-    import: 'default'
-  }) as Record<string, string>
+  // 触发文件选择
+  function triggerFileInput() {
+    fileInput.value?.click()
+  }
   
-  // 图片选择相关状态
-  const showImageSelector = ref(false)
-  const availableImages = ref<{ name: string; url: string }[]>([])
-  const selectedImageIndex = ref(-1)
-  
-  // 加载可用图片
-  async function loadAvailableImages() {
-    isLoading.value = true
-    try {
-      // 处理图片路径
-      availableImages.value = Object.entries(puzzleImages).map(([path, url]) => ({
-        name: path.split('/').pop() || path,
-        url: url
-      }))
-    } catch (error) {
-      console.error('加载图片列表失败:', error)
-    } finally {
-      isLoading.value = false
+  // 处理文件选择
+  async function handleFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement
+    if (input.files?.length) {
+      await processFile(input.files[0])
     }
   }
   
-  // 选择图片
-  function selectImage(index: number) {
-    selectedImageIndex.value = index
+  // 处理文件拖放
+  async function handleFileDrop(event: DragEvent) {
+    const files = event.dataTransfer?.files
+    if (files?.length) {
+      await processFile(files[0])
+    }
+  }
+  
+  // 处理文件
+  async function processFile(file: File) {
+    uploadError.value = ''
+    
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      uploadError.value = '请上传图片文件'
+      return
+    }
+
+    // 验证文件大小 (限制为 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      uploadError.value = '图片大小不能超过 5MB'
+      return
+    }
+
+    try {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        uploadedImage.value = e.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      uploadError.value = '图片处理失败，请重试'
+      console.error('Error processing image:', error)
+    }
   }
   
   // 确认图片选择
   function confirmImageSelection() {
-    if (selectedImageIndex.value !== -1) {
-      selectedImage.value = availableImages.value[selectedImageIndex.value].url
+    if (uploadedImage.value) {
+      selectedImage.value = uploadedImage.value
       showImageSelector.value = false
     }
   }
@@ -230,7 +271,17 @@
   
     const image = new Image()
     image.src = selectedImage.value
-    await new Promise(resolve => { image.onload = resolve })
+    
+    try {
+      await new Promise((resolve, reject) => {
+        image.onload = resolve
+        image.onerror = reject
+      })
+    } catch (error) {
+      console.error('Error loading image:', error)
+      resetGame()
+      return
+    }
   
     const gridSize = difficulty.value
     const pieceWidth = stageConfig.value.width / gridSize
@@ -412,7 +463,7 @@
   
   // 生命周期钩子
   onMounted(() => {
-    loadAvailableImages()
+    // 移除 loadAvailableImages 调用，因为我们现在使用文件上传
   })
   
   onUnmounted(() => {
