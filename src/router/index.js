@@ -150,6 +150,15 @@ export const routes = [
                 }
             },
             {
+                path: '/games/blind-chinese-chess',
+                name: 'BlindChineseChess',
+                component: () => import('@/views/games/BlindChineseChess.vue'),
+                meta: {
+                    title: '揭棋',
+                    icon: 'mdi-chess-queen'
+                }
+            },
+            {
                 path: '/games/snake',
                 name: 'Snake',
                 component: () => import('@/views/games/Snake.vue'),
