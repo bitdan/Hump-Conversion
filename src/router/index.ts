@@ -1,6 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
-export const routes = [
+declare module 'vue-router' {
+  interface RouteMeta {
+    title: string;
+    icon: string;
+  }
+}
+
+export const routes: RouteRecordRaw[] = [
     {
         path: '/',
         redirect: '/case-converter'
@@ -248,4 +255,4 @@ const router = createRouter({
     routes
 })
 
-export default router
+export default router 

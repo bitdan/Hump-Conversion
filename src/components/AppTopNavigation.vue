@@ -137,44 +137,61 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+<script setup lang="ts">
+import { ref, computed, nextTick, watch, onMounted, type ComponentPublicInstance } from 'vue'
+import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router'
 import { useNavStore } from '@/stores/nav'
+
+type RouteItem = RouteRecordRaw & {
+  name?: string;
+  path: string;
+  meta?: {
+    title: string;
+    icon: string;
+  };
+  children?: RouteItem[];
+}
+
+type VuetifyActivator = Element | ComponentPublicInstance | string | "parent";
 
 const router = useRouter()
 const route = useRoute()
 const navStore = useNavStore()
 
 const drawer = ref(false)
-const activeTab = ref(null)
+const activeTab = ref<string | null>(null)
 const showSubmenu = ref(false)
-const submenuActivator = ref(null)
-const currentSubmenuItems = ref([])
+const submenuActivator = ref<VuetifyActivator | undefined>("parent")
+const currentSubmenuItems = ref<RouteItem[]>([])
 
 // 计算主路由（一级菜单）
-const mainRoutes = computed(() => 
-  router.options.routes.filter(route => route.name && route.path !== '/')
+const mainRoutes = computed<RouteItem[]>(() => 
+  router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
 )
 
 // 路由判断方法
-const isCurrentRoute = (path) => {
+const isCurrentRoute = (path: string): boolean => {
   return route.path === path
 }
 
-const isGroupActive = (item) => {
-  return item.children?.some(child => isCurrentRoute(child.path))
+const isGroupActive = (item: RouteItem): boolean => {
+  return item.children?.some(child => isCurrentRoute(child.path)) || false
 }
 
 // 处理标签页变化
-const handleTabChange = (newValue) => {
+const handleTabChange = (newValue: unknown) => {
+  if (typeof newValue !== 'string') return
+  
   const selectedItem = mainRoutes.value.find(item => item.name === newValue)
   if (selectedItem?.children) {
     currentSubmenuItems.value = selectedItem.children
     showSubmenu.value = true
     // 获取当前点击的标签页元素作为子菜单的锚点
     nextTick(() => {
-      submenuActivator.value = document.querySelector(`[value="${newValue}"]`)
+      const element = document.querySelector(`[value="${newValue}"]`)
+      if (element) {
+        submenuActivator.value = element
+      }
     })
   } else {
     showSubmenu.value = false
@@ -192,7 +209,7 @@ onMounted(() => {
   const currentMainRoute = mainRoutes.value.find(item => 
     item.path === route.path || item.children?.some(child => child.path === route.path)
   )
-  if (currentMainRoute) {
+  if (currentMainRoute?.name) {
     activeTab.value = currentMainRoute.name
   }
 })
@@ -204,7 +221,7 @@ watch(
     const currentMainRoute = mainRoutes.value.find(item => 
       item.path === newPath || item.children?.some(child => child.path === newPath)
     )
-    if (currentMainRoute) {
+    if (currentMainRoute?.name) {
       activeTab.value = currentMainRoute.name
     }
   }

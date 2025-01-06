@@ -1,6 +1,6 @@
-import {createApp} from "vue";
-import {createPinia} from 'pinia';
-import {createVuetify} from "vuetify";
+import { createApp, type App as VueApp } from "vue";
+import { createPinia } from 'pinia';
+import { createVuetify, type ThemeDefinition } from "vuetify";
 import "vuetify/styles";
 import "./main.css";
 import App from "./App.vue";
@@ -11,27 +11,29 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import VueKonva from 'vue-konva'
 
+const lightTheme: ThemeDefinition = {
+  colors: {
+    primary: '#1867C0',
+    secondary: '#5CBBF6',
+  },
+}
+
 const vuetify = createVuetify({
   components,
   directives,
   theme: {
     defaultTheme: 'light',
     themes: {
-      light: {
-        colors: {
-          primary: '#1867C0',
-          secondary: '#5CBBF6',
-        },
-      },
+      light: lightTheme,
     },
   },
 })
 
-const app = createApp(App)
+const app: VueApp = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(VueKonva) 
+app.use(VueKonva)
 app.use(router)
 app.use(vuetify)
-app.mount('#app')
+app.mount('#app') 

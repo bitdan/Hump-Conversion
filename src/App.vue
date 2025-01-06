@@ -17,8 +17,8 @@
   </v-app>
 </template>
 
-<script setup>
-import { computed } from 'vue'
+<script setup lang="ts">
+import { computed, type Component } from 'vue'
 import AppNavigation from '@/components/AppNavigation.vue'
 import AppTopNavigation from '@/components/AppTopNavigation.vue'
 import { useNavStore } from '@/stores/nav'
@@ -27,7 +27,7 @@ const navStore = useNavStore()
 const navMode = computed(() => navStore.mode)
 
 // 根据导航模式计算当前应该显示的导航组件
-const currentNav = computed(() => 
+const currentNav = computed<Component>(() => 
   navMode.value === 'side' ? AppNavigation : AppTopNavigation
 )
 </script>

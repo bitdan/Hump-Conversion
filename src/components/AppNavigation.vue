@@ -86,36 +86,46 @@
   </v-navigation-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router'
 import { useNavStore } from '@/stores/nav'
+
+type RouteItem = RouteRecordRaw & {
+  name?: string;
+  path: string;
+  meta?: {
+    title: string;
+    icon: string;
+  };
+  children?: RouteItem[];
+}
 
 const router = useRouter()
 const route = useRoute()
 const drawer = ref(true)
 const rail = ref(false)
 const navStore = useNavStore()
-const openedGroup = ref(null)
+const openedGroup = ref<string | null>(null)
 
 // 添加导航模式计算属性和切换方法
 const isTopNav = computed(() => navStore.mode === 'top')
 
 // Unified routes for both top and side navigation
-const unifiedRoutes = computed(() => 
-  router.options.routes.filter(route => route.name && route.path !== '/')
+const unifiedRoutes = computed<RouteItem[]>(() => 
+  router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
 )
 
 const toggleNavMode = () => {
   navStore.toggleMode()
 }
 
-const isCurrentRoute = (path) => {
+const isCurrentRoute = (path: string): boolean => {
   return route.path === path
 }
 
-const isGroupActive = (item) => {
-  return item.children?.some(child => isCurrentRoute(child.path))
+const isGroupActive = (item: RouteItem): boolean => {
+  return item.children?.some(child => isCurrentRoute(child.path)) || false
 }
 
 // 监听路由变化，自动展开当前路由所在的菜单组
@@ -129,7 +139,7 @@ watch(
     
     // 如果找到了对应的菜单组，且不是当前已展开的组，则切换
     if (currentGroup?.name !== openedGroup.value) {
-      openedGroup.value = currentGroup?.name || null
+      openedGroup.value = currentGroup?.name?.toString() || null
     }
   },
   { immediate: true }
