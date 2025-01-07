@@ -40,18 +40,11 @@ export default defineConfig(({ command, mode }) => {
       target: 'es2015',
       outDir: 'dist',
       assetsDir: 'assets',
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: mode === 'production',
-          drop_debugger: mode === 'production'
-        }
-      },
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
-            'vue-vendor': ['vue', 'vue-router', 'vuetify'],
-            'utils': ['@vueuse/core'],
+            'vue-vendor': ['vue', 'vue-router', 'vuetify']
           }
         }
       },
