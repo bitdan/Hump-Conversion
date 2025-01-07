@@ -458,14 +458,17 @@ function movePiece(piece: Piece, target: Position) {
     piece.isRevealed = true
   }
 
-  // 检查是否将军
-  isCheck.value = checkForCheck()
-  if (isCheck.value) {
-    checkSound.play().catch(() => {})
-  }
-
   // 切换玩家
   currentPlayer.value = currentPlayer.value === 'red' ? 'black' : 'red'
+
+  // 检查是否将军（注意：这里要在切换玩家后检查，因为当前玩家已经变成了对手）
+  isCheck.value = checkForCheck()
+  if (isCheck.value) {
+    // 确保将军音效播放
+    setTimeout(() => {
+      checkSound.play().catch(() => {})
+    }, 100)
+  }
 }
 
 // 获取车的移动位置
@@ -720,14 +723,19 @@ function getPawnMoves(piece: Piece): Position[] {
 
 // 检查是否将军
 function checkForCheck(): boolean {
-  const king = pieces.value.find(p => p.type === (currentPlayer.value === 'red' ? '将' : '帅'))
+  // 找到对方的将/帅
+  const king = pieces.value.find(p => 
+    p.player === currentPlayer.value && (p.type === '将' || p.type === '帅')
+  )
   if (!king) return false
 
-  // 检查对方所有棋子是否可以吃到将/帅
+  // 检查对手的所有棋子是否可以吃到将/帅
   return pieces.value.some(piece => {
-    if (piece.player === currentPlayer.value) return false
-    const moves = getValidMoves(piece)
-    return moves.some(move => move.row === king.row && move.col === king.col)
+    if (piece.player !== currentPlayer.value) {
+      const moves = getValidMoves(piece)
+      return moves.some(move => move.row === king.row && move.col === king.col)
+    }
+    return false
   })
 }
 
