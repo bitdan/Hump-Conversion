@@ -566,11 +566,26 @@ function getAdvisorMoves(piece: Piece): Position[] {
     const newCol = piece.col + dx
     const newRow = piece.row + dy
 
-    // 在揭棋中，士（仕）可以在整个棋盘上移动
+    // 检查是否在棋盘范围内
     if (newCol >= 0 && newCol < BOARD_SIZE.cols && newRow >= 0 && newRow < BOARD_SIZE.rows) {
-      const targetPiece = pieces.value.find(p => p.row === newRow && p.col === newCol)
-      if (!targetPiece || targetPiece.player !== piece.player) {
-        moves.push({ row: newRow, col: newCol })
+      // 如果是暗子，只能在九宫格内移动
+      if (!piece.isRevealed) {
+        // 检查是否在九宫格内
+        if (newCol >= 3 && newCol <= 5) {
+          if ((piece.player === 'red' && newRow >= 7 && newRow <= 9) ||
+              (piece.player === 'black' && newRow >= 0 && newRow <= 2)) {
+            const targetPiece = pieces.value.find(p => p.row === newRow && p.col === newCol)
+            if (!targetPiece || targetPiece.player !== piece.player) {
+              moves.push({ row: newRow, col: newCol })
+            }
+          }
+        }
+      } else {
+        // 如果是明子，可以在整个棋盘上移动
+        const targetPiece = pieces.value.find(p => p.row === newRow && p.col === newCol)
+        if (!targetPiece || targetPiece.player !== piece.player) {
+          moves.push({ row: newRow, col: newCol })
+        }
       }
     }
   }
