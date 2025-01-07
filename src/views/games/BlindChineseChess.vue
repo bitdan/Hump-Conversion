@@ -72,6 +72,7 @@ const moveHistory = ref<Piece[][]>([])
 const isCheck = ref(false)
 const checkSound = new Audio('/sounds/check.wav')
 const captureSound = new Audio('/sounds/capture.wav')
+const eatSound = new Audio('/sounds/eat.wav')
 
 // 计算棋盘总大小
 const BOARD_WIDTH = CELL_SIZE * (BOARD_SIZE.cols - 1) + BOARD_PADDING * 2
@@ -438,11 +439,14 @@ function movePiece(piece: Piece, target: Position) {
   if (targetPiece) {
     pieces.value = pieces.value.filter(p => p !== targetPiece)
     // 播放吃子音效
-    captureSound.play()
+    eatSound.play().catch(() => {})
     // 如果吃掉的是将或帅，游戏结束
     if (targetPiece.type === '将' || targetPiece.type === '帅') {
       gameOver.value = true
     }
+  } else {
+    // 如果只是移动棋子，播放走子音效
+    captureSound.play().catch(() => {})
   }
 
   // 移动棋子
@@ -457,7 +461,7 @@ function movePiece(piece: Piece, target: Position) {
   // 检查是否将军
   isCheck.value = checkForCheck()
   if (isCheck.value) {
-    checkSound.play()
+    checkSound.play().catch(() => {})
   }
 
   // 切换玩家

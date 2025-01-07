@@ -69,6 +69,7 @@ const canUndo = ref(false)
 const moveHistory = ref<Piece[][]>([])
 const checkSound = new Audio('/sounds/check.wav') // 需要添加音效文件
 const captureSound = new Audio('/sounds/capture.wav') // 可选的吃子音效
+const eatSound = new Audio('/sounds/eat.wav')
 
 // 添加将军状态
 const isCheck = ref(false)
@@ -340,12 +341,15 @@ function handleClick(event: MouseEvent) {
       if (targetPiece) {
         // 吃子
         pieces.value = pieces.value.filter(p => p !== targetPiece)
-        captureSound.play().catch(() => {}) // 播放吃子音效
+        eatSound.play().catch(() => {}) // 播放吃子音效
         
         // 检查是否将军
         if (targetPiece.type === '将' || targetPiece.type === '帅') {
           gameOver.value = true
         }
+      } else {
+        // 只是移动棋子
+        captureSound.play().catch(() => {}) // 播放走子音效
       }
 
       selectedPiece.value.row = pos.row
