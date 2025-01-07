@@ -123,15 +123,19 @@ function initializePieces() {
     { type: '将', player: 'black', row: 0, col: 4, isRevealed: true }
   ]
 
-  // 创建所有可用的棋子类型数组（除了将帅）
-  const availablePieces: PieceType[] = [
-    '车', '车', '马', '马', '相', '相', '士', '士', '炮', '炮', '兵', '兵', '兵', '兵', '兵',
+  // 创建红方和黑方的棋子类型数组
+  const redPieces: PieceType[] = [
+    '车', '车', '马', '马', '相', '相', '士', '士', '炮', '炮', '兵', '兵', '兵', '兵', '兵'
+  ]
+  const blackPieces: PieceType[] = [
     '车', '车', '马', '马', '象', '象', '士', '士', '炮', '炮', '卒', '卒', '卒', '卒', '卒'
   ]
 
-  // 随机打乱所有可用棋子
-  shuffleArray(availablePieces)
-  let pieceIndex = 0
+  // 分别打乱红方和黑方棋子
+  shuffleArray(redPieces)
+  shuffleArray(blackPieces)
+  let redIndex = 0
+  let blackIndex = 0
 
   // 添加红方棋子到固定位置
   // 第一排（除了帅）
@@ -145,7 +149,7 @@ function initializePieces() {
       else originalType = '士'
 
       initialPieces.push({
-        type: availablePieces[pieceIndex++],
+        type: redPieces[redIndex++],
         player: 'red',
         row: 9,
         col,
@@ -156,7 +160,7 @@ function initializePieces() {
   }
   // 炮的位置
   initialPieces.push({
-    type: availablePieces[pieceIndex++],
+    type: redPieces[redIndex++],
     player: 'red',
     row: 7,
     col: 1,
@@ -164,7 +168,7 @@ function initializePieces() {
     originalType: '炮'
   })
   initialPieces.push({
-    type: availablePieces[pieceIndex++],
+    type: redPieces[redIndex++],
     player: 'red',
     row: 7,
     col: 7,
@@ -174,7 +178,7 @@ function initializePieces() {
   // 兵的位置
   for (let col = 0; col < 9; col += 2) {
     initialPieces.push({
-      type: availablePieces[pieceIndex++],
+      type: redPieces[redIndex++],
       player: 'red',
       row: 6,
       col,
@@ -195,7 +199,7 @@ function initializePieces() {
       else originalType = '士'
 
       initialPieces.push({
-        type: availablePieces[pieceIndex++],
+        type: blackPieces[blackIndex++],
         player: 'black',
         row: 0,
         col,
@@ -206,7 +210,7 @@ function initializePieces() {
   }
   // 炮的位置
   initialPieces.push({
-    type: availablePieces[pieceIndex++],
+    type: blackPieces[blackIndex++],
     player: 'black',
     row: 2,
     col: 1,
@@ -214,7 +218,7 @@ function initializePieces() {
     originalType: '炮'
   })
   initialPieces.push({
-    type: availablePieces[pieceIndex++],
+    type: blackPieces[blackIndex++],
     player: 'black',
     row: 2,
     col: 7,
@@ -224,7 +228,7 @@ function initializePieces() {
   // 卒的位置
   for (let col = 0; col < 9; col += 2) {
     initialPieces.push({
-      type: availablePieces[pieceIndex++],
+      type: blackPieces[blackIndex++],
       player: 'black',
       row: 3,
       col,
@@ -551,8 +555,8 @@ function getAdvisorMoves(piece: Piece): Position[] {
     const newCol = piece.col + dx
     const newRow = piece.row + dy
 
-    // 在揭棋中，士（仕）可以过河
-    if (newCol >= 3 && newCol <= 5 && newRow >= 0 && newRow < BOARD_SIZE.rows) {
+    // 在揭棋中，士（仕）可以在整个棋盘上移动
+    if (newCol >= 0 && newCol < BOARD_SIZE.cols && newRow >= 0 && newRow < BOARD_SIZE.rows) {
       const targetPiece = pieces.value.find(p => p.row === newRow && p.col === newCol)
       if (!targetPiece || targetPiece.player !== piece.player) {
         moves.push({ row: newRow, col: newCol })
