@@ -37,3 +37,8 @@
     Key Conventions
     - Optimize Web Vitals (LCP, CLS, FID) using tools like Lighthouse or WebPageTest.
     
+    Configuration Principles:
+    - Never modify working configurations without justification
+    - Stick to default configurations unless specific needs arise
+    - Thoroughly understand existing configurations before implementing additions
+    - Keep configurations simple and maintainable
