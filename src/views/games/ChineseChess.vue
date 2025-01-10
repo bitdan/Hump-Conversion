@@ -1,20 +1,20 @@
 <template>
-  <div class="container mx-auto p-5 bg-white rounded-lg shadow-md">
+  <div class="container mx-auto p-2 sm:p-5 bg-white rounded-lg shadow-md">
     <div class="flex flex-col items-center">
-      <h1 class="text-2xl text-gray-800 py-5">中国象棋</h1>
+      <h1 class="text-xl sm:text-2xl text-gray-800 py-3 sm:py-5">中国象棋</h1>
 
       <!-- 游戏控制区 -->
-      <div class="flex gap-4 mb-6">
-        <v-btn color="primary" @click="startNewGame">
+      <div class="flex gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <v-btn size="small" sm:size="medium" color="primary" @click="startNewGame">
           新游戏
         </v-btn>
-        <v-btn color="error" @click="undoMove" :disabled="!canUndo">
+        <v-btn size="small" sm:size="medium" color="error" @click="undoMove" :disabled="!canUndo">
           悔棋
         </v-btn>
       </div>
 
       <!-- 游戏状态显示 -->
-      <div class="mb-4 text-lg font-semibold" 
+      <div class="mb-2 sm:mb-4 text-base sm:text-lg font-semibold" 
            :class="{
              'text-red-600': currentPlayer === 'red',
              'text-black': currentPlayer === 'black'
@@ -26,7 +26,7 @@
       </div>
 
       <!-- 棋盘容器 -->
-      <div ref="boardContainer" class="relative">
+      <div ref="boardContainer" class="relative touch-none">
         <canvas 
           ref="boardCanvas" 
           class="border border-gray-300 shadow-md"
@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 // 类型定义
 type Player = 'red' | 'black'
@@ -53,9 +53,31 @@ type Piece = {
 
 // 棋盘常量
 const BOARD_SIZE = { rows: 10, cols: 9 }
-const CELL_SIZE = 60
-const BOARD_PADDING = 30
-const PIECE_RADIUS = 25
+const CELL_SIZE = ref(60)
+const BOARD_PADDING = ref(30)
+const PIECE_RADIUS = ref(25)
+
+// 计算棋盘总大小
+const BOARD_WIDTH = computed(() => CELL_SIZE.value * (BOARD_SIZE.cols - 1) + BOARD_PADDING.value * 2)
+const BOARD_HEIGHT = computed(() => CELL_SIZE.value * (BOARD_SIZE.rows - 1) + BOARD_PADDING.value * 2)
+
+// 添加响应式调整函数
+function adjustBoardSize() {
+  const isMobile = window.innerWidth < 768
+  const screenWidth = window.innerWidth
+  const screenHeight = window.innerHeight
+  const minDimension = Math.min(screenWidth, screenHeight)
+
+  if (isMobile) {
+    CELL_SIZE.value = Math.floor((minDimension - 40) / (BOARD_SIZE.cols + 1))
+    BOARD_PADDING.value = Math.floor(CELL_SIZE.value / 2)
+    PIECE_RADIUS.value = Math.floor(CELL_SIZE.value * 0.4)
+  } else {
+    CELL_SIZE.value = 60
+    BOARD_PADDING.value = 30
+    PIECE_RADIUS.value = 25
+  }
+}
 
 // 状态变量
 const currentPlayer = ref<Player>('red')
@@ -73,10 +95,6 @@ const eatSound = new Audio('/sounds/eat.wav')
 
 // 添加将军状态
 const isCheck = ref(false)
-
-// 计算棋盘总大小
-const BOARD_WIDTH = CELL_SIZE * (BOARD_SIZE.cols - 1) + BOARD_PADDING * 2
-const BOARD_HEIGHT = CELL_SIZE * (BOARD_SIZE.rows - 1) + BOARD_PADDING * 2
 
 // 初始化棋子位置
 function initializePieces() {
@@ -123,11 +141,11 @@ function initializePieces() {
 
 // 绘制棋盘
 function drawBoard(ctx: CanvasRenderingContext2D) {
-  ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT)
+  ctx.clearRect(0, 0, BOARD_WIDTH.value, BOARD_HEIGHT.value)
   
   // 绘制背景
   ctx.fillStyle = '#DEB887'
-  ctx.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT)
+  ctx.fillRect(0, 0, BOARD_WIDTH.value, BOARD_HEIGHT.value)
 
   // 绘制网格线
   ctx.beginPath()
@@ -136,20 +154,20 @@ function drawBoard(ctx: CanvasRenderingContext2D) {
 
   // 绘制横线（10条）
   for (let i = 0; i < 10; i++) {
-    const y = BOARD_PADDING + i * CELL_SIZE
-    ctx.moveTo(BOARD_PADDING, y)
-    ctx.lineTo(BOARD_WIDTH - BOARD_PADDING, y)
+    const y = BOARD_PADDING.value + i * CELL_SIZE.value
+    ctx.moveTo(BOARD_PADDING.value, y)
+    ctx.lineTo(BOARD_WIDTH.value - BOARD_PADDING.value, y)
   }
 
   // 绘制竖线（9条）
   for (let i = 0; i < 9; i++) {
-    const x = BOARD_PADDING + i * CELL_SIZE
+    const x = BOARD_PADDING.value + i * CELL_SIZE.value
     // 上半部分（0-4）
-    ctx.moveTo(x, BOARD_PADDING)
-    ctx.lineTo(x, BOARD_PADDING + 4 * CELL_SIZE)
+    ctx.moveTo(x, BOARD_PADDING.value)
+    ctx.lineTo(x, BOARD_PADDING.value + 4 * CELL_SIZE.value)
     // 下半部分（5-9）
-    ctx.moveTo(x, BOARD_PADDING + 5 * CELL_SIZE)
-    ctx.lineTo(x, BOARD_HEIGHT - BOARD_PADDING)
+    ctx.moveTo(x, BOARD_PADDING.value + 5 * CELL_SIZE.value)
+    ctx.lineTo(x, BOARD_HEIGHT.value - BOARD_PADDING.value)
   }
   ctx.stroke()
 
@@ -158,27 +176,27 @@ function drawBoard(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = '#000000'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('楚 河', BOARD_WIDTH / 4, BOARD_HEIGHT / 2)
-  ctx.fillText('汉 界', BOARD_WIDTH * 3 / 4, BOARD_HEIGHT / 2)
+  ctx.fillText('楚 河', BOARD_WIDTH.value / 4, BOARD_HEIGHT.value / 2)
+  ctx.fillText('汉 界', BOARD_WIDTH.value * 3 / 4, BOARD_HEIGHT.value / 2)
 
   // 绘制斜线（九宫格）
   ctx.beginPath()
   ctx.lineWidth = 1
   // 红方九宫格
-  const redStartX = BOARD_PADDING + 3 * CELL_SIZE
-  const redStartY = BOARD_PADDING + 7 * CELL_SIZE
-  const redEndX = BOARD_PADDING + 5 * CELL_SIZE
-  const redEndY = BOARD_PADDING + 9 * CELL_SIZE
+  const redStartX = BOARD_PADDING.value + 3 * CELL_SIZE.value
+  const redStartY = BOARD_PADDING.value + 7 * CELL_SIZE.value
+  const redEndX = BOARD_PADDING.value + 5 * CELL_SIZE.value
+  const redEndY = BOARD_PADDING.value + 9 * CELL_SIZE.value
   ctx.moveTo(redStartX, redStartY)
   ctx.lineTo(redEndX, redEndY)
   ctx.moveTo(redEndX, redStartY)
   ctx.lineTo(redStartX, redEndY)
   
   // 黑方九宫格
-  const blackStartX = BOARD_PADDING + 3 * CELL_SIZE
-  const blackStartY = BOARD_PADDING
-  const blackEndX = BOARD_PADDING + 5 * CELL_SIZE
-  const blackEndY = BOARD_PADDING + 2 * CELL_SIZE
+  const blackStartX = BOARD_PADDING.value + 3 * CELL_SIZE.value
+  const blackStartY = BOARD_PADDING.value
+  const blackEndX = BOARD_PADDING.value + 5 * CELL_SIZE.value
+  const blackEndY = BOARD_PADDING.value + 2 * CELL_SIZE.value
   ctx.moveTo(blackStartX, blackStartY)
   ctx.lineTo(blackEndX, blackEndY)
   ctx.moveTo(blackEndX, blackStartY)
@@ -206,8 +224,8 @@ function drawPositionMarks(ctx: CanvasRenderingContext2D) {
   ctx.beginPath()
   positions.forEach(({ row, cols }) => {
     cols.forEach(col => {
-      const x = BOARD_PADDING + col * CELL_SIZE
-      const y = BOARD_PADDING + row * CELL_SIZE
+      const x = BOARD_PADDING.value + col * CELL_SIZE.value
+      const y = BOARD_PADDING.value + row * CELL_SIZE.value
       
       // 绘制十字标记
       if (col > 0) { // 左
@@ -234,12 +252,12 @@ function drawPositionMarks(ctx: CanvasRenderingContext2D) {
 // 绘制棋子
 function drawPieces(ctx: CanvasRenderingContext2D) {
   pieces.value.forEach(piece => {
-    const x = BOARD_PADDING + piece.col * CELL_SIZE
-    const y = BOARD_PADDING + piece.row * CELL_SIZE
+    const x = BOARD_PADDING.value + piece.col * CELL_SIZE.value
+    const y = BOARD_PADDING.value + piece.row * CELL_SIZE.value
 
     // 绘制棋子背景
     ctx.beginPath()
-    ctx.arc(x, y, PIECE_RADIUS, 0, Math.PI * 2)
+    ctx.arc(x, y, PIECE_RADIUS.value, 0, Math.PI * 2)
     ctx.fillStyle = '#f0d5b6'
     ctx.fill()
     ctx.strokeStyle = '#000000'
@@ -256,7 +274,7 @@ function drawPieces(ctx: CanvasRenderingContext2D) {
     // 绘制选中状态
     if (selectedPiece.value === piece) {
       ctx.beginPath()
-      ctx.arc(x, y, PIECE_RADIUS + 2, 0, Math.PI * 2)
+      ctx.arc(x, y, PIECE_RADIUS.value + 2, 0, Math.PI * 2)
       ctx.strokeStyle = '#00ff00'
       ctx.lineWidth = 2
       ctx.stroke()
@@ -265,8 +283,8 @@ function drawPieces(ctx: CanvasRenderingContext2D) {
 
   // 绘制有效移动位置
   validMoves.value.forEach(pos => {
-    const x = BOARD_PADDING + pos.col * CELL_SIZE
-    const y = BOARD_PADDING + pos.row * CELL_SIZE
+    const x = BOARD_PADDING.value + pos.col * CELL_SIZE.value
+    const y = BOARD_PADDING.value + pos.row * CELL_SIZE.value
 
     ctx.beginPath()
     ctx.arc(x, y, 5, 0, Math.PI * 2)
@@ -292,8 +310,8 @@ function getBoardPosition(clientX: number, clientY: number): Position | null {
   const x = clientX - rect.left
   const y = clientY - rect.top
 
-  const col = Math.round((x - BOARD_PADDING) / CELL_SIZE)
-  const row = Math.round((y - BOARD_PADDING) / CELL_SIZE)
+  const col = Math.round((x - BOARD_PADDING.value) / CELL_SIZE.value)
+  const row = Math.round((y - BOARD_PADDING.value) / CELL_SIZE.value)
 
   if (col >= 0 && col < BOARD_SIZE.cols && row >= 0 && row < BOARD_SIZE.rows) {
     return { row, col }
@@ -321,10 +339,13 @@ function checkForCheck(player: Player): boolean {
 }
 
 // 处理点击事件
-function handleClick(event: MouseEvent) {
+function handleClick(event: MouseEvent | TouchEvent) {
   if (gameOver.value) return
 
-  const pos = getBoardPosition(event.clientX, event.clientY)
+  const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
+  const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
+
+  const pos = getBoardPosition(clientX, clientY)
   if (!pos) return
 
   const clickedPiece = pieces.value.find(p => p.row === pos.row && p.col === pos.col)
@@ -644,29 +665,50 @@ function startNewGame() {
 
 // 生命周期钩子
 onMounted(() => {
+  adjustBoardSize()
   if (boardCanvas.value) {
-    boardCanvas.value.width = BOARD_WIDTH
-    boardCanvas.value.height = BOARD_HEIGHT
+    boardCanvas.value.width = BOARD_WIDTH.value
+    boardCanvas.value.height = BOARD_HEIGHT.value
     startNewGame()
   }
 })
 
 // 监听窗口大小变化
 function handleResize() {
+  adjustBoardSize()
+  if (boardCanvas.value) {
+    boardCanvas.value.width = BOARD_WIDTH.value
+    boardCanvas.value.height = BOARD_HEIGHT.value
+  }
   updateCanvas()
 }
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  // 添加触摸事件监听
+  if (boardCanvas.value) {
+    boardCanvas.value.addEventListener('touchstart', handleClick)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  if (boardCanvas.value) {
+    boardCanvas.value.removeEventListener('touchstart', handleClick)
+  }
 })
 </script>
 
 <style scoped>
-.board-container {
-  user-select: none;
+.container {
+  min-height: calc(100vh - 64px);
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
 }
 </style> 

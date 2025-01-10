@@ -1,23 +1,23 @@
 <template>
-  <div class="flex flex-col items-center justify-center">
-    <h1 class="text-4xl font-bold mb-8">五子棋</h1>
+  <div class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
+    <h1 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-8">五子棋</h1>
 
     <!-- 游戏状态 -->
-    <div class="mb-4 text-xl">
+    <div class="mb-4 text-base sm:text-xl">
       <p v-if="winner">获胜者: {{ winner === 'black' ? '黑棋' : '白棋' }}</p>
       <p v-else>当前玩家: {{ currentPlayer === 'black' ? '黑棋' : '白棋' }}</p>
     </div>
 
     <!-- 棋盘容器 -->
     <div
-        class="relative bg-amber-100 rounded-lg shadow-lg p-[30px]"
+        class="relative bg-amber-100 rounded-lg shadow-lg p-[15px] sm:p-[30px] touch-none"
         :style="{
-          width: `${boardSize + 60}px`,
-          height: `${boardSize + 60}px`
+          width: `${boardSize + (isMobile ? 30 : 60)}px`,
+          height: `${boardSize + (isMobile ? 30 : 60)}px`
         }"
     >
       <!-- 棋盘网格线 -->
-      <div class="absolute inset-[30px]">
+      <div class="absolute" :style="{ inset: `${isMobile ? '15px' : '30px'}` }">
         <div
             v-for="i in gridSize"
             :key="`h${i}`"
@@ -43,7 +43,7 @@
       </div>
 
       <!-- 点击区域和棋子 -->
-      <div class="absolute inset-[30px]">
+      <div class="absolute" :style="{ inset: `${isMobile ? '15px' : '30px'}` }">
         <div
             v-for="y in gridSize"
             :key="`row${y}`"
@@ -56,20 +56,24 @@
               :style="{
                 left: `${(x-1) * cellSize}px`,
                 top: `${(y-1) * cellSize}px`,
-                width: '30px',
-                height: '30px',
+                width: `${isMobile ? '20px' : '30px'}`,
+                height: `${isMobile ? '20px' : '30px'}`,
                 transform: 'translate(-50%, -50%)',
                 cursor: !board[y-1][x-1] && !winner ? 'pointer' : 'default'
               }"
               @click="makeMove(x-1, y-1)"
+              @touchstart.prevent="makeMove(x-1, y-1)"
           >
             <div
                 v-if="board[y-1][x-1]"
-                class="absolute w-[24px] h-[24px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
+                :style="{
+                  width: `${isMobile ? '16px' : '24px'}`,
+                  height: `${isMobile ? '16px' : '24px'}`
+                }"
                 :class="{
                   'bg-gray-900': board[y-1][x-1] === 'black',
-                  'bg-white border-2 border-gray-900': board[y-1][x-1] === 'white',
-                  'shadow-lg': true
+                  'bg-white border-2 border-gray-900': board[y-1][x-1] === 'white'
                 }"
             ></div>
           </div>
@@ -79,10 +83,12 @@
       <!-- 最后落子标记 -->
       <div
           v-if="lastMove"
-          class="absolute w-2 h-2 bg-red-500 rounded-full"
+          class="absolute bg-red-500 rounded-full"
           :style="{
-            left: `${lastMove.x * cellSize + 30}px`,
-            top: `${lastMove.y * cellSize + 30}px`,
+            width: `${isMobile ? '6px' : '8px'}`,
+            height: `${isMobile ? '6px' : '8px'}`,
+            left: `${lastMove.x * cellSize + (isMobile ? 15 : 30)}px`,
+            top: `${lastMove.y * cellSize + (isMobile ? 15 : 30)}px`,
             transform: 'translate(-50%, -50%)'
           }"
       ></div>
@@ -91,7 +97,7 @@
     <!-- 重新开始按钮 -->
     <button
         @click="resetGame"
-        class="mt-8 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none"
+        class="mt-4 sm:mt-8 px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 focus:outline-none"
     >
       重新开始
     </button>
@@ -99,12 +105,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
+// 响应式布局
+const isMobile = computed(() => window.innerWidth < 768)
+const boardSize = computed(() => {
+  const screenWidth = window.innerWidth
+  const screenHeight = window.innerHeight
+  const minDimension = Math.min(screenWidth, screenHeight)
+  return isMobile.value ? Math.min(320, minDimension - 80) : 560
+})
 
 // 棋盘配置
-const boardSize = 560 // 棋盘大小
 const gridSize = 15  // 15x15的交叉点
-const cellSize = boardSize / (gridSize - 1) // 格子大小
+const cellSize = computed(() => boardSize.value / (gridSize - 1)) // 格子大小
 
 // 游戏状态
 const board = ref(Array(gridSize).fill(null).map(() => Array(gridSize).fill(null)))
@@ -176,3 +190,11 @@ const resetGame = () => {
   lastMove.value = null
 }
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+}
+</style>

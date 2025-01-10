@@ -1,28 +1,28 @@
 <template>
-  <div class="container mx-auto p-5 bg-white rounded-lg shadow-md">
+  <div class="container mx-auto p-2 sm:p-5 bg-white rounded-lg shadow-md">
     <div class="flex flex-col items-center">
-      <h1 class="text-2xl text-gray-800 py-5">围棋</h1>
+      <h1 class="text-xl sm:text-2xl text-gray-800 py-3 sm:py-5">围棋</h1>
 
       <!-- 游戏控制区 -->
-      <div class="flex gap-4 mb-6">
-        <v-btn color="primary" @click="startNewGame">
+      <div class="flex gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <v-btn size="small" sm:size="medium" color="primary" @click="startNewGame">
           新游戏
         </v-btn>
-        <v-btn color="error" @click="undoMove" :disabled="!canUndo">
+        <v-btn size="small" sm:size="medium" color="error" @click="undoMove" :disabled="!canUndo">
           悔棋
         </v-btn>
-        <v-btn color="warning" @click="pass" :disabled="gameOver">
+        <v-btn size="small" sm:size="medium" color="warning" @click="pass" :disabled="gameOver">
           虚着
         </v-btn>
       </div>
 
       <!-- 游戏状态显示 -->
-      <div class="mb-4 text-lg font-semibold" :class="{'text-blue-600': currentPlayer === 'black', 'text-gray-600': currentPlayer === 'white'}">
+      <div class="mb-2 sm:mb-4 text-base sm:text-lg font-semibold" :class="{'text-blue-600': currentPlayer === 'black', 'text-gray-600': currentPlayer === 'white'}">
         {{ gameOver ? '游戏结束' : `当前回合: ${currentPlayer === 'black' ? '黑棋' : '白棋'}` }}
       </div>
 
       <!-- 棋盘容器 -->
-      <div ref="boardContainer">
+      <div ref="boardContainer" class="relative touch-none">
         <canvas 
           ref="boardCanvas" 
           class="border border-gray-300 shadow-md"
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 // 类型定义
 type Player = 'black' | 'white'
@@ -44,9 +44,31 @@ type Stone = { row: number; col: number; player: Player }
 
 // 棋盘常量
 const BOARD_SIZE = 19
-const CELL_SIZE = 30
-const BOARD_PADDING = 20
-const STONE_RADIUS = 14
+const CELL_SIZE = ref(30)
+const BOARD_PADDING = ref(20)
+const STONE_RADIUS = ref(14)
+
+// 计算棋盘总大小
+const BOARD_WIDTH = computed(() => CELL_SIZE.value * (BOARD_SIZE - 1) + BOARD_PADDING.value * 2)
+const BOARD_HEIGHT = computed(() => BOARD_WIDTH.value)
+
+// 添加响应式调整函数
+function adjustBoardSize() {
+  const isMobile = window.innerWidth < 768
+  const screenWidth = window.innerWidth
+  const screenHeight = window.innerHeight
+  const minDimension = Math.min(screenWidth, screenHeight)
+
+  if (isMobile) {
+    CELL_SIZE.value = Math.floor((minDimension - 40) / (BOARD_SIZE + 1))
+    BOARD_PADDING.value = Math.floor(CELL_SIZE.value * 0.67)
+    STONE_RADIUS.value = Math.floor(CELL_SIZE.value * 0.47)
+  } else {
+    CELL_SIZE.value = 30
+    BOARD_PADDING.value = 20
+    STONE_RADIUS.value = 14
+  }
+}
 
 // 状态变量
 const currentPlayer = ref<Player>('black')
@@ -58,17 +80,13 @@ const boardCanvas = ref<HTMLCanvasElement | null>(null)
 const boardContainer = ref<HTMLElement | null>(null)
 const canUndo = ref(false)
 
-// 计算棋盘总大小
-const BOARD_WIDTH = CELL_SIZE * (BOARD_SIZE - 1) + BOARD_PADDING * 2
-const BOARD_HEIGHT = BOARD_WIDTH
-
 // 绘制棋盘
 function drawBoard(ctx: CanvasRenderingContext2D) {
-  ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT)
+  ctx.clearRect(0, 0, BOARD_WIDTH.value, BOARD_HEIGHT.value)
   
   // 绘制背景
   ctx.fillStyle = '#DEB887'
-  ctx.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT)
+  ctx.fillRect(0, 0, BOARD_WIDTH.value, BOARD_HEIGHT.value)
 
   // 绘制网格线
   ctx.beginPath()
@@ -77,15 +95,15 @@ function drawBoard(ctx: CanvasRenderingContext2D) {
 
   // 绘制横线和竖线
   for (let i = 0; i < BOARD_SIZE; i++) {
-    const position = BOARD_PADDING + i * CELL_SIZE
+    const position = BOARD_PADDING.value + i * CELL_SIZE.value
     
     // 横线
-    ctx.moveTo(BOARD_PADDING, position)
-    ctx.lineTo(BOARD_WIDTH - BOARD_PADDING, position)
+    ctx.moveTo(BOARD_PADDING.value, position)
+    ctx.lineTo(BOARD_WIDTH.value - BOARD_PADDING.value, position)
     
     // 竖线
-    ctx.moveTo(position, BOARD_PADDING)
-    ctx.lineTo(position, BOARD_HEIGHT - BOARD_PADDING)
+    ctx.moveTo(position, BOARD_PADDING.value)
+    ctx.lineTo(position, BOARD_HEIGHT.value - BOARD_PADDING.value)
   }
   ctx.stroke()
 
@@ -99,8 +117,8 @@ function drawBoard(ctx: CanvasRenderingContext2D) {
   starPoints.forEach(point => {
     ctx.beginPath()
     ctx.arc(
-      BOARD_PADDING + point.x * CELL_SIZE,
-      BOARD_PADDING + point.y * CELL_SIZE,
+      BOARD_PADDING.value + point.x * CELL_SIZE.value,
+      BOARD_PADDING.value + point.y * CELL_SIZE.value,
       4,
       0,
       Math.PI * 2
@@ -113,11 +131,11 @@ function drawBoard(ctx: CanvasRenderingContext2D) {
 // 绘制棋子
 function drawStones(ctx: CanvasRenderingContext2D) {
   stones.value.forEach((stone, index) => {
-    const x = BOARD_PADDING + stone.col * CELL_SIZE
-    const y = BOARD_PADDING + stone.row * CELL_SIZE
+    const x = BOARD_PADDING.value + stone.col * CELL_SIZE.value
+    const y = BOARD_PADDING.value + stone.row * CELL_SIZE.value
 
     ctx.beginPath()
-    ctx.arc(x, y, STONE_RADIUS, 0, Math.PI * 2)
+    ctx.arc(x, y, STONE_RADIUS.value, 0, Math.PI * 2)
     
     if (stone.player === 'black') {
       ctx.fillStyle = '#000000'
@@ -160,8 +178,8 @@ function getBoardPosition(clientX: number, clientY: number): Point | null {
   const y = clientY - rect.top
 
   // 计算最近的交叉点
-  const col = Math.round((x - BOARD_PADDING) / CELL_SIZE)
-  const row = Math.round((y - BOARD_PADDING) / CELL_SIZE)
+  const col = Math.round((x - BOARD_PADDING.value) / CELL_SIZE.value)
+  const row = Math.round((y - BOARD_PADDING.value) / CELL_SIZE.value)
 
   // 检查是否在有效范围内
   if (col >= 0 && col < BOARD_SIZE && row >= 0 && row < BOARD_SIZE) {
@@ -260,10 +278,13 @@ function isConnected(row1: number, col1: number, row2: number, col2: number, pla
 }
 
 // 处理落子
-function handleClick(event: MouseEvent) {
+function handleClick(event: MouseEvent | TouchEvent) {
   if (gameOver.value) return
 
-  const pos = getBoardPosition(event.clientX, event.clientY)
+  const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
+  const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
+
+  const pos = getBoardPosition(clientX, clientY)
   if (!pos) return
 
   // 检查点击位置是否在有效范围内
@@ -360,25 +381,50 @@ function startNewGame() {
 
 // 生命周期钩子
 onMounted(() => {
+  adjustBoardSize()
   if (boardCanvas.value) {
-    boardCanvas.value.width = BOARD_WIDTH
-    boardCanvas.value.height = BOARD_HEIGHT
+    boardCanvas.value.width = BOARD_WIDTH.value
+    boardCanvas.value.height = BOARD_HEIGHT.value
     updateCanvas()
   }
 })
 
 // 监听窗口大小变化
 function handleResize() {
+  adjustBoardSize()
+  if (boardCanvas.value) {
+    boardCanvas.value.width = BOARD_WIDTH.value
+    boardCanvas.value.height = BOARD_HEIGHT.value
+  }
   updateCanvas()
 }
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  // 添加触摸事件监听
+  if (boardCanvas.value) {
+    boardCanvas.value.addEventListener('touchstart', handleClick)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  if (boardCanvas.value) {
+    boardCanvas.value.removeEventListener('touchstart', handleClick)
+  }
 })
 </script>
 
-<style scoped></style> 
+<style scoped>
+.container {
+  min-height: calc(100vh - 64px);
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+}
+</style> 

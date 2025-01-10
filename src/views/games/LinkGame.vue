@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-4 sm:py-8 px-2 sm:px-4">
     <div class="max-w-4xl mx-auto">
       <!-- 标题区域 -->
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+      <div class="text-center mb-4 sm:mb-8">
+        <h1 class="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
           连连看
         </h1>
-        <div class="mt-2 flex justify-center items-center gap-8">
-          <p class="text-gray-600">
+        <div class="mt-2 flex justify-center items-center gap-4 sm:gap-8">
+          <p class="text-sm sm:text-base text-gray-600">
             <v-icon icon="mdi-clock-outline" class="text-blue-500" />
             剩余时间: {{ formatTime(remainingTime) }}
           </p>
-          <p class="text-gray-600">
+          <p class="text-sm sm:text-base text-gray-600">
             <v-icon icon="mdi-star" class="text-yellow-500" />
             得分: {{ score }}
           </p>
@@ -19,8 +19,10 @@
       </div>
 
       <!-- 游戏控制区 -->
-      <div class="flex justify-center gap-4 mb-6">
+      <div class="flex justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
         <v-btn
+          size="small"
+          sm:size="medium"
           color="primary"
           @click="startGame"
           :disabled="false"
@@ -28,6 +30,8 @@
           重新开始
         </v-btn>
         <v-btn
+          size="small"
+          sm:size="medium"
           color="error"
           @click="pauseGame"
           :disabled="!isPlaying"
@@ -40,10 +44,11 @@
       <div class="flex justify-center">
         <canvas
           ref="gameCanvas"
-          :width="CANVAS_SIZE"
-          :height="CANVAS_SIZE"
-          class="bg-white rounded-lg shadow-xl cursor-pointer"
+          :width="canvasSize"
+          :height="canvasSize"
+          class="bg-white rounded-lg shadow-xl cursor-pointer touch-none"
           @click="handleClick"
+          @touchstart.prevent="handleTouch"
         ></canvas>
       </div>
     </div>
@@ -51,14 +56,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 // 游戏常量
-const CANVAS_SIZE = 600
 const BOARD_SIZE = 10 // 整个棋盘大小
 const GRID_SIZE = 8  // 图标区域大小
-const CELL_SIZE = CANVAS_SIZE / BOARD_SIZE
-const ICON_SIZE = CELL_SIZE * 0.8
 const PADDING = 1   // 图标区域的偏移量
 const INFINITY = 10000
 const DIRECTIONS = [
@@ -67,6 +69,17 @@ const DIRECTIONS = [
   { dx: 1, dy: 0 }, // 右
   { dx: -1, dy: 0 } // 左
 ]
+
+// 响应式布局
+const isMobile = computed(() => window.innerWidth < 768)
+const canvasSize = computed(() => {
+  const screenWidth = window.innerWidth
+  const screenHeight = window.innerHeight
+  const minDimension = Math.min(screenWidth, screenHeight)
+  return isMobile.value ? Math.min(320, minDimension - 80) : 600
+})
+const CELL_SIZE = computed(() => canvasSize.value / BOARD_SIZE)
+const ICON_SIZE = computed(() => CELL_SIZE.value * 0.8)
 
 // 游戏状态
 const gameCanvas = ref<HTMLCanvasElement | null>(null)
@@ -136,17 +149,17 @@ const draw = () => {
 
   // 清空画布
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+  ctx.fillRect(0, 0, canvasSize.value, canvasSize.value)
 
   // 绘制网格
   for (let i = 0; i < BOARD_SIZE; i++) {
     for (let j = 0; j < BOARD_SIZE; j++) {
-      const x = j * CELL_SIZE
-      const y = i * CELL_SIZE
+      const x = j * CELL_SIZE.value
+      const y = i * CELL_SIZE.value
       
       // 绘制单元格边框
       ctx.strokeStyle = '#e5e7eb'
-      ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE)
+      ctx.strokeRect(x, y, CELL_SIZE.value, CELL_SIZE.value)
       
       // 如果在图标区域且有图标，绘制图标
       if (i >= PADDING && i < PADDING + GRID_SIZE && 
@@ -155,22 +168,22 @@ const draw = () => {
         // 绘制背景
         if (selectedCell.value?.x === j && selectedCell.value?.y === i) {
           ctx.fillStyle = '#e5e7eb'
-          ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE)
+          ctx.fillRect(x, y, CELL_SIZE.value, CELL_SIZE.value)
         }
         
         // 绘制图标
         const icon = icons[board.value[i][j]]
-        ctx.font = `${ICON_SIZE}px Arial`
+        ctx.font = `${isMobile.value ? ICON_SIZE.value * 0.8 : ICON_SIZE.value}px Arial`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(icon, x + CELL_SIZE / 2, y + CELL_SIZE / 2)
+        ctx.fillText(icon, x + CELL_SIZE.value / 2, y + CELL_SIZE.value / 2)
         
         // 添加选中效果
         if (selectedCell.value?.x === j && selectedCell.value?.y === i) {
           ctx.strokeStyle = '#4f46e5'
           ctx.lineWidth = 3
           ctx.beginPath()
-          ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, 8)
+          ctx.roundRect(x + 2, y + 2, CELL_SIZE.value - 4, CELL_SIZE.value - 4, 8)
           ctx.stroke()
           
           ctx.shadowColor = '#4f46e5'
@@ -188,14 +201,14 @@ const draw = () => {
     ctx.lineWidth = 3
     ctx.beginPath()
     ctx.moveTo(
-      currentPath.value[0].x * CELL_SIZE + CELL_SIZE / 2,
-      currentPath.value[0].y * CELL_SIZE + CELL_SIZE / 2
+      currentPath.value[0].x * CELL_SIZE.value + CELL_SIZE.value / 2,
+      currentPath.value[0].y * CELL_SIZE.value + CELL_SIZE.value / 2
     )
 
     for (let i = 1; i < currentPath.value.length; i++) {
       ctx.lineTo(
-        currentPath.value[i].x * CELL_SIZE + CELL_SIZE / 2,
-        currentPath.value[i].y * CELL_SIZE + CELL_SIZE / 2
+        currentPath.value[i].x * CELL_SIZE.value + CELL_SIZE.value / 2,
+        currentPath.value[i].y * CELL_SIZE.value + CELL_SIZE.value / 2
       )
     }
     
@@ -209,21 +222,20 @@ const draw = () => {
   }
 }
 
-
-
-// 处理点击事件
-const handleClick = (event: MouseEvent) => {
+// 处理触摸事件
+function handleTouch(event: TouchEvent) {
+  event.preventDefault()
   if (!isPlaying.value || isPaused.value) return
   
   const rect = (event.target as HTMLCanvasElement).getBoundingClientRect()
-  const x = Math.floor((event.clientX - rect.left) / CELL_SIZE)
-  const y = Math.floor((event.clientY - rect.top) / CELL_SIZE)
+  const x = Math.floor((event.touches[0].clientX - rect.left) / CELL_SIZE.value)
+  const y = Math.floor((event.touches[0].clientY - rect.top) / CELL_SIZE.value)
   
   if (board.value[y][x] === -1) return
   
   if (!selectedCell.value) {
     selectedCell.value = { x, y }
-    currentPath.value = null  // 清除之前的连接线
+    currentPath.value = null
   } else {
     if (selectedCell.value.x === x && selectedCell.value.y === y) {
       selectedCell.value = null
@@ -231,22 +243,68 @@ const handleClick = (event: MouseEvent) => {
     } else {
       const path = findPath(selectedCell.value.x, selectedCell.value.y, x, y)
       if (path) {
-        currentPath.value = path  // 保存新的连接线
-        draw()  // 立即绘制连接线
+        currentPath.value = path
+        draw()
 
-        // 添加消除动画
         setTimeout(() => {
+          if (!selectedCell.value) return // 添加空值检查
           board.value[selectedCell.value.y][selectedCell.value.x] = -1
           board.value[y][x] = -1
           selectedCell.value = null
-          currentPath.value = null  // 清除连接线
+          currentPath.value = null
           score.value += 10
 
           if (isGameComplete()) {
             endGame(true)
           }
           draw()
-        }, 300)  // 延长显示时间以便看清连接线
+        }, 300)
+      } else {
+        selectedCell.value = { x, y }
+        currentPath.value = null
+      }
+    }
+  }
+  
+  draw()
+}
+
+// 修改原有的 handleClick 函数
+function handleClick(event: MouseEvent) {
+  if (!isPlaying.value || isPaused.value) return
+  
+  const rect = (event.target as HTMLCanvasElement).getBoundingClientRect()
+  const x = Math.floor((event.clientX - rect.left) / CELL_SIZE.value)
+  const y = Math.floor((event.clientY - rect.top) / CELL_SIZE.value)
+  
+  if (board.value[y][x] === -1) return
+  
+  if (!selectedCell.value) {
+    selectedCell.value = { x, y }
+    currentPath.value = null
+  } else {
+    if (selectedCell.value.x === x && selectedCell.value.y === y) {
+      selectedCell.value = null
+      currentPath.value = null
+    } else {
+      const path = findPath(selectedCell.value.x, selectedCell.value.y, x, y)
+      if (path) {
+        currentPath.value = path
+        draw()
+
+        setTimeout(() => {
+          if (!selectedCell.value) return // 添加空值检查
+          board.value[selectedCell.value.y][selectedCell.value.x] = -1
+          board.value[y][x] = -1
+          selectedCell.value = null
+          currentPath.value = null
+          score.value += 10
+
+          if (isGameComplete()) {
+            endGame(true)
+          }
+          draw()
+        }, 300)
       } else {
         selectedCell.value = { x, y }
         currentPath.value = null
@@ -314,7 +372,7 @@ const endGame = (win: boolean) => {
     const animate = () => {
       // 创建半透明叠加效果
       ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
-      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+      ctx.fillRect(0, 0, canvasSize.value, canvasSize.value)
       
       // 更新和绘制粒子
       updateConfetti(ctx)
@@ -326,11 +384,11 @@ const endGame = (win: boolean) => {
       ctx.textBaseline = 'middle'
       ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
       ctx.shadowBlur = 10
-      ctx.fillText('恭喜过关!', CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 40)
+      ctx.fillText('恭喜过关!', canvasSize.value / 2, canvasSize.value / 2 - 40)
       
       ctx.font = 'bold 32px Arial'
-      ctx.fillText(`得分: ${score.value}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 20)
-      ctx.fillText(`剩余时间: ${formatTime(remainingTime.value)}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 70)
+      ctx.fillText(`得分: ${score.value}`, canvasSize.value / 2, canvasSize.value / 2 + 20)
+      ctx.fillText(`剩余时间: ${formatTime(remainingTime.value)}`, canvasSize.value / 2, canvasSize.value / 2 + 70)
       
       // 继续动画
       if (confettiParticles.value.length > 0) {
@@ -342,16 +400,16 @@ const endGame = (win: boolean) => {
   } else {
     // 游戏失败效果
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+    ctx.fillRect(0, 0, canvasSize.value, canvasSize.value)
     
     ctx.fillStyle = '#fff'
     ctx.font = 'bold 48px Arial'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('游戏结束', CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 40)
+    ctx.fillText('游戏结束', canvasSize.value / 2, canvasSize.value / 2 - 40)
     
     ctx.font = 'bold 32px Arial'
-    ctx.fillText(`最终得分: ${score.value}`, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 20)
+    ctx.fillText(`最终得分: ${score.value}`, canvasSize.value / 2, canvasSize.value / 2 + 20)
   }
 }
 
@@ -359,11 +417,24 @@ const endGame = (win: boolean) => {
 onMounted(() => {
   // 自动开始新游戏
   startGame()
+  
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
+  window.removeEventListener('resize', handleResize)
 })
+
+// 添加窗口大小变化处理函数
+function handleResize() {
+  if (gameCanvas.value) {
+    gameCanvas.value.width = canvasSize.value
+    gameCanvas.value.height = canvasSize.value
+    draw()
+  }
+}
 
 // 替换原有的路径查找相关函数
 interface PathNode {
@@ -480,8 +551,8 @@ const createConfetti = () => {
   const colors = ['#FF69B4', '#4169E1', '#FFD700', '#98FB98', '#DDA0DD']
   for (let i = 0; i < 100; i++) {
     confettiParticles.value.push({
-      x: CANVAS_SIZE / 2,
-      y: CANVAS_SIZE / 2,
+      x: canvasSize.value / 2,
+      y: canvasSize.value / 2,
       color: colors[Math.floor(Math.random() * colors.length)],
       speed: Math.random() * 8 + 2,
       angle: Math.random() * Math.PI * 2,
@@ -507,8 +578,16 @@ const updateConfetti = (ctx: CanvasRenderingContext2D) => {
     ctx.restore()
     
     // 当粒子超出画布时移除
-    return particle.y < CANVAS_SIZE && particle.x > 0 && particle.x < CANVAS_SIZE
+    return particle.y < canvasSize.value && particle.x > 0 && particle.x < canvasSize.value
   })
 }
-</script> 
+</script>
+
+<style scoped>
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+}
+</style> 
 
