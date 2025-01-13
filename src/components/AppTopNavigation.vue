@@ -1,12 +1,12 @@
 <template>
   <div class="top-nav-wrapper">
     <v-app-bar
-      class="px-2 bg-white/80 backdrop-blur-sm border-b"
+      class="px-2 bg-white/80 backdrop-blur-sm border-b transition-all duration-300"
       elevation="0"
       height="64"
       fixed
     >
-      <v-app-bar-title class="font-semibold text-gray-800">
+      <v-app-bar-title class="font-semibold text-gray-800 select-none">
         开发者工具
       </v-app-bar-title>
 
@@ -19,26 +19,11 @@
         @update:modelValue="handleTabChange"
       >
         <template v-for="item in mainRoutes" :key="item.name">
-          <!-- 没有子菜单的项目 -->
           <v-tab
-            v-if="!item.children"
             :value="item.name"
-            :to="item.path"
-            class="px-4"
-          >
-            <v-icon
-              :icon="item.meta?.icon"
-              size="small"
-              class="mr-2"
-            ></v-icon>
-            {{ item.meta?.title }}
-          </v-tab>
-
-          <!-- 有子菜单的项目 -->
-          <v-tab
-            v-else
-            :value="item.name"
-            class="px-4"
+            :to="item.children ? undefined : item.path"
+            class="px-4 transition-colors duration-200"
+            v-ripple
           >
             <v-icon
               :icon="item.meta?.icon"
@@ -47,9 +32,11 @@
             ></v-icon>
             {{ item.meta?.title }}
             <v-icon
+              v-if="item.children"
               icon="mdi-chevron-down"
               size="small"
-              class="ml-1"
+              class="ml-1 transition-transform"
+              :class="{ 'rotate-180': showSubmenu && activeTab === item.name }"
             ></v-icon>
           </v-tab>
         </template>
@@ -63,14 +50,14 @@
         transition="scale-transition"
         offset="5"
       >
-        <v-list class="bg-white rounded-lg py-2" density="compact">
+        <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact">
           <v-list-item
             v-for="child in currentSubmenuItems"
             :key="child.name"
             :to="child.path"
             :prepend-icon="child.meta?.icon"
             :title="child.meta?.title"
-            class="px-4"
+            class="px-4 hover:bg-gray-50 transition-colors duration-200"
             @click="handleSubMenuClick"
           ></v-list-item>
         </v-list>
@@ -82,15 +69,16 @@
       <v-btn
         variant="text"
         :prepend-icon="'mdi-view-grid'"
+        class="hidden md:flex"
         @click="toggleNavMode"
       >
-        切换为侧边导航
+        切换为{{ navMode === 'side' ? '顶部' : '侧边' }}导航
       </v-btn>
 
       <!-- 移动端菜单按钮 -->
       <v-app-bar-nav-icon
         class="md:hidden"
-        @click="drawer = !drawer"
+        @click="toggleDrawer"
       ></v-app-bar-nav-icon>
     </v-app-bar>
 
@@ -99,26 +87,31 @@
       v-model="drawer"
       location="left"
       temporary
-      class="md:hidden bg-gray-50"
+      class="md:hidden"
     >
-      <v-list>
+      <v-list class="py-2">
         <template v-for="item in mainRoutes" :key="item.name">
           <v-list-item
             v-if="!item.children"
             :to="item.path"
             :prepend-icon="item.meta?.icon"
             :title="item.meta?.title"
+            class="mb-1 transition-colors duration-200"
+            v-ripple
           ></v-list-item>
 
           <v-list-group
             v-else
             :value="isGroupActive(item)"
+            class="mb-1"
           >
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
                 :prepend-icon="item.meta?.icon"
                 :title="item.meta?.title"
+                class="transition-colors duration-200"
+                v-ripple
               ></v-list-item>
             </template>
 
@@ -128,7 +121,8 @@
               :to="child.path"
               :prepend-icon="child.meta?.icon"
               :title="child.meta?.title"
-              class="pl-4"
+              class="pl-4 transition-colors duration-200"
+              v-ripple
             ></v-list-item>
           </v-list-group>
         </template>
@@ -138,45 +132,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onMounted, type ComponentPublicInstance } from 'vue'
-import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router'
+import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useStorage } from '@vueuse/core'
 import { useNavStore } from '@/stores/nav'
+import type { ComponentPublicInstance } from 'vue'
+import type { RouteRecordRaw } from 'vue-router'
 
-type RouteItem = RouteRecordRaw & {
-  name?: string;
+interface RouteItem {
+  name: string;
   path: string;
   meta?: {
     title: string;
     icon: string;
   };
   children?: RouteItem[];
+  component?: any;
 }
 
 type VuetifyActivator = Element | ComponentPublicInstance | string | "parent";
 
-const router = useRouter()
-const route = useRoute()
-const navStore = useNavStore()
+// 组合式函数：路由相关逻辑
+function useNavigation() {
+  const router = useRouter()
+  const route = useRoute()
+  
+  const mainRoutes = computed<RouteItem[]>(() => 
+    router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
+  )
 
+  const isCurrentRoute = (path: string): boolean => route.path === path
+  
+  const isGroupActive = (item: RouteItem): boolean => 
+    item.children?.some(child => isCurrentRoute(child.path)) || false
+
+  return {
+    mainRoutes,
+    isCurrentRoute,
+    isGroupActive
+  }
+}
+
+// 组件状态
 const drawer = ref(false)
 const activeTab = ref<string | null>(null)
 const showSubmenu = ref(false)
-const submenuActivator = ref<VuetifyActivator | undefined>("parent")
+const submenuActivator = ref<VuetifyActivator>("parent")
 const currentSubmenuItems = ref<RouteItem[]>([])
+const navMode = useStorage('nav-mode', 'top')
 
-// 计算主路由（一级菜单）
-const mainRoutes = computed<RouteItem[]>(() => 
-  router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
-)
-
-// 路由判断方法
-const isCurrentRoute = (path: string): boolean => {
-  return route.path === path
-}
-
-const isGroupActive = (item: RouteItem): boolean => {
-  return item.children?.some(child => isCurrentRoute(child.path)) || false
-}
+// 获取路由相关方法
+const { mainRoutes, isCurrentRoute, isGroupActive } = useNavigation()
+const route = useRoute()
+const navStore = useNavStore()
 
 // 处理标签页变化
 const handleTabChange = (newValue: unknown) => {
@@ -186,7 +194,6 @@ const handleTabChange = (newValue: unknown) => {
   if (selectedItem?.children) {
     currentSubmenuItems.value = selectedItem.children
     showSubmenu.value = true
-    // 获取当前点击的标签页元素作为子菜单的锚点
     nextTick(() => {
       const element = document.querySelector(`[value="${newValue}"]`)
       if (element) {
@@ -198,14 +205,22 @@ const handleTabChange = (newValue: unknown) => {
   }
 }
 
-// 处理子菜单点击
 const handleSubMenuClick = () => {
   showSubmenu.value = false
+  drawer.value = false
 }
 
-// 设置初始激活的标签
+const toggleDrawer = () => {
+  drawer.value = !drawer.value
+}
+
+const toggleNavMode = () => {
+  navStore.toggleMode()
+  navMode.value = navMode.value === 'top' ? 'side' : 'top'
+}
+
+// 生命周期钩子
 onMounted(() => {
-  // 根据当前路由设置激活的标签
   const currentMainRoute = mainRoutes.value.find(item => 
     item.path === route.path || item.children?.some(child => child.path === route.path)
   )
@@ -214,7 +229,7 @@ onMounted(() => {
   }
 })
 
-// 监听路由变化
+// 路由监听
 watch(
   () => route.path,
   (newPath) => {
@@ -226,14 +241,6 @@ watch(
     }
   }
 )
-
-const toggleDrawer = () => {
-  drawer.value = !drawer.value
-}
-
-const toggleNavMode = () => {
-  navStore.toggleMode()
-}
 </script>
 
 <style scoped>
@@ -248,150 +255,15 @@ const toggleNavMode = () => {
   border-bottom: 1px solid rgba(79, 70, 229, 0.1);
 }
 
-:deep(.v-tab) {
-  text-transform: none;
-  font-weight: 500;
-  letter-spacing: 0;
-  min-width: unset;
-  border-radius: 8px;
-  margin: 0 2px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.v-tab:hover) {
-  background: rgba(79, 70, 229, 0.05);
-  transform: translateY(-1px);
-}
-
-:deep(.v-tab--selected) {
-  color: #4f46e5;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
-}
-
-:deep(.v-tab__slider) {
-  background: linear-gradient(90deg, #4f46e5, #7c3aed);
-  height: 3px;
-  border-radius: 2px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* App bar title */
-.v-app-bar-title {
-  font-weight: 600;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
-}
-
-/* Menu styles */
-:deep(.v-menu > .v-overlay__content) {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(79, 70, 229, 0.1);
-  padding: 8px;
-  min-width: 220px;
-}
-
-:deep(.v-list-item) {
-  border-radius: 8px;
-  margin: 4px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.v-list-item:hover) {
-  background: rgba(79, 70, 229, 0.05);
-  transform: translateX(4px);
-}
-
-:deep(.v-list-item--active) {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
-  color: #4f46e5;
-  font-weight: 500;
-}
-
-/* Navigation mode toggle button */
-.v-btn {
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.v-btn:hover {
-  background: rgba(79, 70, 229, 0.05);
-  transform: translateY(-1px);
-}
-
-/* Mobile menu button */
-.v-app-bar-nav-icon {
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.v-app-bar-nav-icon:hover {
-  background: rgba(79, 70, 229, 0.05);
-  transform: scale(1.1);
-}
-
-/* Mobile drawer */
-:deep(.v-navigation-drawer) {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-}
-
-/* Custom scrollbar */
-:deep(::-webkit-scrollbar) {
-  width: 6px;
-}
-
-:deep(::-webkit-scrollbar-track) {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-:deep(::-webkit-scrollbar-thumb) {
-  background: rgba(79, 70, 229, 0.2);
-  border-radius: 3px;
-}
-
-:deep(::-webkit-scrollbar-thumb:hover) {
-  background: rgba(79, 70, 229, 0.3);
-}
-
-/* Animations */
+/* 添加过渡动画 */
 .scale-transition-enter-active,
 .scale-transition-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
 }
 
 .scale-transition-enter-from,
 .scale-transition-leave-to {
   opacity: 0;
-  transform: scale(0.95) translateY(-10px);
-}
-
-/* Icon animations */
-:deep(.v-icon) {
-  transition: transform 0.3s ease;
-}
-
-:deep(.v-list-item:hover .v-icon) {
-  transform: scale(1.1);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .v-btn {
-    min-width: unset;
-    padding: 0 12px;
-  }
-  
-  :deep(.v-tab) {
-    padding: 0 12px;
-  }
+  transform: scale(0.95);
 }
 </style> 
