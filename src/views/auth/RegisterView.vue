@@ -11,7 +11,8 @@ const formData = ref({
   password: '',
   confirmPassword: '',
   code: '',
-  userType: 'sys_user'
+  userType: 'sys_user',
+  uuid: ''
 })
 
 const showPassword = ref(false)
@@ -36,13 +37,18 @@ const rules = {
 
 async function refreshCaptcha() {
   await getCaptcha()
+  if (captchaData.value) {
+    formData.value.uuid = captchaData.value.uuid
+  }
 }
 
 async function handleRegister() {
   try {
-    await register(formData.value)
-    // 注册成功后跳转到登录页
-    router.push('/auth/login')
+    const response = await register(formData.value)
+    if (response.token) {
+      localStorage.setItem('token', response.token)
+      router.push('/auth/login')
+    }
   } catch (err) {
     await refreshCaptcha()
   }
@@ -102,7 +108,7 @@ onMounted(() => {
           <div class="w-32 h-12 flex items-center" @click="refreshCaptcha">
             <img
               v-if="captchaData?.img"
-              :src="captchaData.img"
+              :src="`data:image/png;base64,${captchaData.img}`"
               alt="验证码"
               class="w-full h-full object-contain cursor-pointer"
             />

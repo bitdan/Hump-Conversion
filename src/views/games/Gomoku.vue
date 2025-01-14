@@ -2,79 +2,149 @@
   <div class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
     <h1 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-8">五子棋</h1>
 
+    <!-- 在线对战控制 -->
+    <div v-if="!isOnlineMode" class="mb-4 flex gap-4">
+      <v-btn color="primary" @click="createRoom">
+        创建对战房间
+      </v-btn>
+      <v-text-field
+        v-model="inputRoomId"
+        label="房间ID"
+        placeholder="输入房间ID加入游戏"
+        variant="outlined"
+        hide-details
+        class="max-w-xs"
+      >
+        <template v-slot:append>
+          <v-btn
+            color="primary"
+            variant="text"
+            :disabled="!inputRoomId"
+            @click="joinRoom(inputRoomId)"
+          >
+            加入
+          </v-btn>
+        </template>
+      </v-text-field>
+    </div>
+
+    <!-- 在线对战信息 -->
+    <v-card v-if="isOnlineMode" class="mb-4 p-4 w-full max-w-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-lg font-bold mb-2">
+            房间号: {{ roomId }}
+            <v-btn
+              variant="text"
+              density="compact"
+              @click="copyRoomId"
+            >
+              复制
+            </v-btn>
+          </div>
+          <div v-if="game?.opponentName" class="text-sm">
+            对手: {{ game.opponentName }}
+          </div>
+          <div v-else class="text-sm text-gray-500">
+            等待对手加入...
+          </div>
+        </div>
+        <v-btn color="error" variant="outlined" @click="leaveRoom">
+          退出房间
+        </v-btn>
+      </div>
+    </v-card>
+
     <!-- 游戏状态 -->
     <div class="mb-4 text-base sm:text-xl">
-      <p v-if="winner">获胜者: {{ winner === 'black' ? '黑棋' : '白棋' }}</p>
-      <p v-else>当前玩家: {{ currentPlayer === 'black' ? '黑棋' : '白棋' }}</p>
+      <template v-if="isOnlineMode && game">
+        <template v-if="game.gameState.winner">
+          {{ game.gameState.winner === 'black' ? '黑棋' : '白棋' }}胜利！
+        </template>
+        <template v-else>
+          {{ game.gameState.currentPlayer === 'black' ? '黑棋' : '白棋' }}回合
+          <span v-if="game.playerColor" class="ml-2">
+            (你是{{ game.playerColor === 'black' ? '黑棋' : '白棋' }})
+          </span>
+        </template>
+      </template>
+      <template v-else>
+        <template v-if="winner">
+          获胜者: {{ winner === 'black' ? '黑棋' : '白棋' }}
+        </template>
+        <template v-else>
+          当前玩家: {{ currentPlayer === 'black' ? '黑棋' : '白棋' }}
+        </template>
+      </template>
     </div>
 
     <!-- 棋盘容器 -->
     <div
-        class="relative bg-amber-100 rounded-lg shadow-lg p-[15px] sm:p-[30px] touch-none"
-        :style="{
-          width: `${boardSize + (isMobile ? 30 : 60)}px`,
-          height: `${boardSize + (isMobile ? 30 : 60)}px`
-        }"
+      class="relative bg-amber-100 rounded-lg shadow-lg p-[15px] sm:p-[30px] touch-none"
+      :style="{
+        width: `${boardSize + (isMobile ? 30 : 60)}px`,
+        height: `${boardSize + (isMobile ? 30 : 60)}px`
+      }"
     >
       <!-- 棋盘网格线 -->
       <div class="absolute" :style="{ inset: `${isMobile ? '15px' : '30px'}` }">
         <div
-            v-for="i in gridSize"
-            :key="`h${i}`"
-            class="absolute bg-gray-800"
-            :style="{
-              left: '0',
-              right: '0',
-              top: `${(i-1) * cellSize}px`,
-              height: '1px'
-            }"
+          v-for="i in gridSize"
+          :key="`h${i}`"
+          class="absolute bg-gray-800"
+          :style="{
+            left: '0',
+            right: '0',
+            top: `${(i-1) * cellSize}px`,
+            height: '1px'
+          }"
         ></div>
         <div
-            v-for="i in gridSize"
-            :key="`v${i}`"
-            class="absolute bg-gray-800"
-            :style="{
-              top: '0',
-              bottom: '0',
-              left: `${(i-1) * cellSize}px`,
-              width: '1px'
-            }"
+          v-for="i in gridSize"
+          :key="`v${i}`"
+          class="absolute bg-gray-800"
+          :style="{
+            top: '0',
+            bottom: '0',
+            left: `${(i-1) * cellSize}px`,
+            width: '1px'
+          }"
         ></div>
       </div>
 
       <!-- 点击区域和棋子 -->
       <div class="absolute" :style="{ inset: `${isMobile ? '15px' : '30px'}` }">
         <div
-            v-for="y in gridSize"
-            :key="`row${y}`"
-            class="absolute top-0 left-0 right-0"
+          v-for="y in gridSize"
+          :key="`row${y}`"
+          class="absolute top-0 left-0 right-0"
         >
           <div
-              v-for="x in gridSize"
-              :key="`cell${x}`"
-              class="absolute cursor-pointer"
-              :style="{
-                left: `${(x-1) * cellSize}px`,
-                top: `${(y-1) * cellSize}px`,
-                width: `${isMobile ? '20px' : '30px'}`,
-                height: `${isMobile ? '20px' : '30px'}`,
-                transform: 'translate(-50%, -50%)',
-                cursor: !board[y-1][x-1] && !winner ? 'pointer' : 'default'
-              }"
-              @click="makeMove(x-1, y-1)"
-              @touchstart.prevent="makeMove(x-1, y-1)"
+            v-for="x in gridSize"
+            :key="`cell${x}`"
+            class="absolute cursor-pointer"
+            :style="{
+              left: `${(x-1) * cellSize}px`,
+              top: `${(y-1) * cellSize}px`,
+              width: `${isMobile ? '20px' : '30px'}`,
+              height: `${isMobile ? '20px' : '30px'}`,
+              transform: 'translate(-50%, -50%)',
+              cursor: !board[y-1][x-1] && !winner ? 'pointer' : 'default'
+            }"
+            @click="makeMove(x-1, y-1)"
+            @touchstart.prevent="makeMove(x-1, y-1)"
           >
             <div
-                v-if="board[y-1][x-1]"
-                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
-                :style="{
-                  width: `${isMobile ? '16px' : '24px'}`,
-                  height: `${isMobile ? '16px' : '24px'}`
-                }"
-                :class="{
-                  'bg-gray-900': board[y-1][x-1] === 'black',
-                  'bg-white border-2 border-gray-900': board[y-1][x-1] === 'white'
-                }"
+              v-if="isOnlineMode ? game?.gameState.board[y-1][x-1] !== 0 : board[y-1][x-1]"
+              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
+              :style="{
+                width: `${isMobile ? '16px' : '24px'}`,
+                height: `${isMobile ? '16px' : '24px'}`
+              }"
+              :class="{
+                'bg-gray-900': isOnlineMode ? game?.gameState.board[y-1][x-1] === 1 : board[y-1][x-1] === 'black',
+                'bg-white border-2 border-gray-900': isOnlineMode ? game?.gameState.board[y-1][x-1] === 2 : board[y-1][x-1] === 'white'
+              }"
             ></div>
           </div>
         </div>
@@ -82,30 +152,44 @@
 
       <!-- 最后落子标记 -->
       <div
-          v-if="lastMove"
-          class="absolute bg-red-500 rounded-full"
-          :style="{
-            width: `${isMobile ? '6px' : '8px'}`,
-            height: `${isMobile ? '6px' : '8px'}`,
-            left: `${lastMove.x * cellSize + (isMobile ? 15 : 30)}px`,
-            top: `${lastMove.y * cellSize + (isMobile ? 15 : 30)}px`,
-            transform: 'translate(-50%, -50%)'
-          }"
+        v-if="isOnlineMode ? game?.gameState.lastMove : lastMove"
+        class="absolute bg-red-500 rounded-full"
+        :style="{
+          width: `${isMobile ? '6px' : '8px'}`,
+          height: `${isMobile ? '6px' : '8px'}`,
+          left: `${((isOnlineMode && game?.gameState.lastMove?.x !== undefined) ? game.gameState.lastMove.x : lastMove?.x || 0) * cellSize + (isMobile ? 15 : 30)}px`,
+          top: `${((isOnlineMode && game?.gameState.lastMove?.y !== undefined) ? game.gameState.lastMove.y : lastMove?.y || 0) * cellSize + (isMobile ? 15 : 30)}px`,
+          transform: 'translate(-50%, -50%)'
+        }"
       ></div>
     </div>
 
     <!-- 重新开始按钮 -->
     <button
-        @click="resetGame"
-        class="mt-4 sm:mt-8 px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 focus:outline-none"
+      @click="resetGame"
+      class="mt-4 sm:mt-8 px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 focus:outline-none"
+      :disabled="isOnlineMode && (!game?.opponentName)"
     >
       重新开始
+    </button>
+
+    <!-- 在线模式退出按钮 -->
+    <button
+      v-if="isOnlineMode"
+      @click="leaveRoom"
+      class="mt-2 px-4 sm:px-6 py-2 border border-red-500 text-red-500 text-sm sm:text-base rounded-lg hover:bg-red-50 focus:outline-none"
+    >
+      退出对战
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useAuthCheck } from '@/composables/useAuthCheck'
+import { useGomokuGame } from '@/composables/useGomokuGame'
+
+const { withAuth } = useAuthCheck()
 
 // 响应式布局
 const isMobile = computed(() => window.innerWidth < 768)
@@ -126,6 +210,12 @@ const currentPlayer = ref<'black' | 'white'>('black')
 const winner = ref<'black' | 'white' | null>(null)
 const lastMove = ref<{x: number, y: number} | null>(null)
 
+// 在线对战状态
+const isOnlineMode = ref(false)
+const roomId = ref<string | null>(null)
+const inputRoomId = ref('')
+const game = ref<ReturnType<typeof useGomokuGame> | null>(null)
+
 // 检查是否获胜
 const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
   const directions = [
@@ -143,9 +233,9 @@ const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
       const newX = x + dx * i
       const newY = y + dy * i
       if (
-          newX < 0 || newX >= gridSize ||
-          newY < 0 || newY >= gridSize ||
-          board.value[newY][newX] !== player
+        newX < 0 || newX >= gridSize ||
+        newY < 0 || newY >= gridSize ||
+        board.value[newY][newX] !== player
       ) break
       count++
     }
@@ -155,9 +245,9 @@ const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
       const newX = x - dx * i
       const newY = y - dy * i
       if (
-          newX < 0 || newX >= gridSize ||
-          newY < 0 || newY >= gridSize ||
-          board.value[newY][newX] !== player
+        newX < 0 || newX >= gridSize ||
+        newY < 0 || newY >= gridSize ||
+        board.value[newY][newX] !== player
       ) break
       count++
     }
@@ -169,6 +259,13 @@ const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
 
 // 落子
 const makeMove = (x: number, y: number) => {
+  if (isOnlineMode.value) {
+    if (game.value) {
+      game.value.makeMove(x, y)
+    }
+    return
+  }
+
   if (winner.value || board.value[y][x]) return
 
   board.value[y][x] = currentPlayer.value
@@ -184,10 +281,53 @@ const makeMove = (x: number, y: number) => {
 
 // 重置游戏
 const resetGame = () => {
+  if (isOnlineMode.value) {
+    if (game.value) {
+      game.value.restartGame()
+    }
+    return
+  }
+
   board.value = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null))
   currentPlayer.value = 'black'
   winner.value = null
   lastMove.value = null
+}
+
+// 创建在线房间
+async function createRoom() {
+  await withAuth(async () => {
+    roomId.value = 'ROOM_' + Math.random().toString(36).substr(2, 9)
+    isOnlineMode.value = true
+    game.value = useGomokuGame(roomId.value)
+  })
+}
+
+// 加入在线房间
+async function joinRoom(id: string) {
+  await withAuth(async () => {
+    roomId.value = id
+    isOnlineMode.value = true
+    game.value = useGomokuGame(id)
+  })
+}
+
+// 复制房间ID
+function copyRoomId() {
+  if (roomId.value) {
+    navigator.clipboard.writeText(roomId.value)
+  }
+}
+
+// 离开房间
+async function leaveRoom() {
+  if (game.value) {
+    game.value.leaveGame()
+    game.value = null
+  }
+  roomId.value = null
+  isOnlineMode.value = false
+  resetGame()
 }
 </script>
 

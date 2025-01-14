@@ -84,7 +84,7 @@ onMounted(() => {
           <div class="w-32 h-12 flex items-center" @click="refreshCaptcha">
             <img
               v-if="captchaData?.img"
-              :src="captchaData.img"
+              :src="`data:image/png;base64,${captchaData.img}`"
               alt="验证码"
               class="w-full h-full object-contain cursor-pointer"
             />
