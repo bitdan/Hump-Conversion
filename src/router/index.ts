@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthCheck } from '@/composables/useAuthCheck'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    title: string;
-    icon: string;
+    title?: string;
+    icon?: string;
+    requiresAuth?: boolean;
   }
 }
 
@@ -13,12 +15,30 @@ export const routes: RouteRecordRaw[] = [
         redirect: '/case-converter'
     },
     {
+        path: '/auth',
+        children: [
+            {
+                path: 'login',
+                name: 'login',
+                component: () => import('@/views/auth/LoginView.vue'),
+                meta: { requiresAuth: false }
+            },
+            {
+                path: 'register',
+                name: 'register',
+                component: () => import('@/views/auth/RegisterView.vue'),
+                meta: { requiresAuth: false }
+            }
+        ]
+    },
+    {
         path: '/home',
         name: 'Home',
         component: () => import('@/components/Home.vue'),
         meta: { 
             title: '首页',
-            icon: 'mdi-home'
+            icon: 'mdi-home',
+            requiresAuth: false
         }
     },
     {
@@ -251,7 +271,7 @@ export const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL),
     routes
 })
 
