@@ -1,32 +1,24 @@
-import { ref } from 'vue'
-import axios from 'axios'
-import { 
-  API_CONFIG, 
-  type LoginPayload, 
-  type RegisterPayload, 
-  type CaptchaResponse,
-  type LoginResponse,
-  type RegisterResponse
-} from '@/config/api.config'
+import {ref} from 'vue'
+import {
+    type CaptchaData,
+    getCaptcha as authGetCaptcha,
+    login as authLogin,
+    type LoginPayload,
+    register as authRegister,
+    type RegisterPayload
+} from '@/api/auth'
 
 export function useAuth() {
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const captchaData = ref<CaptchaResponse['data'] | null>(null)
+  const captchaData = ref<CaptchaData | null>(null)
 
   async function register(payload: RegisterPayload) {
     try {
       loading.value = true
       error.value = null
-      const response = await axios.post<RegisterResponse>(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.REGISTER}`,
-        payload
-      )
-      if (response.data.code === 200) {
-        return response.data.data
-      } else {
-        throw new Error(response.data.msg)
-      }
+      const { data } = await authRegister(payload)
+      return data
     } catch (err: any) {
       error.value = err.response?.data?.msg || err.message || '注册失败'
       throw err
@@ -39,15 +31,8 @@ export function useAuth() {
     try {
       loading.value = true
       error.value = null
-      const response = await axios.post<LoginResponse>(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.LOGIN}`,
-        payload
-      )
-      if (response.data.code === 200) {
-        return response.data.data
-      } else {
-        throw new Error(response.data.msg)
-      }
+      const { data } = await authLogin(payload)
+      return data
     } catch (err: any) {
       error.value = err.response?.data?.msg || err.message || '登录失败'
       throw err
@@ -60,15 +45,9 @@ export function useAuth() {
     try {
       loading.value = true
       error.value = null
-      const response = await axios.get<CaptchaResponse>(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.CAPTCHA}`
-      )
-      if (response.data.code === 200) {
-        captchaData.value = response.data.data
-        return response.data.data
-      } else {
-        throw new Error(response.data.msg)
-      }
+      const { data } = await authGetCaptcha()
+      captchaData.value = data
+      return data
     } catch (err: any) {
       error.value = err.response?.data?.msg || err.message || '获取验证码失败'
       throw err
@@ -85,4 +64,4 @@ export function useAuth() {
     login,
     getCaptcha
   }
-} 
+}
