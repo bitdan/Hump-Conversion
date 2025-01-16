@@ -11,6 +11,7 @@ import {
 } from '@/api/auth'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '@/stores/user'
+import {useMessage} from '@/composables/useMessage'
 
 export function useAuth() {
   const loading = ref(false)
@@ -18,13 +19,16 @@ export function useAuth() {
   const captchaData = ref<CaptchaData | null>(null)
   const router = useRouter()
   const userStore = useUserStore()
+  const { showSuccess } = useMessage()
 
   async function register(payload: RegisterPayload) {
     try {
       loading.value = true
       error.value = null
-      const { data } = await authRegister(payload)
-      return data
+      await authRegister(payload)
+      showSuccess('注册成功，请登录')
+      router.push('/auth/login')
+      return true
     } catch (err: any) {
       error.value = err.response?.data?.msg || err.message || '注册失败'
       throw err

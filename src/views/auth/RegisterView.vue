@@ -181,11 +181,7 @@ async function refreshCaptcha() {
 
 async function handleRegister() {
   try {
-    const response = await register(formData.value)
-    if (response.token) {
-      localStorage.setItem('token', response.token)
-      router.push('/auth/login')
-    }
+    await register(formData.value)
   } catch (err) {
     await refreshCaptcha()
   }
