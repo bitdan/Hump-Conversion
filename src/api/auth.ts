@@ -37,6 +37,17 @@ export interface CaptchaData {
   img: string
 }
 
+export interface UserInfo {
+  user: {
+    userId: string
+    username: string
+    email?: string
+    avatar?: string
+  }
+  roles: string[]
+  permissions: string[]
+}
+
 // 用户注册
 export function register(data: RegisterPayload) {
   return request.post<ApiResponse<RegisterData>>('/register', data)
@@ -50,6 +61,11 @@ export function login(data: LoginPayload) {
 // 获取验证码
 export function getCaptcha() {
   return request.get<ApiResponse<CaptchaData>>('/captchaImage')
+}
+
+// 获取用户信息
+export function getUserInfo() {
+  return request.get<ApiResponse<UserInfo>>('/getInfo')
 }
 
 // 用户登出

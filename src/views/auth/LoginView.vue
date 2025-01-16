@@ -124,9 +124,10 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue'
 import {useAuth} from '@/composables/useAuth'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const { login, getCaptcha, loading, error, captchaData } = useAuth()
 
 const formData = ref({
@@ -156,8 +157,8 @@ async function handleLogin() {
   try {
     const response = await login(formData.value)
     if (response.token) {
-      localStorage.setItem('token', response.token)
-      router.push('/case-converter')
+      const redirect = route.query.redirect as string
+      router.push(redirect || '/case-converter')
     }
   } catch (err) {
     await refreshCaptcha()

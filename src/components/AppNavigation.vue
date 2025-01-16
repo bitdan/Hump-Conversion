@@ -20,9 +20,19 @@
               v-bind="props"
               size="40"
               class="cursor-pointer"
-            ></v-avatar>
+              :image="(userStore.avatar || undefined) as string | undefined"
+            >
+              <v-icon v-if="!userStore.avatar">mdi-account</v-icon>
+            </v-avatar>
           </template>
-          <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact">
+          <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact" v-if="userStore.token">
+            <v-list-item
+              prepend-icon="mdi-account"
+              :title="userStore.username || ''"
+              class="px-4 text-gray-600"
+              disabled
+            ></v-list-item>
+            <v-divider class="my-2"></v-divider>
             <v-list-item
               prepend-icon="mdi-view-grid"
               :title="'切换为' + (isTopNav ? '侧边' : '顶部') + '导航'"
@@ -39,7 +49,19 @@
           </v-list>
         </v-menu>
       </template>
-      <v-list-item-title v-if="!rail">{{ userStore.username || '未登录' }}</v-list-item-title>
+      <template v-if="!rail">
+        <v-list-item-title v-if="userStore.token">{{ userStore.username }}</v-list-item-title>
+        <v-list-item-title v-else>
+          <v-btn
+            variant="text"
+            color="primary"
+            class="px-2"
+            @click="router.push('/auth/login')"
+          >
+            登录
+          </v-btn>
+        </v-list-item-title>
+      </template>
       <template v-slot:append>
         <v-btn
           variant="text"
@@ -52,7 +74,7 @@
     <v-divider class="my-2"></v-divider>
 
     <v-list density="compact" nav>
-      <template v-for="item in unifiedRoutes" :key="item.name">
+      <template v-for="item in filteredRoutes" :key="item.name">
         <!-- 没有子路由的菜单项 -->
         <v-list-item
           v-if="!item.children"
@@ -171,6 +193,11 @@ const handleLogout = async () => {
     console.error('登出失败:', error)
   }
 }
+
+// 根据登录状态过滤路由
+const filteredRoutes = computed<RouteItem[]>(() => {
+  return router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
+})
 </script>
 
 <style scoped>

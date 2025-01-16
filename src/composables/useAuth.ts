@@ -2,6 +2,7 @@ import {ref} from 'vue'
 import {
     type CaptchaData,
     getCaptcha as authGetCaptcha,
+    getUserInfo as authGetUserInfo,
     login as authLogin,
     type LoginPayload,
     logout as authLogout,
@@ -38,9 +39,25 @@ export function useAuth() {
       error.value = null
       const { data } = await authLogin(payload)
       userStore.setToken(data.token)
+      await getUserInfo()
       return data
     } catch (err: any) {
       error.value = err.response?.data?.msg || err.message || '登录失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function getUserInfo() {
+    try {
+      loading.value = true
+      error.value = null
+      const { data } = await authGetUserInfo()
+      userStore.setUserInfo(data)
+      return data
+    } catch (err: any) {
+      error.value = err.response?.data?.msg || err.message || '获取用户信息失败'
       throw err
     } finally {
       loading.value = false
