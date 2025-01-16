@@ -44,6 +44,9 @@
           </div>
           <div v-if="game?.opponentName" class="text-sm">
             对手: {{ game.opponentName }}
+            <span class="ml-2" :class="{ 'text-green-500': game.isReady }">
+              {{ game.isReady ? '(已准备)' : '(未准备)' }}
+            </span>
           </div>
           <div v-else class="text-sm text-gray-500">
             等待对手加入...
@@ -81,6 +84,7 @@
     <!-- 棋盘容器 -->
     <div
       class="relative bg-amber-100 rounded-lg shadow-lg p-[15px] sm:p-[30px] touch-none"
+      :class="{ 'opacity-50': isOnlineMode && !game?.isReady }"
       :style="{
         width: `${boardSize + (isMobile ? 30 : 60)}px`,
         height: `${boardSize + (isMobile ? 30 : 60)}px`
@@ -129,7 +133,7 @@
               width: `${isMobile ? '20px' : '30px'}`,
               height: `${isMobile ? '20px' : '30px'}`,
               transform: 'translate(-50%, -50%)',
-              cursor: !board[y-1][x-1] && !winner ? 'pointer' : 'default'
+              cursor: canMove(x-1, y-1) ? 'pointer' : 'default'
             }"
             @click="makeMove(x-1, y-1)"
             @touchstart.prevent="makeMove(x-1, y-1)"
@@ -168,7 +172,7 @@
     <button
       @click="resetGame"
       class="mt-4 sm:mt-8 px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 focus:outline-none"
-      :disabled="isOnlineMode && (!game?.opponentName)"
+      :disabled="isOnlineMode && (!game?.isReady || !game?.opponentName)"
     >
       重新开始
     </button>
@@ -185,11 +189,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useAuthCheck } from '@/composables/useAuthCheck'
-import { useGomokuGame } from '@/composables/useGomokuGame'
+import {computed, ref} from 'vue'
+import {useAuthCheck} from '@/composables/useAuthCheck'
+import {useGomokuGame} from '@/composables/useGomokuGame'
+import {useMessage} from '@/composables/useMessage'
+import {createGomokuRoom, joinGomokuRoom, leaveGomokuRoom} from '@/api/game'
 
 const { withAuth } = useAuthCheck()
+const { showSuccess, showError } = useMessage()
 
 // 响应式布局
 const isMobile = computed(() => window.innerWidth < 768)
@@ -215,6 +222,19 @@ const isOnlineMode = ref(false)
 const roomId = ref<string | null>(null)
 const inputRoomId = ref('')
 const game = ref<ReturnType<typeof useGomokuGame> | null>(null)
+
+// 检查是否可以落子
+const canMove = (x: number, y: number) => {
+  if (isOnlineMode.value) {
+    return game.value?.isReady &&
+           !game.value.gameState.winner &&
+           game.value.gameState.board[y][x] === 0 &&
+           game.value.gameState.currentPlayer === game.value.playerColor &&
+           game.value.opponentName
+  } else {
+    return !winner.value && !board.value[y][x]
+  }
+}
 
 // 检查是否获胜
 const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
@@ -297,18 +317,44 @@ const resetGame = () => {
 // 创建在线房间
 async function createRoom() {
   await withAuth(async () => {
-    roomId.value = 'ROOM_' + Math.random().toString(36).substr(2, 9)
-    isOnlineMode.value = true
-    game.value = useGomokuGame(roomId.value)
+    try {
+      console.log('开始创建房间')
+      const res = await createGomokuRoom()
+      console.log('创建房间响应:', res)
+      if (res.code === 200 && res.data) {
+        roomId.value = res.data
+        isOnlineMode.value = true
+        game.value = useGomokuGame(res.data)
+        showSuccess('房间创建成功')
+      } else {
+        showError(res.msg || '创建房间失败')
+      }
+    } catch (error: any) {
+      console.error('创建房间错误:', error)
+      showError(error.message || '创建房间失败，请重试')
+    }
   })
 }
 
 // 加入在线房间
 async function joinRoom(id: string) {
   await withAuth(async () => {
-    roomId.value = id
-    isOnlineMode.value = true
-    game.value = useGomokuGame(id)
+    try {
+      console.log('开始加入房间:', id)
+      const res = await joinGomokuRoom(id)
+      console.log('加入房间响应:', res)
+      if (res.code === 200) {
+        roomId.value = id
+        isOnlineMode.value = true
+        game.value = useGomokuGame(id)
+        showSuccess('加入房间成功')
+      } else {
+        showError(res.msg || '加入房间失败')
+      }
+    } catch (error: any) {
+      console.error('加入房间错误:', error)
+      showError(error.message || '加入房间失败，请检查房间号是否正确')
+    }
   })
 }
 
@@ -316,18 +362,34 @@ async function joinRoom(id: string) {
 function copyRoomId() {
   if (roomId.value) {
     navigator.clipboard.writeText(roomId.value)
+    showSuccess('房间ID已复制到剪贴板')
   }
 }
 
 // 离开房间
 async function leaveRoom() {
-  if (game.value) {
-    game.value.leaveGame()
-    game.value = null
+  if (roomId.value) {
+    try {
+      console.log('开始离开房间:', roomId.value)
+      const res = await leaveGomokuRoom(roomId.value)
+      console.log('离开房间响应:', res)
+      if (res.code === 200) {
+        if (game.value) {
+          game.value.leaveGame()
+          game.value = null
+        }
+        roomId.value = null
+        isOnlineMode.value = false
+        resetGame()
+        showSuccess('已退出房间')
+      } else {
+        showError(res.msg || '离开房间失败')
+      }
+    } catch (error: any) {
+      console.error('离开房间错误:', error)
+      showError(error.message || '退出房间失败，请重试')
+    }
   }
-  roomId.value = null
-  isOnlineMode.value = false
-  resetGame()
 }
 </script>
 

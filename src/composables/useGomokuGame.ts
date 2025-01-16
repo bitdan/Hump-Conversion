@@ -1,5 +1,7 @@
-import { ref, computed } from 'vue'
-import { useWebSocket } from '@vueuse/core'
+import {onMounted, onUnmounted, ref} from 'vue'
+import {useUserStore} from '@/store/user'
+import {useWebSocket} from '@/hooks/useWebSocket'
+import {useMessage} from '@/composables/useMessage'
 
 export interface GameState {
   board: number[][]
@@ -9,74 +11,142 @@ export interface GameState {
 }
 
 export function useGomokuGame(roomId: string) {
-  // 连接WebSocket
-  const { status, data, send } = useWebSocket(`${import.meta.env.VITE_WS_URL}/gomoku/${roomId}`)
+  const userStore = useUserStore()
+  const { showError } = useMessage()
 
-  // 游戏状态
   const gameState = ref<GameState>({
-    board: Array(15).fill(null).map(() => Array(15).fill(0)),
+    board: Array(15).fill(0).map(() => Array(15).fill(0)),
     currentPlayer: 'black',
     winner: null,
     lastMove: null
   })
-
-  // 玩家信息
   const playerColor = ref<'black' | 'white' | null>(null)
   const opponentName = ref<string | null>(null)
-  const isMyTurn = computed(() => gameState.value.currentPlayer === playerColor.value)
+  const isReady = ref(false)
 
-  // 处理接收到的消息
-  const onMessage = (event: MessageEvent) => {
+  const { connect, disconnect, send, onMessage } = useWebSocket(`/ws/gomoku?token=${userStore.token}`)
+
+  const handleJoin = (data: any) => {
+    const { userId, username } = data
+    if (userId !== userStore.userId) {
+      opponentName.value = username
+      // 分配颜色：房主是黑棋，加入者是白棋
+      playerColor.value = playerColor.value || 'white'
+    } else {
+      playerColor.value = playerColor.value || 'black'
+    }
+    isReady.value = true
+  }
+
+  const handleMove = (data: any) => {
+    const { x, y, player } = data
+    if (x >= 0 && x < 15 && y >= 0 && y < 15) {
+      gameState.value.board[y][x] = player === 'black' ? 1 : 2
+      gameState.value.lastMove = { x, y }
+      gameState.value.currentPlayer = player === 'black' ? 'white' : 'black'
+
+      if (data.winner) {
+        gameState.value.winner = data.winner
+      }
+    }
+  }
+
+  const handleLeave = (data: any) => {
+    const { userId } = data
+    if (userId !== userStore.userId) {
+      opponentName.value = null
+      isReady.value = false
+    }
+  }
+
+  const handleRestart = () => {
+    gameState.value = {
+      board: Array(15).fill(0).map(() => Array(15).fill(0)),
+      currentPlayer: 'black',
+      winner: null,
+      lastMove: null
+    }
+  }
+
+  onMessage((event: MessageEvent) => {
     const message = JSON.parse(event.data)
-    
+
     switch (message.type) {
-      case 'gameState':
-        gameState.value = message.data
+      case 'JOIN':
+        handleJoin(message.data)
         break
-      case 'playerAssigned':
-        playerColor.value = message.color
+      case 'MOVE':
+        handleMove(message.data)
         break
-      case 'opponentJoined':
-        opponentName.value = message.name
+      case 'LEAVE':
+        handleLeave(message.data)
         break
-      case 'opponentLeft':
-        opponentName.value = null
+      case 'RESTART':
+        handleRestart()
+        break
+      case 'ERROR':
+        showError(message.data.message)
         break
     }
-  }
+  })
 
-  // 下棋
   const makeMove = (x: number, y: number) => {
-    if (!isMyTurn.value || gameState.value.winner || gameState.value.board[y][x] !== 0) {
-      return false
+    if (
+      !isReady.value ||
+      gameState.value.winner ||
+      gameState.value.board[y][x] !== 0 ||
+      gameState.value.currentPlayer !== playerColor.value ||
+      !opponentName.value
+    ) {
+      return
     }
 
-    send(JSON.stringify({
-      type: 'move',
-      data: { x, y }
-    }))
-
-    return true
+    send({
+      type: 'MOVE',
+      roomId,
+      data: { x, y, player: playerColor.value }
+    })
   }
 
-  // 重新开始游戏
   const restartGame = () => {
-    send(JSON.stringify({ type: 'restart' }))
+    if (!isReady.value) return
+
+    send({
+      type: 'RESTART',
+      roomId,
+      data: {}
+    })
   }
 
-  // 离开游戏
   const leaveGame = () => {
-    send(JSON.stringify({ type: 'leave' }))
+    send({
+      type: 'LEAVE',
+      roomId,
+      data: {}
+    })
+    disconnect()
   }
+
+  onMounted(() => {
+    connect()
+    send({
+      type: 'JOIN',
+      roomId,
+      data: {}
+    })
+  })
+
+  onUnmounted(() => {
+    leaveGame()
+  })
 
   return {
-    status,
     gameState,
     playerColor,
     opponentName,
-    isMyTurn,
+    isReady,
     makeMove,
     restartGame,
     leaveGame
   }
-} 
+}
