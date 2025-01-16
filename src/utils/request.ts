@@ -1,6 +1,6 @@
 import type {AxiosInstance, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
 import axios from 'axios'
-import {useUserStore} from '@/store/user'
+import {useUserStore} from '@/stores/user'
 import {useMessage} from '@/composables/useMessage'
 
 const { showError } = useMessage()

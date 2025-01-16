@@ -1,5 +1,5 @@
 import {ref} from 'vue'
-import {useUserStore} from '../store/user'
+import {useUserStore} from '../stores/user'
 import {useMessage} from './useMessage'
 import {useRouter} from 'vue-router'
 import {useWebSocket} from '../hooks/useWebSocket'
@@ -15,7 +15,7 @@ export function useGomokuGame(roomId: string) {
   const { showError } = useMessage()
   const userStore = useUserStore()
   const router = useRouter()
-  
+
   const gameState = ref<GameState>({
     board: Array(15).fill(0).map(() => Array(15).fill(0)),
     currentPlayer: 'black',
