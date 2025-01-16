@@ -47,6 +47,21 @@
               class="px-4 hover:bg-gray-50 transition-colors duration-200"
             ></v-list-item>
           </v-list>
+          <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact" v-else>
+            <v-list-item
+              prepend-icon="mdi-view-grid"
+              :title="'切换为' + (isTopNav ? '侧边' : '顶部') + '导航'"
+              @click="toggleNavMode"
+              class="px-4 hover:bg-gray-50 transition-colors duration-200"
+            ></v-list-item>
+            <v-divider class="my-2"></v-divider>
+            <v-list-item
+              prepend-icon="mdi-login"
+              title="登录"
+              @click="router.push('/auth/login')"
+              class="px-4 hover:bg-gray-50 transition-colors duration-200"
+            ></v-list-item>
+          </v-list>
         </v-menu>
       </template>
       <template v-if="!rail">
