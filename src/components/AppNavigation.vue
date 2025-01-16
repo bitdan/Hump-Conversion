@@ -8,33 +8,48 @@
     width="260"
     :rail-width="56"
   >
+    <!-- 用户信息区域 -->
     <v-list-item
-      prepend-avatar="https://s2.loli.net/2025/01/03/FcBEJdh1YvOSWpK.jpg"
-      :title="rail ? '' : '开发者工具'"
       nav
+      class="user-info"
     >
+      <template v-slot:prepend>
+        <v-menu location="bottom start" transition="scale-transition">
+          <template v-slot:activator="{ props }">
+            <v-avatar
+              v-bind="props"
+              size="40"
+              class="cursor-pointer"
+            ></v-avatar>
+          </template>
+          <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact">
+            <v-list-item
+              prepend-icon="mdi-view-grid"
+              :title="'切换为' + (isTopNav ? '侧边' : '顶部') + '导航'"
+              @click="toggleNavMode"
+              class="px-4 hover:bg-gray-50 transition-colors duration-200"
+            ></v-list-item>
+            <v-divider class="my-2"></v-divider>
+            <v-list-item
+              prepend-icon="mdi-logout"
+              title="退出登录"
+              @click="handleLogout"
+              class="px-4 hover:bg-gray-50 transition-colors duration-200"
+            ></v-list-item>
+          </v-list>
+        </v-menu>
+      </template>
+      <v-list-item-title v-if="!rail">{{ userStore.username || '未登录' }}</v-list-item-title>
       <template v-slot:append>
-        <div class="d-flex align-center">
-          <v-btn
-            v-if="!rail"
-            variant="text"
-            size="small"
-            :prepend-icon="'mdi-view-grid'"
-            class="mr-2"
-            @click="toggleNavMode"
-          >
-            {{ isTopNav ? '侧边导航' : '顶部导航' }}
-          </v-btn>
-          <v-btn
-            variant="text"
-            :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-            @click.stop="rail = !rail"
-          ></v-btn>
-        </div>
+        <v-btn
+          variant="text"
+          :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+          @click.stop="rail = !rail"
+        ></v-btn>
       </template>
     </v-list-item>
 
-    <v-divider></v-divider>
+    <v-divider class="my-2"></v-divider>
 
     <v-list density="compact" nav>
       <template v-for="item in unifiedRoutes" :key="item.name">
@@ -87,9 +102,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router'
-import { useNavStore } from '@/stores/nav'
+import {computed, ref, watch} from 'vue'
+import {type RouteRecordRaw, useRoute, useRouter} from 'vue-router'
+import {useNavStore} from '@/stores/nav'
+import {useUserStore} from '@/stores/user'
+import {useAuth} from '@/composables/useAuth'
 
 type RouteItem = RouteRecordRaw & {
   name?: string;
@@ -107,12 +124,14 @@ const drawer = ref(true)
 const rail = ref(false)
 const navStore = useNavStore()
 const openedGroup = ref<string | null>(null)
+const userStore = useUserStore()
+const { logout } = useAuth()
 
 // 添加导航模式计算属性和切换方法
 const isTopNav = computed(() => navStore.mode === 'top')
 
 // Unified routes for both top and side navigation
-const unifiedRoutes = computed<RouteItem[]>(() => 
+const unifiedRoutes = computed<RouteItem[]>(() =>
   router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
 )
 
@@ -133,10 +152,10 @@ watch(
   () => route.path,
   (newPath) => {
     // 找到包含当前路由的菜单组
-    const currentGroup = unifiedRoutes.value.find(item => 
+    const currentGroup = unifiedRoutes.value.find(item =>
       item.children?.some(child => child.path === newPath)
     )
-    
+
     // 如果找到了对应的菜单组，且不是当前已展开的组，则切换
     if (currentGroup?.name !== openedGroup.value) {
       openedGroup.value = currentGroup?.name?.toString() || null
@@ -144,6 +163,14 @@ watch(
   },
   { immediate: true }
 )
+
+const handleLogout = async () => {
+  try {
+    await logout()
+  } catch (error) {
+    console.error('登出失败:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -375,4 +402,17 @@ watch(
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-</style> 
+
+.user-info {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+}
+
+.user-info :deep(.v-list-item__prepend) {
+  margin-inline-end: 12px;
+}
+
+.user-info :deep(.v-avatar) {
+  border: 2px solid rgba(79, 70, 229, 0.2);
+}
+</style>
