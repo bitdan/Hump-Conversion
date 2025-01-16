@@ -189,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useAuthCheck} from '@/composables/useAuthCheck'
 import {useGomokuGame} from '@/composables/useGomokuGame'
 import {useMessage} from '@/composables/useMessage'
@@ -324,7 +324,6 @@ async function createRoom() {
       if (res.code === 200 && res.data) {
         roomId.value = res.data
         isOnlineMode.value = true
-        game.value = useGomokuGame(res.data)
         showSuccess('房间创建成功')
       } else {
         showError(res.msg || '创建房间失败')
@@ -346,7 +345,6 @@ async function joinRoom(id: string) {
       if (res.code === 200) {
         roomId.value = id
         isOnlineMode.value = true
-        game.value = useGomokuGame(id)
         showSuccess('加入房间成功')
       } else {
         showError(res.msg || '加入房间失败')
@@ -376,8 +374,8 @@ async function leaveRoom() {
       if (res.code === 200) {
         if (game.value) {
           game.value.leaveGame()
-          game.value = null
         }
+        game.value = null
         roomId.value = null
         isOnlineMode.value = false
         resetGame()
@@ -391,6 +389,15 @@ async function leaveRoom() {
     }
   }
 }
+
+// 监听房间ID变化，创建或销毁游戏实例
+watch(roomId, (newRoomId) => {
+  if (newRoomId) {
+    game.value = useGomokuGame(newRoomId)
+  } else {
+    game.value = null
+  }
+})
 </script>
 
 <style scoped>

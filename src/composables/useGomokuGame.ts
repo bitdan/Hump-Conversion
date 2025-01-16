@@ -1,9 +1,9 @@
-import {onMounted, onUnmounted, ref} from 'vue'
+import {ref} from 'vue'
 import {useUserStore} from '@/store/user'
-import {useWebSocket} from '@/hooks/useWebSocket'
-import {useMessage} from '@/composables/useMessage'
+import {useMessage} from './useMessage'
+import {useRouter} from 'vue-router'
 
-export interface GameState {
+interface GameState {
   board: number[][]
   currentPlayer: 'black' | 'white'
   winner: 'black' | 'white' | null
@@ -11,8 +11,22 @@ export interface GameState {
 }
 
 export function useGomokuGame(roomId: string) {
-  const userStore = useUserStore()
   const { showError } = useMessage()
+  const userStore = useUserStore()
+  const router = useRouter()
+  
+  // 构建WebSocket URL，添加token用于认证
+  const wsUrl = `${import.meta.env.VITE_WS_URL}/ws/gomoku/${roomId}?token=${userStore.token}`
+  console.log('尝试连接WebSocket:', wsUrl)
+  
+  let ws: WebSocket
+  try {
+    ws = new WebSocket(wsUrl)
+  } catch (error) {
+    console.error('WebSocket连接创建失败:', error)
+    showError('连接游戏服务器失败')
+    throw error
+  }
 
   const gameState = ref<GameState>({
     board: Array(15).fill(0).map(() => Array(15).fill(0)),
@@ -20,125 +34,143 @@ export function useGomokuGame(roomId: string) {
     winner: null,
     lastMove: null
   })
+
   const playerColor = ref<'black' | 'white' | null>(null)
   const opponentName = ref<string | null>(null)
   const isReady = ref(false)
 
-  const { connect, disconnect, send, onMessage } = useWebSocket(`/ws/gomoku?token=${userStore.token}`)
-
-  const handleJoin = (data: any) => {
-    const { userId, username } = data
-    if (userId !== userStore.userId) {
-      opponentName.value = username
-      // 分配颜色：房主是黑棋，加入者是白棋
-      playerColor.value = playerColor.value || 'white'
-    } else {
-      playerColor.value = playerColor.value || 'black'
-    }
-    isReady.value = true
-  }
-
-  const handleMove = (data: any) => {
-    const { x, y, player } = data
-    if (x >= 0 && x < 15 && y >= 0 && y < 15) {
-      gameState.value.board[y][x] = player === 'black' ? 1 : 2
-      gameState.value.lastMove = { x, y }
-      gameState.value.currentPlayer = player === 'black' ? 'white' : 'black'
-
-      if (data.winner) {
-        gameState.value.winner = data.winner
+  ws.onopen = () => {
+    console.log('WebSocket连接已建立，发送加入消息')
+    try {
+      const joinMessage = {
+        type: 'JOIN',
+        roomId,
+        data: {
+          userId: userStore.userId,
+          username: userStore.username
+        }
       }
+      console.log('发送加入消息:', joinMessage)
+      ws.send(JSON.stringify(joinMessage))
+    } catch (error) {
+      console.error('发送加入消息失败:', error)
+      showError('加入游戏失败')
     }
   }
 
-  const handleLeave = (data: any) => {
-    const { userId } = data
-    if (userId !== userStore.userId) {
-      opponentName.value = null
-      isReady.value = false
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      console.log('收到WebSocket消息:', data)
+
+      switch (data.type) {
+        case 'GAME_STATE':
+          gameState.value = data.data
+          break
+        case 'PLAYER_INFO':
+          playerColor.value = data.data.color
+          break
+        case 'OPPONENT_JOIN':
+          opponentName.value = data.data.username
+          isReady.value = true
+          break
+        case 'OPPONENT_LEAVE':
+          opponentName.value = null
+          isReady.value = false
+          break
+        case 'ERROR':
+          showError(data.data.message)
+          // 如果是token过期，跳转到登录页
+          if (data.data.message === 'invalid token') {
+            userStore.clearUserInfo()
+            router.push('/login')
+          }
+          break
+        default:
+          console.warn('收到未知类型的消息:', data.type)
+      }
+    } catch (error) {
+      console.error('处理WebSocket消息失败:', error)
     }
   }
 
-  const handleRestart = () => {
-    gameState.value = {
-      board: Array(15).fill(0).map(() => Array(15).fill(0)),
-      currentPlayer: 'black',
-      winner: null,
-      lastMove: null
-    }
+  ws.onerror = (error) => {
+    console.error('WebSocket错误:', error)
+    showError('游戏连接出错')
   }
 
-  onMessage((event: MessageEvent) => {
-    const message = JSON.parse(event.data)
-
-    switch (message.type) {
-      case 'JOIN':
-        handleJoin(message.data)
-        break
-      case 'MOVE':
-        handleMove(message.data)
-        break
-      case 'LEAVE':
-        handleLeave(message.data)
-        break
-      case 'RESTART':
-        handleRestart()
-        break
-      case 'ERROR':
-        showError(message.data.message)
-        break
+  ws.onclose = (event) => {
+    console.log('WebSocket连接已关闭:', event.code, event.reason)
+    isReady.value = false
+    // 如果是token过期导致的关闭
+    if (event.code === 1008) {
+      userStore.clearUserInfo()
+      router.push('/login')
+    } else if (!event.wasClean) {
+      showError('游戏连接已断开')
     }
-  })
+  }
 
   const makeMove = (x: number, y: number) => {
-    if (
-      !isReady.value ||
-      gameState.value.winner ||
-      gameState.value.board[y][x] !== 0 ||
-      gameState.value.currentPlayer !== playerColor.value ||
-      !opponentName.value
-    ) {
-      return
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        const moveMessage = {
+          type: 'MOVE',
+          roomId,
+          data: {
+            x,
+            y,
+            player: playerColor.value
+          }
+        }
+        console.log('发送移动消息:', moveMessage)
+        ws.send(JSON.stringify(moveMessage))
+      } catch (error) {
+        console.error('发送移动消息失败:', error)
+        showError('发送移动失败')
+      }
+    } else {
+      console.warn('WebSocket未连接，无法发送移动')
+      showError('游戏未连接')
     }
-
-    send({
-      type: 'MOVE',
-      roomId,
-      data: { x, y, player: playerColor.value }
-    })
   }
 
   const restartGame = () => {
-    if (!isReady.value) return
-
-    send({
-      type: 'RESTART',
-      roomId,
-      data: {}
-    })
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        const restartMessage = {
+          type: 'RESTART',
+          roomId,
+          data: {}
+        }
+        console.log('发送重启消息:', restartMessage)
+        ws.send(JSON.stringify(restartMessage))
+      } catch (error) {
+        console.error('发送重启消息失败:', error)
+        showError('重启游戏失败')
+      }
+    } else {
+      console.warn('WebSocket未连接，无法重启游戏')
+      showError('游戏未连接')
+    }
   }
 
   const leaveGame = () => {
-    send({
-      type: 'LEAVE',
-      roomId,
-      data: {}
-    })
-    disconnect()
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        const leaveMessage = {
+          type: 'LEAVE',
+          roomId,
+          data: {}
+        }
+        console.log('发送离开消息:', leaveMessage)
+        ws.send(JSON.stringify(leaveMessage))
+        ws.close(1000, '主动离开')
+      } catch (error) {
+        console.error('发送离开消息失败:', error)
+      }
+    }
   }
-
-  onMounted(() => {
-    connect()
-    send({
-      type: 'JOIN',
-      roomId,
-      data: {}
-    })
-  })
-
-  onUnmounted(() => {
-    leaveGame()
-  })
 
   return {
     gameState,
