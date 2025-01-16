@@ -1,13 +1,18 @@
 import {ref} from 'vue'
+import {useUserStore} from '../store/user'
 
 export function useWebSocket(url: string) {
   const ws = ref<WebSocket | null>(null)
   const isConnected = ref(false)
   const messageHandler = ref<((event: MessageEvent) => void) | null>(null)
+  const userStore = useUserStore()
 
   const connect = () => {
     const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080'
-    ws.value = new WebSocket(`${baseUrl}${url}`)
+    const token = userStore.token
+    const wsUrl = `${baseUrl}${url}${url.includes('?') ? '&' : '?'}Authorization=Bearer ${token}`
+    console.log('WebSocket URL:', wsUrl)
+    ws.value = new WebSocket(wsUrl)
 
     ws.value.onopen = () => {
       isConnected.value = true
