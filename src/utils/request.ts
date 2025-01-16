@@ -33,6 +33,12 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data
     if (res.code && res.code !== 200) {
+      if (res.code === 401) {
+        const userStore = useUserStore()
+        userStore.clearUserInfo()
+        window.location.href = '/auth/login'
+        return Promise.reject(new Error('认证失败，请重新登录'))
+      }
       showError(res.msg || '请求失败')
       return Promise.reject(new Error(res.msg || '请求失败'))
     }
@@ -40,6 +46,12 @@ service.interceptors.response.use(
   },
   (error) => {
     console.error('请求错误', error)
+    if (error.response?.status === 401) {
+      const userStore = useUserStore()
+      userStore.clearUserInfo()
+      window.location.href = '/auth/login'
+      return Promise.reject(new Error('认证失败，请重新登录'))
+    }
     showError(error.message || '请求失败')
     return Promise.reject(error)
   }
