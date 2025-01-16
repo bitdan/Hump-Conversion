@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import {useUserStore} from '@/stores/user'
 
 interface ApiResponse<T> {
   code: number
@@ -49,4 +50,12 @@ export function login(data: LoginPayload) {
 // 获取验证码
 export function getCaptcha() {
   return request.get<ApiResponse<CaptchaData>>('/captchaImage')
-} 
+}
+
+// 用户登出
+export function logout() {
+  return request.post<ApiResponse<void>>('/logout').finally(() => {
+    const userStore = useUserStore()
+    userStore.clearUserInfo()
+  })
+}

@@ -75,6 +75,28 @@
         切换为{{ navMode === 'side' ? '顶部' : '侧边' }}导航
       </v-btn>
 
+      <!-- 用户菜单 -->
+      <v-menu location="bottom end" transition="scale-transition">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            v-bind="props"
+            variant="text"
+            :prepend-icon="'mdi-account-circle'"
+            class="ml-2"
+          >
+            {{ userStore.username }}
+          </v-btn>
+        </template>
+        <v-list class="bg-white rounded-lg py-2 shadow-lg" density="compact">
+          <v-list-item
+            prepend-icon="mdi-logout"
+            title="退出登录"
+            @click="handleLogout"
+            class="px-4 hover:bg-gray-50 transition-colors duration-200"
+          ></v-list-item>
+        </v-list>
+      </v-menu>
+
       <!-- 移动端菜单按钮 -->
       <v-app-bar-nav-icon
         class="md:hidden"
@@ -132,12 +154,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useStorage } from '@vueuse/core'
-import { useNavStore } from '@/stores/nav'
-import type { ComponentPublicInstance } from 'vue'
-import type { RouteRecordRaw } from 'vue-router'
+import type {ComponentPublicInstance} from 'vue'
+import {computed, nextTick, onMounted, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useStorage} from '@vueuse/core'
+import {useNavStore} from '@/stores/nav'
+import {useUserStore} from '@/stores/user'
+import {useAuth} from '@/composables/useAuth'
 
 interface RouteItem {
   name: string;
@@ -156,14 +179,14 @@ type VuetifyActivator = Element | ComponentPublicInstance | string | "parent";
 function useNavigation() {
   const router = useRouter()
   const route = useRoute()
-  
-  const mainRoutes = computed<RouteItem[]>(() => 
+
+  const mainRoutes = computed<RouteItem[]>(() =>
     router.options.routes.filter(route => route.name && route.path !== '/') as RouteItem[]
   )
 
   const isCurrentRoute = (path: string): boolean => route.path === path
-  
-  const isGroupActive = (item: RouteItem): boolean => 
+
+  const isGroupActive = (item: RouteItem): boolean =>
     item.children?.some(child => isCurrentRoute(child.path)) || false
 
   return {
@@ -185,11 +208,13 @@ const navMode = useStorage('nav-mode', 'top')
 const { mainRoutes, isCurrentRoute, isGroupActive } = useNavigation()
 const route = useRoute()
 const navStore = useNavStore()
+const userStore = useUserStore()
+const { logout } = useAuth()
 
 // 处理标签页变化
 const handleTabChange = (newValue: unknown) => {
   if (typeof newValue !== 'string') return
-  
+
   const selectedItem = mainRoutes.value.find(item => item.name === newValue)
   if (selectedItem?.children) {
     currentSubmenuItems.value = selectedItem.children
@@ -219,9 +244,17 @@ const toggleNavMode = () => {
   navMode.value = navMode.value === 'top' ? 'side' : 'top'
 }
 
+const handleLogout = async () => {
+  try {
+    await logout()
+  } catch (error) {
+    console.error('登出失败:', error)
+  }
+}
+
 // 生命周期钩子
 onMounted(() => {
-  const currentMainRoute = mainRoutes.value.find(item => 
+  const currentMainRoute = mainRoutes.value.find(item =>
     item.path === route.path || item.children?.some(child => child.path === route.path)
   )
   if (currentMainRoute?.name) {
@@ -233,7 +266,7 @@ onMounted(() => {
 watch(
   () => route.path,
   (newPath) => {
-    const currentMainRoute = mainRoutes.value.find(item => 
+    const currentMainRoute = mainRoutes.value.find(item =>
       item.path === newPath || item.children?.some(child => child.path === newPath)
     )
     if (currentMainRoute?.name) {
@@ -266,4 +299,4 @@ watch(
   opacity: 0;
   transform: scale(0.95);
 }
-</style> 
+</style>
