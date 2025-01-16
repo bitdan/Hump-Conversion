@@ -16,7 +16,8 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const userStore = useUserStore()
-    if (userStore.token) {
+    // 登录接口不需要token
+    if (userStore.token && !config.url?.includes('/login')) {
       config.headers = config.headers || {}
       config.headers['Authorization'] = 'Bearer ' + userStore.token
     }
