@@ -31,16 +31,16 @@ export const routes: RouteRecordRaw[] = [
             }
         ]
     },
-    {
-        path: '/home',
-        name: 'Home',
-        component: () => import('@/components/Home.vue'),
-        meta: { 
-            title: '首页',
-            icon: 'mdi-home',
-            requiresAuth: false
-        }
-    },
+    // {
+    //     path: '/home',
+    //     name: 'Home',
+    //     component: () => import('@/components/Home.vue'),
+    //     meta: { 
+    //         title: '首页',
+    //         icon: 'mdi-home',
+    //         requiresAuth: false
+    //     }
+    // },
     {
         path: '/tools',
         name: 'Tools',

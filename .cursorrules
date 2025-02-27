@@ -10,6 +10,27 @@
     - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
     - Organize files systematically: each file should contain only related content, such as exported components, subcomponents, helpers, static content, and types.
   
+   Service Layer API Pattern
+    - Directory Structure:
+        api/*.ts: Service layer for API request encapsulation
+        composables/*.ts: Business layer for state management and logic
+    - Core Characteristics:
+        /**
+            // Unified Response Type
+            interface ApiResponse<T> {
+                code: number
+                msg: string
+                data: T
+            }
+
+            // Interface Definitions
+            interface PayloadType { ... }
+            interface ResponseType { ... }
+
+            // Function Implementation
+            export function apiName(data: PayloadType): Promise<ApiResponse<ResponseType>>
+         */
+
     Naming Conventions
     - Use lowercase with dashes for directories (e.g., components/auth-wizard).
     - Favor named exports for functions.
