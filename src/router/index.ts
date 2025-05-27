@@ -159,15 +159,6 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
-                path: '/games/euler-circuit',
-                name: 'EulerCircuit',
-                component: () => import('@/views/games/EulerCircuit.vue'),
-                meta: {
-                    title: '欧拉回路求解',
-                    icon: 'mdi-graph'
-                }
-            },
-            {
                 path: '/games/gomoku',
                 name: 'Gomoku',
                 component: () => import('@/views/games/Gomoku.vue'),
