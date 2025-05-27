@@ -111,6 +111,15 @@ export const routes: RouteRecordRaw[] = [
                   title: '文字转二维码',
                   icon: 'mdi-qrcode'
                 }
+            },
+            {
+                path: '/tools/jetbrain-checker',
+                name: 'JetbrainChecker',
+                component: () => import('@/views/tools/JetbrainChecker.vue'),
+                meta: {
+                    title: 'Jetbrain 激活工具',
+                    icon: 'mdi-link-variant'
+                }
             }
         ]
     },
