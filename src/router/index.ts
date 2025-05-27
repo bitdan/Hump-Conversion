@@ -102,6 +102,15 @@ export const routes: RouteRecordRaw[] = [
                     title: 'JSON转实体类',
                     icon: 'mdi-code-json'
                 }
+            },
+            {
+                path: '/tools/qr-code-generator',
+                name: 'QrCodeGenerator',
+                component: () => import('@/views/tools/QrCodeGenerator.vue'),
+                meta: {
+                  title: '文字转二维码',
+                  icon: 'mdi-qrcode'
+                }
             }
         ]
     },
