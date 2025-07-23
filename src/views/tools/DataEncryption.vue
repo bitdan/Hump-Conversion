@@ -112,8 +112,8 @@ const encryptionTypes = [
 
 const algorithms = {
   hash: ['MD5', 'SHA-256', 'SHA-512', 'SHA3', 'SM3', 'RIPEMD160'],
-  symmetric: ['AES', 'DES', 'Triple DES', 'SM4'],
-  asymmetric: ['RSA', 'SM2'],
+  symmetric: ['AES', 'DES', 'Triple DES'],
+  asymmetric: ['RSA'],
   password: ['Bcrypt'],
   base64: ['Base64'],
 };
@@ -264,11 +264,6 @@ function processSymmetric(encrypt: boolean) {
         ? SymmetricEncryption.tripleDesEncrypt(inputText.value, key.value)
         : SymmetricEncryption.tripleDesDecrypt(inputText.value, key.value);
       break;
-    case 'SM4':
-      result.value = encrypt
-        ? SMCrypto.sm4Encrypt(inputText.value, key.value)
-        : SMCrypto.sm4Decrypt(inputText.value, key.value);
-      break;
   }
 }
 
@@ -282,11 +277,6 @@ function processAsymmetric(encrypt: boolean) {
       result.value = encrypt
         ? AsymmetricEncryption.rsaEncrypt(inputText.value, key.value)
         : AsymmetricEncryption.rsaDecrypt(inputText.value, key.value);
-      break;
-    case 'SM2':
-      result.value = encrypt
-        ? SMCrypto.sm2Encrypt(inputText.value, key.value)
-        : SMCrypto.sm2Decrypt(inputText.value, key.value);
       break;
   }
 }
