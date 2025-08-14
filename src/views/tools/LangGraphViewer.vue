@@ -1,12 +1,9 @@
 <template>
   <div class="chat-container">
-    <!-- 聊天内容区 -->
+    <!-- 聊天内容 -->
     <div class="chat-messages" ref="messageContainer">
-      <div
-        v-if="messages.length === 0"
-        class="text-gray-400 text-center mt-10"
-      >
-        请输入主题开始对话...
+      <div v-if="messages.length === 0" class="empty-hint">
+        💬 请输入主题开始对话
       </div>
 
       <div
@@ -28,11 +25,12 @@
         placeholder="输入主题或问题，按 Enter 发送"
         @keydown.enter.prevent="fetchFromApi"
         outlined
+        class="input-box"
       ></v-textarea>
       <v-btn
         color="success"
         :loading="apiLoading"
-        class="ml-2"
+        class="send-btn"
         @click="fetchFromApi"
       >
         发送
@@ -68,7 +66,10 @@ watch(messages, async () => {
 function formatDraft(draft: string): string {
   return draft
     .replace(/\n/g, '<br>')
-    .replace(/```(\w+)\n([\s\S]*?)```/g, '<pre class="bg-gray-800 text-green-400 p-4 rounded-lg overflow-x-auto"><code>$2</code></pre>')
+    .replace(
+      /```(\w+)\n([\s\S]*?)```/g,
+      '<pre class="code-block"><code>$2</code></pre>'
+    )
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>');
 }
@@ -88,10 +89,8 @@ async function fetchFromApi(): Promise<void> {
     const { data } = await getLangGraphData(topic);
     const fullText = formatDraft(data.draft);
 
-    // 添加一个空的 assistant 消息
     const msgIndex = messages.value.push({ role: 'assistant', content: '' }) - 1;
 
-    // 流式打字效果
     let i = 0;
     const timer = setInterval(() => {
       if (i < fullText.length) {
@@ -100,7 +99,7 @@ async function fetchFromApi(): Promise<void> {
       } else {
         clearInterval(timer);
       }
-    }, 15); // 速度可以调节
+    }, 15);
 
     showSuccess('获取成功');
   } catch (error) {
@@ -112,24 +111,30 @@ async function fetchFromApi(): Promise<void> {
 }
 </script>
 
-
 <style scoped>
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: #fafafa;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  background: #f5f5f5;
+  padding: 24px;
+}
+
+.empty-hint {
+  color: #aaa;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 15px;
 }
 
 .message-wrapper {
   display: flex;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .message-wrapper.user {
@@ -142,9 +147,12 @@ async function fetchFromApi(): Promise<void> {
 
 .message-bubble {
   max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  white-space: pre-wrap;
+  padding: 12px 16px;
+  border-radius: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .user .message-bubble {
@@ -153,15 +161,37 @@ async function fetchFromApi(): Promise<void> {
 }
 
 .assistant .message-bubble {
-  background: white;
-  border: 1px solid #ddd;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+}
+
+.code-block {
+  background: #1e1e1e;
+  color: #dcdcdc;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
 .chat-input {
   display: flex;
   align-items: flex-end;
-  padding: 8px;
-  border-top: 1px solid #ddd;
+  padding: 12px;
+  border-top: 1px solid #e5e5e5;
   background: white;
+}
+
+.input-box {
+  flex: 1;
+  border-radius: 12px;
+  background: #f7f7f7;
+}
+
+.send-btn {
+  margin-left: 10px;
+  border-radius: 10px;
 }
 </style>

@@ -50,6 +50,15 @@ export const routes: RouteRecordRaw[] = [
         },
         children: [
             {
+                path: '/tools/langgraph-viewer',
+                name: 'LangGraphViewer',
+                component: () => import('@/views/tools/LangGraphViewer.vue'),
+                meta: {
+                    title: 'LangGraph ',
+                    icon: 'mdi-brain'
+                }
+            },
+            {
                 path: '/tools/case-converter',
                 name: 'CaseConverter',
                 component: () => import('@/views/tools/CaseConverter.vue'),
@@ -119,15 +128,6 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: 'Jetbrain 激活工具',
                     icon: 'mdi-link-variant'
-                }
-            },
-            {
-                path: '/tools/langgraph-viewer',
-                name: 'LangGraphViewer',
-                component: () => import('@/views/tools/LangGraphViewer.vue'),
-                meta: {
-                    title: 'LangGraph ',
-                    icon: 'mdi-brain'
                 }
             }
         ]
