@@ -1,4 +1,3 @@
-// src/api/langGraph.ts
 import axios from 'axios';
 
 // 定义 LangGraph 数据结构
@@ -12,7 +11,7 @@ export interface LangGraphData {
 // 创建 axios 实例（可全局复用）
 const http = axios.create({
   baseURL: 'http://0.0.0.0:8000/api/v1', // 统一前缀
-  timeout: 10000,
+  timeout: 300000,
   headers: {
     'Content-Type': 'application/json',
   },
