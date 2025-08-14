@@ -120,6 +120,15 @@ export const routes: RouteRecordRaw[] = [
                     title: 'Jetbrain 激活工具',
                     icon: 'mdi-link-variant'
                 }
+            },
+            {
+                path: '/tools/langgraph-viewer',
+                name: 'LangGraphViewer',
+                component: () => import('@/views/tools/LangGraphViewer.vue'),
+                meta: {
+                    title: 'LangGraph ',
+                    icon: 'mdi-brain'
+                }
             }
         ]
     },
