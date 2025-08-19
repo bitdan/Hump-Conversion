@@ -8,7 +8,7 @@ const { showError } = useMessage()
 // 创建axios实例
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api', // API的base_url
-  timeout: 10000, // 请求超时时间
+  timeout: 1000*60, // 请求超时时间
   headers: { 'Content-Type': 'application/json;charset=utf-8' }
 })
 
