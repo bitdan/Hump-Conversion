@@ -55,6 +55,7 @@ const messages = ref<ChatMessage[]>([]);
 const apiTopic = ref('');
 const apiLoading = ref(false);
 const messageContainer = ref<HTMLElement | null>(null);
+const streamingToken = ref(0);
 
 watch(messages, async () => {
   await nextTick();
@@ -74,6 +75,39 @@ function formatDraft(draft: string): string {
     .replace(/\*(.*?)\*/g, '<em>$1</em>');
 }
 
+function scrollToBottom(): void {
+  if (messageContainer.value) {
+    messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+  }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getDelayForChar(char: string): number {
+  if (char === '\n') return 80;
+  if (/[\.\!\?]/.test(char)) return 120;
+  if (/[,:;，。；：]/.test(char)) return 80;
+  return 18;
+}
+
+async function typeWriter(
+  fullText: string,
+  onUpdate: (html: string) => void,
+  tokenSnapshot: number
+): Promise<void> {
+  let buffer = '';
+  for (let i = 0; i < fullText.length; i++) {
+    if (tokenSnapshot !== streamingToken.value) return; // canceled by new request
+    const ch = fullText[i];
+    buffer += ch;
+    onUpdate(formatDraft(buffer));
+    scrollToBottom();
+    await delay(getDelayForChar(ch));
+  }
+}
+
 async function fetchFromApi(): Promise<void> {
   if (!apiTopic.value.trim()) {
     showError('请输入主题');
@@ -84,36 +118,44 @@ async function fetchFromApi(): Promise<void> {
   messages.value.push({ role: 'user', content: topic });
   apiTopic.value = '';
   apiLoading.value = true;
+  streamingToken.value += 1;
+  const currentToken = streamingToken.value;
 
   try {
     const data = await getLangGraphData(topic);
 
-    // 直接渲染 draft
-    messages.value.push({
-      role: 'assistant',
-      content: formatDraft(data.draft)
-    });
+    // 初始化助手消息占位并逐字渲染
+    const assistantIndex = messages.value.push({ role: 'assistant', content: '' }) - 1;
+    await typeWriter(
+      data.draft || '',
+      (html) => {
+        messages.value[assistantIndex].content = html;
+      },
+      currentToken
+    );
 
-    // 渲染 corrections
-    if (data.corrections && data.corrections.length > 0) {
+    // 如果未被取消，渲染改进建议
+    if (currentToken === streamingToken.value && data.corrections && data.corrections.length > 0) {
       const correctionsText =
         '<strong>✍️ 改进建议：</strong><br>' +
         data.corrections
           .map((c, idx) => `${idx + 1}. ${c.replace(/\n/g, '<br>')}`)
           .join('<br><br>');
-
-      messages.value.push({
-        role: 'assistant',
-        content: correctionsText
-      });
+      messages.value.push({ role: 'assistant', content: correctionsText });
+      await nextTick();
+      scrollToBottom();
     }
 
-    showSuccess('获取成功');
+    if (currentToken === streamingToken.value) {
+      showSuccess('获取成功');
+    }
   } catch (error) {
     console.error('API调用失败:', error);
     showError('API调用失败，请检查网络连接和接口地址');
   } finally {
-    apiLoading.value = false;
+    if (currentToken === streamingToken.value) {
+      apiLoading.value = false;
+    }
   }
 }
 
