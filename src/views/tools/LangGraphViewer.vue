@@ -88,34 +88,25 @@ async function fetchFromApi(): Promise<void> {
   try {
     const data = await getLangGraphData(topic);
 
-    // 1. 渲染 draft
-    const draftText = formatDraft(data.draft);
-    const draftIndex =
-      messages.value.push({ role: 'assistant', content: '' }) - 1;
+    // 直接渲染 draft
+    messages.value.push({
+      role: 'assistant',
+      content: formatDraft(data.draft)
+    });
 
-    let i = 0;
-    const draftTimer = setInterval(() => {
-      if (i < draftText.length) {
-        messages.value[draftIndex].content += draftText[i];
-        i++;
-      } else {
-        clearInterval(draftTimer);
+    // 渲染 corrections
+    if (data.corrections && data.corrections.length > 0) {
+      const correctionsText =
+        '<strong>✍️ 改进建议：</strong><br>' +
+        data.corrections
+          .map((c, idx) => `${idx + 1}. ${c.replace(/\n/g, '<br>')}`)
+          .join('<br><br>');
 
-        // 2. 渲染 corrections（如果有）
-        if (data.corrections && data.corrections.length > 0) {
-          const correctionsText =
-            '<strong>✍️ 改进建议：</strong><br>' +
-            data.corrections
-              .map((c, idx) => `${idx + 1}. ${c.replace(/\n/g, '<br>')}`)
-              .join('<br><br>');
-
-          messages.value.push({
-            role: 'assistant',
-            content: correctionsText,
-          });
-        }
-      }
-    }, 15);
+      messages.value.push({
+        role: 'assistant',
+        content: correctionsText
+      });
+    }
 
     showSuccess('获取成功');
   } catch (error) {
@@ -125,6 +116,7 @@ async function fetchFromApi(): Promise<void> {
     apiLoading.value = false;
   }
 }
+
 </script>
 
 <style scoped>
