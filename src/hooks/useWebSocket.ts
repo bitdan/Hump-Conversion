@@ -8,7 +8,7 @@ export function useWebSocket(url: string) {
   const userStore = useUserStore()
 
   const connect = () => {
-    const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080'
+    const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
     const token = userStore.token
     const wsUrl = `${baseUrl}${url}${url.includes('?') ? '&' : '?'}Authorization=Bearer ${token}`
     console.log('WebSocket URL:', wsUrl)

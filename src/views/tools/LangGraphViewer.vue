@@ -86,18 +86,34 @@ async function fetchFromApi(): Promise<void> {
   apiLoading.value = true;
 
   try {
-    const { data } = await getLangGraphData(topic);
-    const fullText = formatDraft(data.draft);
+    const data = await getLangGraphData(topic);
 
-    const msgIndex = messages.value.push({ role: 'assistant', content: '' }) - 1;
+    // 1. 渲染 draft
+    const draftText = formatDraft(data.draft);
+    const draftIndex =
+      messages.value.push({ role: 'assistant', content: '' }) - 1;
 
     let i = 0;
-    const timer = setInterval(() => {
-      if (i < fullText.length) {
-        messages.value[msgIndex].content += fullText[i];
+    const draftTimer = setInterval(() => {
+      if (i < draftText.length) {
+        messages.value[draftIndex].content += draftText[i];
         i++;
       } else {
-        clearInterval(timer);
+        clearInterval(draftTimer);
+
+        // 2. 渲染 corrections（如果有）
+        if (data.corrections && data.corrections.length > 0) {
+          const correctionsText =
+            '<strong>✍️ 改进建议：</strong><br>' +
+            data.corrections
+              .map((c, idx) => `${idx + 1}. ${c.replace(/\n/g, '<br>')}`)
+              .join('<br><br>');
+
+          messages.value.push({
+            role: 'assistant',
+            content: correctionsText,
+          });
+        }
       }
     }, 15);
 
