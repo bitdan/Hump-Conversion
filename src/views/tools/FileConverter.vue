@@ -11,8 +11,9 @@ const inputContent = ref<string>('')
 const outputContent = ref<string>('')
 const error = ref<string>('')
 const isLoading = ref<boolean>(false)
-const detectedFormat = ref<string>('')
+const selectedInputFormat = ref<string>('')
 const selectedOutputFormat = ref<string>('json')
+const isValidInput = ref<boolean>(false)
 
 const formatOptions: FormatOption[] = [
   { value: 'json', label: 'JSON' },
@@ -21,18 +22,69 @@ const formatOptions: FormatOption[] = [
   { value: 'properties', label: 'Properties' }
 ]
 
+// 验证输入内容格式
+function validateInputFormat() {
+  if (!inputContent.value.trim() || !selectedInputFormat.value) {
+    isValidInput.value = false
+    return
+  }
+
+  try {
+    switch (selectedInputFormat.value) {
+      case 'json':
+        JSON.parse(inputContent.value)
+        isValidInput.value = true
+        break
+      case 'xml':
+        // 简单的XML格式检查
+        const xmlContent = inputContent.value.trim()
+        if (xmlContent.startsWith('<?xml') || xmlContent.startsWith('<') && xmlContent.endsWith('>')) {
+          isValidInput.value = true
+        } else {
+          isValidInput.value = false
+        }
+        break
+      case 'yaml':
+        // 简单的YAML格式检查
+        if (inputContent.value.includes(':') && (inputContent.value.includes('  ') || inputContent.value.includes('- '))) {
+          isValidInput.value = true
+        } else {
+          isValidInput.value = false
+        }
+        break
+      case 'properties':
+        // 简单的Properties格式检查
+        const lines = inputContent.value.split('\n')
+        const hasValidProperties = lines.some(line => {
+          const trimmed = line.trim()
+          return trimmed && !trimmed.startsWith('#') && trimmed.includes('=')
+        })
+        isValidInput.value = hasValidProperties
+        break
+      default:
+        isValidInput.value = false
+    }
+  } catch {
+    isValidInput.value = false
+  }
+}
+
 async function handleConvert() {
   error.value = ''
   isLoading.value = true
   
   try {
-    if (!detectedFormat.value) {
-      throw new Error('无法识别输入格式')
+    if (!selectedInputFormat.value) {
+      throw new Error('请选择输入格式')
+    }
+
+    if (!isValidInput.value) {
+      throw new Error('输入内容格式无效，请检查输入格式选择是否正确')
     }
 
     const result = await FileConverter.convert({
       content: inputContent.value,
-      fromFormat: detectedFormat.value,
+      fromFormat: selectedInputFormat.value,
       toFormat: selectedOutputFormat.value
     })
     outputContent.value = result
@@ -43,13 +95,17 @@ async function handleConvert() {
   }
 }
 
-// 监听输入内容变化，自动检测格式并转换
-watch([inputContent, selectedOutputFormat], async ([newContent]) => {
-  detectedFormat.value = FileConverter.detectFormat(newContent)
-  if (detectedFormat.value && newContent) {
+// 监听输入内容或输入格式变化，验证格式
+watch([inputContent, selectedInputFormat], () => {
+  validateInputFormat()
+  // 清空输出内容
+  outputContent.value = ''
+})
+
+// 监听输出格式变化，如果输入有效则重新转换
+watch(selectedOutputFormat, async () => {
+  if (isValidInput.value && inputContent.value.trim()) {
     await handleConvert()
-  } else {
-    outputContent.value = ''
   }
 })
 </script>
@@ -65,17 +121,25 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
 
       <!-- 格式选择区域 -->
       <div class="bg-white/80 rounded-xl p-4 mb-4">
-        <div class="flex items-center gap-6">
-          <!-- 检测到的输入格式 -->
-          <div class="flex-1">
-            <div class="text-sm font-medium text-gray-600 mb-2">检测到的格式</div>
-            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium">
-              {{ detectedFormat ? formatOptions.find(f => f.value === detectedFormat)?.label : '未检测到格式' }}
-            </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 输入格式选择 -->
+          <div>
+            <div class="text-sm font-medium text-gray-600 mb-2">输入格式</div>
+            <v-select
+              v-model="selectedInputFormat"
+              :items="formatOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              placeholder="选择输入格式"
+              class="bg-white rounded-lg"
+            />
           </div>
 
           <!-- 输出格式选择 -->
-          <div class="flex-1">
+          <div>
             <div class="text-sm font-medium text-gray-600 mb-2">目标格式</div>
             <v-select
               v-model="selectedOutputFormat"
@@ -85,9 +149,25 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
               variant="outlined"
               density="comfortable"
               hide-details
+              placeholder="选择输出格式"
               class="bg-white rounded-lg"
             />
           </div>
+        </div>
+
+        <!-- 格式验证提示 -->
+        <div v-if="selectedInputFormat && inputContent.trim()" class="mt-3">
+          <v-alert
+            :type="isValidInput ? 'success' : 'error'"
+            variant="tonal"
+            density="compact"
+            class="mb-0"
+          >
+            <template v-slot:prepend>
+              <v-icon :icon="isValidInput ? 'mdi-check-circle' : 'mdi-alert-circle'" />
+            </template>
+            {{ isValidInput ? '输入格式验证通过' : '输入格式验证失败，请检查格式选择是否正确' }}
+          </v-alert>
         </div>
       </div>
 
@@ -98,11 +178,12 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
           <v-textarea
             v-model="inputContent"
             variant="outlined"
-            placeholder="在此粘贴要转换的内容，将自动识别格式..."
+            :placeholder="selectedInputFormat ? `在此粘贴${formatOptions.find(f => f.value === selectedInputFormat)?.label}格式的内容...` : '请先选择输入格式'"
             class="font-mono bg-white/80 rounded-xl"
             :rows="30"
             auto-grow
             hide-details
+            :disabled="!selectedInputFormat"
           />
         </div>
         
@@ -119,6 +200,21 @@ watch([inputContent, selectedOutputFormat], async ([newContent]) => {
             hide-details
           />
         </div>
+      </div>
+
+      <!-- 转换按钮 -->
+      <div class="flex justify-center mt-6">
+        <v-btn
+          @click="handleConvert"
+          :disabled="!selectedInputFormat || !isValidInput || !inputContent.trim()"
+          color="primary"
+          size="large"
+          :loading="isLoading"
+          class="px-8"
+        >
+          <v-icon start icon="mdi-convert" />
+          开始转换
+        </v-btn>
       </div>
 
       <!-- 错误提示 -->
