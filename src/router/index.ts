@@ -59,6 +59,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/file-diff',
+                name: 'FileDiff',
+                component: () => import('@/views/tools/FileDiff.vue'),
+                meta: {
+                    title: '文件对比 Diff',
+                    icon: 'mdi-file-compare'
+                }
+            },
+            {
                 path: '/tools/case-converter',
                 name: 'CaseConverter',
                 component: () => import('@/views/tools/CaseConverter.vue'),
