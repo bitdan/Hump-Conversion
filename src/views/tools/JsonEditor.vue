@@ -1,88 +1,94 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-    <div class="max-w-full mx-auto h-screen flex flex-col">
+  <div class="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-1">
+    <div class="max-w-full mx-auto h-full flex flex-col">
       <!-- 标题区域 -->
-      <div class="text-center mb-4 flex-shrink-0">
-        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+      <div class="text-center mb-1 flex-shrink-0">
+        <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
           JSON 编辑器
         </h1>
-        <p class="text-gray-600 mt-1 text-sm">支持自动格式化、转义字符处理、语法验证等功能</p>
+        <p class="text-gray-600 text-xs">支持自动格式化、转义字符处理、语法验证等功能</p>
       </div>
 
       <!-- 主要内容区域 -->
-      <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-4 flex-1 flex flex-col">
+      <div class="bg-white/70 backdrop-blur-sm rounded-lg shadow-lg p-1 flex-1 flex flex-col">
         <!-- 工具栏 -->
-        <div class="flex flex-wrap items-center justify-between mb-4 gap-4 flex-shrink-0">
-          <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center justify-between mb-1 gap-1 flex-shrink-0">
+          <div class="flex flex-wrap items-center gap-1">
             <v-btn
               color="primary"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="formatJson"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-code-json" size="small" class="mr-1" />
+              <v-icon icon="mdi-code-json" size="x-small" class="mr-1" />
               格式化
             </v-btn>
             
             <v-btn
               color="secondary"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="minifyJson"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-compress" size="small" class="mr-1" />
+              <v-icon icon="mdi-compress" size="x-small" class="mr-1" />
               压缩
             </v-btn>
             
             <v-btn
               color="info"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="addEscapeCharacters"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-format-text" size="small" class="mr-1" />
+              <v-icon icon="mdi-format-text" size="x-small" class="mr-1" />
               添加转义
             </v-btn>
             
             <v-btn
               color="warning"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="removeEscapeCharacters"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-format-text-variant" size="small" class="mr-1" />
+              <v-icon icon="mdi-format-text-variant" size="x-small" class="mr-1" />
               移除转义
             </v-btn>
             
             <v-btn
               color="success"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="copyToClipboard"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-content-copy" size="small" class="mr-1" />
+              <v-icon icon="mdi-content-copy" size="x-small" class="mr-1" />
               复制
             </v-btn>
             
             <v-btn
               color="error"
               variant="tonal"
-              density="comfortable"
+              density="compact"
+              size="small"
               @click="clearAll"
               :disabled="!jsonInput.trim()"
-              class="text-sm"
+              class="text-xs"
             >
-              <v-icon icon="mdi-delete" size="small" class="mr-1" />
+              <v-icon icon="mdi-delete" size="x-small" class="mr-1" />
               清空
             </v-btn>
           </div>
@@ -103,44 +109,44 @@
         </div>
 
         <!-- 状态栏 -->
-        <div class="flex items-center justify-between mb-3 flex-shrink-0">
-          <div class="flex items-center gap-4">
+        <div class="flex items-center justify-between mb-1 flex-shrink-0">
+          <div class="flex items-center gap-2">
             <v-chip
               v-if="isValidJson"
               color="success"
-              size="small"
+              size="x-small"
               variant="tonal"
             >
-              <v-icon icon="mdi-check-circle" size="small" class="mr-1" />
+              <v-icon icon="mdi-check-circle" size="x-small" class="mr-1" />
               有效 JSON
             </v-chip>
             <v-chip
               v-else-if="jsonInput.trim()"
               color="error"
-              size="small"
+              size="x-small"
               variant="tonal"
             >
-              <v-icon icon="mdi-alert-circle" size="small" class="mr-1" />
+              <v-icon icon="mdi-alert-circle" size="x-small" class="mr-1" />
               {{ errorMessage || '无效 JSON' }}
             </v-chip>
             <v-chip
               v-if="jsonInput.trim()"
               color="info"
-              size="small"
+              size="x-small"
               variant="tonal"
             >
-              <v-icon icon="mdi-text" size="small" class="mr-1" />
+              <v-icon icon="mdi-text" size="x-small" class="mr-1" />
               {{ jsonInput.length }} 字符
             </v-chip>
           </div>
           
-          <div class="text-sm text-gray-500">
+          <div class="text-xs text-gray-500">
             行 {{ currentLine }} | 列 {{ currentColumn }}
           </div>
         </div>
 
         <!-- JSON 编辑器 -->
-        <div class="relative flex-1 flex flex-col">
+        <div class="relative flex-1 flex flex-col json-editor-container">
           <v-textarea
             ref="jsonTextarea"
             v-model="jsonInput"
@@ -158,11 +164,11 @@
           />
           
           <!-- 行号显示 -->
-          <div class="absolute left-0 top-0 bottom-0 w-12 bg-gray-50 border-r border-gray-200 rounded-l-lg flex flex-col items-center py-3 text-xs text-gray-500 font-mono overflow-hidden">
+          <div class="absolute left-0 top-0 bottom-0 w-8 bg-gray-50 border-r border-gray-200 rounded-l-lg flex flex-col items-center py-1 text-xs text-gray-500 font-mono overflow-hidden">
             <div
               v-for="(line, index) in lineNumbers"
               :key="index"
-              class="leading-6 h-6 flex items-center justify-center"
+              class="leading-4 h-4 flex items-center justify-center"
             >
               {{ index + 1 }}
             </div>
@@ -412,9 +418,9 @@ watch(autoFormat, (newVal) => {
 }
 
 :deep(.v-textarea textarea) {
-  padding: 0.75rem !important;
-  padding-left: 3rem !important;
-  line-height: 1.5 !important;
+  padding: 0.25rem !important;
+  padding-left: 2.25rem !important;
+  line-height: 1.3 !important;
   font-size: 0.875rem !important;
   height: 100% !important;
   resize: none !important;
@@ -422,11 +428,36 @@ watch(autoFormat, (newVal) => {
 
 :deep(.v-textarea .v-field) {
   height: 100% !important;
+  min-height: 100% !important;
 }
 
 :deep(.v-textarea .v-field__input) {
   height: 100% !important;
   min-height: 100% !important;
+}
+
+:deep(.v-textarea) {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* 确保编辑器容器占满剩余空间 */
+.json-editor-container {
+  height: calc(100vh - 80px) !important;
+  min-height: calc(100vh - 80px) !important;
+}
+
+/* 确保整个页面没有底部空白 */
+.h-screen {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* 确保主容器占满高度 */
+.max-w-full.mx-auto.h-full {
+  height: 100% !important;
+  max-height: 100% !important;
 }
 
 /* 自定义滚动条样式 */
