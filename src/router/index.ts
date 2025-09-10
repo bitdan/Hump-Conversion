@@ -77,6 +77,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/calculator',
+                name: 'Calculator',
+                component: () => import('@/views/tools/Calculator.vue'),
+                meta: {
+                    title: '计算稿纸',
+                    icon: 'mdi-calculator'
+                }
+            },
+            {
                 path: '/tools/string-generator',
                 name: 'StringGenerator',
                 component: () => import('@/views/tools/StringGenerator.vue'),
