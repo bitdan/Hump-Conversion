@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-    <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div class="max-w-full mx-auto h-screen flex flex-col">
       <!-- 标题区域 -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+      <div class="text-center mb-4 flex-shrink-0">
+        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
           JSON 编辑器
         </h1>
-        <p class="text-gray-600 mt-2">支持自动格式化、转义字符处理、语法验证等功能</p>
+        <p class="text-gray-600 mt-1 text-sm">支持自动格式化、转义字符处理、语法验证等功能</p>
       </div>
 
       <!-- 主要内容区域 -->
-      <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6">
+      <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-4 flex-1 flex flex-col">
         <!-- 工具栏 -->
-        <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+        <div class="flex flex-wrap items-center justify-between mb-4 gap-4 flex-shrink-0">
           <div class="flex flex-wrap items-center gap-3">
             <v-btn
               color="primary"
@@ -103,7 +103,7 @@
         </div>
 
         <!-- 状态栏 -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-3 flex-shrink-0">
           <div class="flex items-center gap-4">
             <v-chip
               v-if="isValidJson"
@@ -140,14 +140,13 @@
         </div>
 
         <!-- JSON 编辑器 -->
-        <div class="relative">
+        <div class="relative flex-1 flex flex-col">
           <v-textarea
             ref="jsonTextarea"
             v-model="jsonInput"
-            rows="20"
             variant="outlined"
             placeholder="在此输入或粘贴 JSON 数据..."
-            class="font-mono bg-white rounded-lg transition-all duration-200 hover:shadow-md"
+            class="font-mono bg-white rounded-lg transition-all duration-200 hover:shadow-md flex-1"
             hide-details
             @input="handleInput"
             @keydown="handleKeydown"
@@ -155,6 +154,7 @@
             @keyup="updateCursorPosition"
             :error="!isValidJson && jsonInput.trim() !== ''"
             :error-messages="!isValidJson && jsonInput.trim() !== '' ? [errorMessage] : []"
+            style="height: 100%;"
           />
           
           <!-- 行号显示 -->
@@ -169,33 +169,6 @@
           </div>
         </div>
 
-        <!-- 示例 JSON -->
-        <div class="mt-6">
-          <v-expansion-panels variant="accordion">
-            <v-expansion-panel>
-              <v-expansion-panel-title>
-                <v-icon icon="mdi-lightbulb-outline" class="mr-2" />
-                示例 JSON
-              </v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <div class="space-y-3">
-                  <div class="flex flex-wrap gap-2">
-                    <v-btn
-                      v-for="example in examples"
-                      :key="example.name"
-                      size="small"
-                      variant="outlined"
-                      @click="loadExample(example.data)"
-                      class="text-xs"
-                    >
-                      {{ example.name }}
-                    </v-btn>
-                  </div>
-                </div>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
-        </div>
       </div>
     </div>
 
@@ -226,71 +199,6 @@ const currentLine = ref(1)
 const currentColumn = ref(1)
 const jsonTextarea = ref()
 
-// 示例数据
-const examples = [
-  {
-    name: '用户信息',
-    data: {
-      "id": 1,
-      "name": "张三",
-      "email": "zhangsan@example.com",
-      "profile": {
-        "age": 25,
-        "city": "北京",
-        "hobbies": ["读书", "游泳", "编程"]
-      },
-      "isActive": true,
-      "createdAt": "2024-01-15T10:30:00Z"
-    }
-  },
-  {
-    name: 'API 响应',
-    data: {
-      "code": 200,
-      "message": "success",
-      "data": {
-        "users": [
-          {
-            "id": 1,
-            "username": "admin",
-            "role": "administrator"
-          },
-          {
-            "id": 2,
-            "username": "user",
-            "role": "user"
-          }
-        ],
-        "pagination": {
-          "page": 1,
-          "limit": 10,
-          "total": 2
-        }
-      }
-    }
-  },
-  {
-    name: '配置信息',
-    data: {
-      "app": {
-        "name": "My App",
-        "version": "1.0.0",
-        "debug": false
-      },
-      "database": {
-        "host": "localhost",
-        "port": 5432,
-        "name": "myapp_db",
-        "ssl": true
-      },
-      "features": {
-        "auth": true,
-        "notifications": false,
-        "analytics": true
-      }
-    }
-  }
-]
 
 // 计算属性
 const isValidJson = computed(() => {
@@ -461,11 +369,6 @@ function clearAll() {
   showSuccessMessage('内容已清空')
 }
 
-// 加载示例
-function loadExample(data: any) {
-  jsonInput.value = JSON.stringify(data, null, 2)
-  showSuccessMessage('示例已加载')
-}
 
 // 显示成功消息
 function showSuccessMessage(message: string) {
@@ -513,6 +416,17 @@ watch(autoFormat, (newVal) => {
   padding-left: 3rem !important;
   line-height: 1.5 !important;
   font-size: 0.875rem !important;
+  height: 100% !important;
+  resize: none !important;
+}
+
+:deep(.v-textarea .v-field) {
+  height: 100% !important;
+}
+
+:deep(.v-textarea .v-field__input) {
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 /* 自定义滚动条样式 */
