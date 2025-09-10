@@ -147,30 +147,35 @@
 
         <!-- JSON 编辑器 -->
         <div class="relative flex-1 flex flex-col json-editor-container">
-          <v-textarea
-            ref="jsonTextarea"
-            v-model="jsonInput"
-            variant="outlined"
-            placeholder="在此输入或粘贴 JSON 数据..."
-            class="font-mono bg-white rounded-lg transition-all duration-200 hover:shadow-md flex-1"
-            hide-details
-            @input="handleInput"
-            @keydown="handleKeydown"
-            @click="updateCursorPosition"
-            @keyup="updateCursorPosition"
-            :error="!isValidJson && jsonInput.trim() !== ''"
-            :error-messages="!isValidJson && jsonInput.trim() !== '' ? [errorMessage] : []"
-            style="height: 100%;"
-          />
+          <div class="relative w-full h-full">
+            <textarea
+              ref="jsonTextarea"
+              v-model="jsonInput"
+              placeholder="在此输入或粘贴 JSON 数据..."
+              class="w-full h-full font-mono bg-white border border-gray-300 rounded-lg p-2 pl-10 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              :class="{ 'border-red-500 bg-red-50': !isValidJson && jsonInput.trim() !== '' }"
+              @input="handleInput"
+              @keydown="handleKeydown"
+              @click="updateCursorPosition"
+              @keyup="updateCursorPosition"
+              @scroll="syncLineNumbersScroll"
+              style="line-height: 1.3; font-size: 0.875rem;"
+            />
           
-          <!-- 行号显示 -->
-          <div class="absolute left-0 top-0 bottom-0 w-8 bg-gray-50 border-r border-gray-200 rounded-l-lg flex flex-col items-center py-1 text-xs text-gray-500 font-mono overflow-hidden">
-            <div
-              v-for="(line, index) in lineNumbers"
-              :key="index"
-              class="leading-4 h-4 flex items-center justify-center"
+            <!-- 行号显示 -->
+            <div 
+              ref="lineNumbersContainer"
+              class="line-numbers-container absolute left-0 top-0 bottom-0 w-8 bg-gray-50 border-r border-gray-200 rounded-l-lg flex flex-col items-center text-xs text-gray-500 font-mono overflow-y-auto pointer-events-none" 
+              style="padding: 0.5rem 0; scrollbar-width: none; -ms-overflow-style: none;"
             >
-              {{ index + 1 }}
+              <div
+                v-for="(line, index) in lineNumbers"
+                :key="index"
+                class="flex items-center justify-center"
+                style="height: 1.3em; line-height: 1.3;"
+              >
+                {{ index + 1 }}
+              </div>
             </div>
           </div>
         </div>
@@ -192,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { debounce } from '../../utils/helpers'
 
 // 状态定义
@@ -204,6 +209,7 @@ const snackbarColor = ref('success')
 const currentLine = ref(1)
 const currentColumn = ref(1)
 const jsonTextarea = ref()
+const lineNumbersContainer = ref()
 
 
 // 计算属性
@@ -251,16 +257,23 @@ const handleInput = debounce(() => {
 function updateCursorPosition() {
   nextTick(() => {
     if (jsonTextarea.value) {
-      const textarea = jsonTextarea.value.$el.querySelector('textarea')
-      if (textarea) {
-        const cursorPos = textarea.selectionStart
-        const textBeforeCursor = jsonInput.value.substring(0, cursorPos)
-        const lines = textBeforeCursor.split('\n')
-        currentLine.value = lines.length
-        currentColumn.value = lines[lines.length - 1].length + 1
-      }
+      const textarea = jsonTextarea.value
+      const cursorPos = textarea.selectionStart
+      const textBeforeCursor = jsonInput.value.substring(0, cursorPos)
+      const lines = textBeforeCursor.split('\n')
+      currentLine.value = lines.length
+      currentColumn.value = lines[lines.length - 1].length + 1
     }
   })
+}
+
+// 同步行号滚动
+function syncLineNumbersScroll() {
+  if (jsonTextarea.value && lineNumbersContainer.value) {
+    const textarea = jsonTextarea.value
+    const lineNumbersDiv = lineNumbersContainer.value
+    lineNumbersDiv.scrollTop = textarea.scrollTop
+  }
 }
 
 // 键盘事件处理
@@ -396,6 +409,14 @@ watch(autoFormat, (newVal) => {
     formatJson()
   }
 })
+
+// 组件挂载后初始化
+onMounted(() => {
+  // 确保行号与textarea同步
+  nextTick(() => {
+    syncLineNumbersScroll()
+  })
+})
 </script>
 
 <style scoped>
@@ -417,34 +438,21 @@ watch(autoFormat, (newVal) => {
   background-color: rgb(254 242 242) !important;
 }
 
-:deep(.v-textarea textarea) {
-  padding: 0.25rem !important;
-  padding-left: 2.25rem !important;
-  line-height: 1.3 !important;
-  font-size: 0.875rem !important;
-  height: 100% !important;
-  resize: none !important;
+/* 原生textarea样式 */
+textarea {
+  box-sizing: border-box !important;
 }
 
-:deep(.v-textarea .v-field) {
-  height: 100% !important;
-  min-height: 100% !important;
-}
-
-:deep(.v-textarea .v-field__input) {
-  height: 100% !important;
-  min-height: 100% !important;
-}
-
-:deep(.v-textarea) {
-  height: 100% !important;
-  min-height: 100% !important;
+/* 隐藏行号容器的滚动条 */
+.line-numbers-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* 确保编辑器容器占满剩余空间 */
 .json-editor-container {
-  height: calc(100vh - 80px) !important;
-  min-height: calc(100vh - 80px) !important;
+  height: calc(100vh - 60px) !important;
+  min-height: calc(100vh - 60px) !important;
+  max-height: calc(100vh - 60px) !important;
 }
 
 /* 确保整个页面没有底部空白 */
@@ -460,22 +468,23 @@ watch(autoFormat, (newVal) => {
   max-height: 100% !important;
 }
 
+
 /* 自定义滚动条样式 */
-:deep(.v-textarea textarea::-webkit-scrollbar) {
+textarea::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-:deep(.v-textarea textarea::-webkit-scrollbar-track) {
+textarea::-webkit-scrollbar-track {
   background: transparent;
 }
 
-:deep(.v-textarea textarea::-webkit-scrollbar-thumb) {
+textarea::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
 
-:deep(.v-textarea textarea::-webkit-scrollbar-thumb:hover) {
+textarea::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
 }
 
