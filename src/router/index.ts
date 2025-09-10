@@ -77,6 +77,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/json-editor',
+                name: 'JsonEditor',
+                component: () => import('@/views/tools/JsonEditor.vue'),
+                meta: {
+                    title: 'JSON 编辑器',
+                    icon: 'mdi-code-json'
+                }
+            },
+            {
                 path: '/tools/calculator',
                 name: 'Calculator',
                 component: () => import('@/views/tools/Calculator.vue'),
