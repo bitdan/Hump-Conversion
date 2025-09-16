@@ -70,20 +70,32 @@ export function useComposeGenerator(templates: DockerServiceTemplate[]) {
 
     function downloadYaml(filename?: string) {
         const content = generateYaml()
-        const safeName = (composeSpec.value.meta.name || 'docker-compose')
+        const normalized = (typeof filename === 'string' ? filename : undefined)
+        const safeName = (composeSpec.value?.meta?.name || 'docker-compose')
             .toString()
             .trim()
             .replace(/[^a-zA-Z0-9-_]+/g, '-')
-            .replace(/^-+|-+$/g, '') || 'docker-compose'
-        const finalName = filename || `${safeName}.yml`
+            .replace(/^-+|-+$/g, '')
+
+        const base = normalized?.trim() || safeName || 'docker-compose'
+        const finalName = `${base}.yml`
+
         const blob = new Blob([content], { type: 'application/x-yaml;charset=utf-8' })
         const url = URL.createObjectURL(blob)
+
         const a = document.createElement('a')
+        a.style.display = 'none'
         a.href = url
-        a.download = finalName
+        a.setAttribute('download', finalName)
+        document.body.appendChild(a)
+
         a.click()
-        URL.revokeObjectURL(url)
+        setTimeout(() => {
+            URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+        }, 0)
     }
+    
 
     return {
         meta,

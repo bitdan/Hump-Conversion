@@ -12,7 +12,7 @@
           <div class="bg-gray-50 rounded-xl p-5 space-y-4">
             <div class="flex items-center justify-between">
               <div class="text-lg font-semibold text-gray-800">项目元信息</div>
-              <v-btn color="primary" @click="downloadYaml">下载 docker-compose.yml</v-btn>
+              <v-btn color="primary" @click="downloadYaml()">下载 docker-compose.yml</v-btn>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <v-text-field v-model="meta.name" label="项目名称"></v-text-field>
