@@ -10,17 +10,14 @@
       <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 space-y-6">
           <div class="bg-gray-50 rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="text-lg font-semibold text-gray-800">项目元信息</div>
-              <v-btn color="primary" @click="downloadYaml()">下载 docker-compose.yml</v-btn>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-lg font-semibold text-gray-800">项目元信息</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
               <v-text-field v-model="meta.name" label="项目名称"></v-text-field>
               <v-select :items="['3.8','3']" v-model="meta.version" label="Compose 版本"></v-select>
-              <v-select :items="templateOptions" v-model="selectedTemplateId" label="添加服务模板"></v-select>
-            </div>
-            <div>
-              <v-btn color="primary" @click="handleAddService" :disabled="!selectedTemplateId">添加服务</v-btn>
+              <div class="flex gap-2 items-center">
+                <v-select class="flex-1" :items="templateOptions" v-model="selectedTemplateId" label="添加服务模板"></v-select>
+                <v-btn :disabled="!selectedTemplateId" icon="mdi-plus" color="primary" variant="elevated" @click="handleAddService" :title="'添加'" />
+              </div>
             </div>
           </div>
 
@@ -78,7 +75,10 @@
           <div class="bg-gray-50 rounded-xl p-5">
             <div class="flex items-center justify-between">
               <div class="font-semibold">YAML 预览</div>
-              <v-btn icon="mdi-content-copy" variant="text" @click="copyYaml" :title="'复制'" />
+              <div class="flex items-center gap-1">
+                <v-btn icon="mdi-content-copy" variant="text" @click="copyYaml" :title="'复制'" />
+                <v-btn icon="mdi-download" variant="text" @click="downloadYaml()" :title="'下载 DOCKER-COMPOSE.YML'" />
+              </div>
             </div>
             <pre class="bg-gray-900 text-gray-100 rounded-lg p-3 text-sm overflow-auto max-h-[70vh]">{{ yamlString }}</pre>
           </div>
