@@ -59,6 +59,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/docker-compose-generator',
+                name: 'DockerComposeGenerator',
+                component: () => import('@/views/tools/DockerComposeGenerator.vue'),
+                meta: {
+                    title: 'Docker Compose 生成器',
+                    icon: 'mdi-docker'
+                }
+            },
+            {
                 path: '/tools/file-diff',
                 name: 'FileDiff',
                 component: () => import('@/views/tools/FileDiff.vue'),
