@@ -278,8 +278,11 @@ function convertRightToLeft() {
   }
 }
 
+const lastEdited = ref<'left' | 'right' | null>(null)
+
 const onLeftInput = debounce(() => {
   if (isUpdatingLeft) return
+  lastEdited.value = 'left'
   isUpdatingRight = true
   convertLeftToRight()
   isUpdatingRight = false
@@ -287,34 +290,34 @@ const onLeftInput = debounce(() => {
 
 const onRightInput = debounce(() => {
   if (isUpdatingRight) return
+  lastEdited.value = 'right'
   isUpdatingLeft = true
   convertRightToLeft()
   isUpdatingLeft = false
 }, 300)
 
 function onLeftBaseChange() {
-  onLeftInput()
+  if (lastEdited.value === 'right') {
+    onRightInput()
+  } else {
+    onLeftInput()
+  }
 }
 
 function onRightBaseChange() {
-  onRightInput()
+  if (lastEdited.value === 'left') {
+    onLeftInput()
+  } else {
+    onRightInput()
+  }
 }
 
 function triggerReformat() {
-  // 根据当前最后一次输入侧触发一次重排
-  if (document.activeElement && (document.activeElement as HTMLElement).tagName.toLowerCase() === 'textarea') {
-    const ta = (document.activeElement as HTMLTextAreaElement)
-    if (ta && ta.value === leftValue.value) {
-      onLeftInput()
-      return
-    }
-    if (ta && ta.value === rightValue.value) {
-      onRightInput()
-      return
-    }
+  if (lastEdited.value === 'right') {
+    onRightInput()
+  } else {
+    onLeftInput()
   }
-  // 默认从左到右
-  onLeftInput()
 }
 
 const showSnackbar = ref(false)
