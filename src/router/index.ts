@@ -2,11 +2,11 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthCheck } from '@/composables/useAuthCheck'
 
 declare module 'vue-router' {
-  interface RouteMeta {
-    title?: string;
-    icon?: string;
-    requiresAuth?: boolean;
-  }
+    interface RouteMeta {
+        title?: string;
+        icon?: string;
+        requiresAuth?: boolean;
+    }
 }
 
 export const routes: RouteRecordRaw[] = [
@@ -68,6 +68,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/base-converter',
+                name: 'BaseConverter',
+                component: () => import('@/views/tools/BaseConverter.vue'),
+                meta: {
+                    title: '进制转换',
+                    icon: 'mdi-compare'
+                }
+            },
+            {
                 path: '/tools/file-diff',
                 name: 'FileDiff',
                 component: () => import('@/views/tools/FileDiff.vue'),
@@ -80,7 +89,7 @@ export const routes: RouteRecordRaw[] = [
                 path: '/tools/case-converter',
                 name: 'CaseConverter',
                 component: () => import('@/views/tools/CaseConverter.vue'),
-                meta: { 
+                meta: {
                     title: '驼峰转换',
                     icon: 'mdi-format-letter-case'
                 }
@@ -107,7 +116,7 @@ export const routes: RouteRecordRaw[] = [
                 path: '/tools/string-generator',
                 name: 'StringGenerator',
                 component: () => import('@/views/tools/StringGenerator.vue'),
-                meta: { 
+                meta: {
                     title: '字符串生成',
                     icon: 'mdi-format-letter-case'
                 }
@@ -125,7 +134,7 @@ export const routes: RouteRecordRaw[] = [
                 path: '/tools/data-encryption',
                 name: 'DataEncryption',
                 component: () => import('@/views/tools/DataEncryption.vue'),
-                meta: { 
+                meta: {
                     title: '数据加密解密',
                     icon: 'mdi-shield-lock-outline'
                 }
@@ -153,8 +162,8 @@ export const routes: RouteRecordRaw[] = [
                 name: 'QrCodeGenerator',
                 component: () => import('@/views/tools/QrCodeGenerator.vue'),
                 meta: {
-                  title: '文字转二维码',
-                  icon: 'mdi-qrcode'
+                    title: '文字转二维码',
+                    icon: 'mdi-qrcode'
                 }
             },
             {
@@ -189,7 +198,7 @@ export const routes: RouteRecordRaw[] = [
                 path: '/games/tic-tac-toe',
                 name: 'TicTacToe',
                 component: () => import('@/views/games/TicTacToe.vue'),
-                meta: { 
+                meta: {
                     title: '井字棋',
                     icon: 'mdi-grid'
                 }
