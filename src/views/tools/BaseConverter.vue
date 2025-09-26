@@ -185,7 +185,7 @@ function parseToBigInt(raw: string, base: number): bigint {
   const s = raw.trim().toLowerCase()
   const neg = s[0] === '-'
   const body = neg ? s.slice(1) : s
-  let value = 0n
+  let value = BigInt(0)
   for (const ch of body) {
     const digit = BigInt(DIGITS.indexOf(ch))
     value = value * BigInt(base) + digit
@@ -194,12 +194,12 @@ function parseToBigInt(raw: string, base: number): bigint {
 }
 
 function bigIntToBase(n: bigint, base: number): string {
-  const neg = n < 0n
+  const neg = n < BigInt(0)
   let x = neg ? -n : n
-  if (x === 0n) return '0'
+  if (x === BigInt(0)) return '0'
   const b = BigInt(base)
   let out = ''
-  while (x > 0n) {
+  while (x > BigInt(0)) {
     const rem = Number(x % b)
     out = DIGITS[rem] + out
     x = x / b
