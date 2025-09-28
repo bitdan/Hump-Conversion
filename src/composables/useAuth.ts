@@ -25,12 +25,20 @@ export function useAuth() {
     try {
       loading.value = true
       error.value = null
-      await authRegister(payload)
-      showSuccess('注册成功，请登录')
-      router.push('/auth/login')
+        const {data} = await authRegister(payload)
+        // 注册成功后自动登录
+        if (data?.token) {
+            userStore.setToken(data.token)
+            await getUserInfo()
+            showSuccess('注册成功')
+            router.push('/case-converter')
+        } else {
+            showSuccess('注册成功，请登录')
+            router.push('/auth/login')
+        }
       return true
     } catch (err: any) {
-      error.value = err.response?.data?.msg || err.message || '注册失败'
+        error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '注册失败'
       throw err
     } finally {
       loading.value = false
@@ -42,11 +50,15 @@ export function useAuth() {
       loading.value = true
       error.value = null
       const { data } = await authLogin(payload)
-      userStore.setToken(data.token)
-      await getUserInfo()
-      return data
+        if (data?.token) {
+            userStore.setToken(data.token)
+            await getUserInfo()
+            return data
+        } else {
+            throw new Error('登录响应数据格式错误')
+        }
     } catch (err: any) {
-      error.value = err.response?.data?.msg || err.message || '登录失败'
+        error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '登录失败'
       throw err
     } finally {
       loading.value = false
@@ -76,7 +88,7 @@ export function useAuth() {
       captchaData.value = data
       return data
     } catch (err: any) {
-      error.value = err.response?.data?.msg || err.message || '获取验证码失败'
+        error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '获取验证码失败'
       throw err
     } finally {
       loading.value = false
@@ -90,7 +102,7 @@ export function useAuth() {
       await authLogout()
       router.push('/auth/login')
     } catch (err: any) {
-      error.value = err.response?.data?.msg || err.message || '登出失败'
+        error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '登出失败'
       throw err
     } finally {
       loading.value = false
