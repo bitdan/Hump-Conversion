@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf node_modules package-lock.json",
-    "install": "npm install",
+    "clean-cache": "npm cache clean --force",
+    "i": "npm install",
     "reinstall": "npm run clean && npm install",
     "dev": "vite",
     "preview": "vite preview",
