@@ -1,0 +1,64 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - refactor/ts-conversion
+  workflow_dispatch:   # ✅ 支持手动触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: REPO
+
+    steps:
+      # 1. 拉取代码
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. 设置 Node 环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: npm install
+
+      # 4. 构建
+      - name: Build project
+        run: npm run build
+
+      # 5. 压缩 dist
+      - name: Archive dist files
+        run: tar -czf dist.tar.gz -C dist .
+
+      # 6. 上传压缩包到服务器
+      - name: Upload dist.tar.gz
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.host }}
+          username: ${{ secrets.username }}
+          port: ${{ secrets.port }}
+          key: ${{ secrets.key }}
+          source: "dist.tar.gz"
+          target: "/tmp/"  # 先上传到临时目录
+
+      # 7. 完整部署
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.host }}
+          username: ${{ secrets.username }}
+          port: ${{ secrets.port }}
+          key: ${{ secrets.key }}
+          script: |
+            # 删除整个目录
+            rm -rf /docker/nginx/html/tool/
+            # 重新创建目录
+            mkdir -p /docker/nginx/html/tool/
+            # 解压到新目录
+            cd /docker/nginx/html/tool/
+            tar -xzf /tmp/dist.tar.gz -C .
+            echo "✅ 部署完成：目录已完全重建"
