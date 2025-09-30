@@ -102,11 +102,32 @@
                 block
                 :loading="loading"
                 :disabled="!formValid"
-                class="mb-8 text-body-1 register-btn"
+                class="mb-4 text-body-1 register-btn"
                 height="52"
                 elevation="2"
               >
                 注册
+              </v-btn>
+
+              <!-- 分隔线 -->
+              <div class="d-flex align-center my-6">
+                <v-divider></v-divider>
+                <span class="mx-4 text-medium-emphasis">或</span>
+                <v-divider></v-divider>
+              </div>
+
+              <!-- 微信注册按钮 -->
+              <v-btn
+                  @click="handleWechatRegister"
+                  :loading="wechatLoading"
+                  block
+                  class="mb-8 text-body-1 wechat-register-btn"
+                  height="52"
+                  elevation="2"
+                  variant="outlined"
+              >
+                <v-icon class="mr-2">mdi-wechat</v-icon>
+                微信快速注册
               </v-btn>
 
               <div class="text-center">
@@ -132,6 +153,64 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- 微信账号绑定对话框 -->
+    <v-dialog v-model="showBindDialog" max-width="500px" persistent>
+      <v-card class="auth-card">
+        <v-card-title class="text-center mb-6">
+          <h3 class="text-h4 font-weight-bold"
+              style="background: linear-gradient(135deg, #0062ff, #00b7ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            绑定微信账号
+          </h3>
+          <p class="text-subtitle-1 text-medium-emphasis">请输入您的账号信息以绑定微信</p>
+        </v-card-title>
+
+        <v-form @submit.prevent="handleBindWechat">
+          <v-text-field
+              v-model="bindFormData.username"
+              label="用户名"
+              :rules="[v => !!v || '用户名不能为空']"
+              variant="outlined"
+              class="mb-4 input-field"
+              prepend-inner-icon="mdi-account"
+              bg-color="grey-lighten-4"
+              hide-details="auto"
+          />
+
+          <v-text-field
+              v-model="bindFormData.password"
+              label="密码"
+              type="password"
+              :rules="[v => !!v || '密码不能为空']"
+              variant="outlined"
+              class="mb-6 input-field"
+              prepend-inner-icon="mdi-lock"
+              bg-color="grey-lighten-4"
+              hide-details="auto"
+          />
+
+          <div class="d-flex gap-4">
+            <v-btn
+                @click="showBindDialog = false"
+                variant="outlined"
+                class="flex-1"
+                height="48"
+            >
+              取消
+            </v-btn>
+            <v-btn
+                type="submit"
+                color="primary"
+                class="flex-1"
+                height="48"
+                :loading="loading"
+            >
+              绑定
+            </v-btn>
+          </div>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -141,7 +220,16 @@ import {useAuth} from '@/composables/useAuth'
 import {useRouter} from 'vue-router'
 
 const router = useRouter()
-const { register, getCaptcha, loading, error, captchaData } = useAuth()
+const {
+  register,
+  getCaptcha,
+  loading,
+  error,
+  captchaData,
+  redirectToWechatLogin,
+  wechatLogin,
+  bindWechatUser
+} = useAuth()
 
 const formData = ref({
   username: '',
@@ -155,6 +243,13 @@ const formData = ref({
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const formValid = ref(false)
+const wechatLoading = ref(false)
+const showBindDialog = ref(false)
+const bindFormData = ref({
+  username: '',
+  password: '',
+  openid: ''
+})
 
 const rules = {
   username: [
@@ -187,8 +282,57 @@ async function handleRegister() {
   }
 }
 
+// 微信注册处理
+async function handleWechatRegister() {
+  try {
+    wechatLoading.value = true
+    await redirectToWechatLogin()
+  } catch (err) {
+    console.error('微信注册失败:', err)
+  } finally {
+    wechatLoading.value = false
+  }
+}
+
+// 处理微信回调注册
+async function handleWechatCallback() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const code = urlParams.get('code')
+  const state = urlParams.get('state')
+
+  if (code) {
+    try {
+      const result = await wechatLogin({code, state: state || undefined})
+      if (result.success) {
+        router.push('/case-converter')
+      } else if (result.needBind && result.wechatInfo) {
+        // 需要绑定账号
+        bindFormData.value.openid = result.wechatInfo.openid
+        showBindDialog.value = true
+      }
+    } catch (err) {
+      console.error('微信注册处理失败:', err)
+    }
+  }
+}
+
+// 绑定微信账号
+async function handleBindWechat() {
+  try {
+    const result = await bindWechatUser(bindFormData.value)
+    if (result.success) {
+      showBindDialog.value = false
+      router.push('/case-converter')
+    }
+  } catch (err) {
+    console.error('绑定失败:', err)
+  }
+}
+
 onMounted(() => {
   refreshCaptcha()
+  // 检查是否是微信回调
+  handleWechatCallback()
 })
 </script>
 
@@ -276,6 +420,20 @@ onMounted(() => {
 .register-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 98, 255, 0.3) !important;
+}
+
+.wechat-register-btn {
+  border: 2px solid #07c160 !important;
+  color: #07c160 !important;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.wechat-register-btn:hover {
+  background-color: #07c160 !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(7, 193, 96, 0.3) !important;
 }
 
 .tech-circles {

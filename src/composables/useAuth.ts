@@ -1,13 +1,23 @@
 import {ref} from 'vue'
 import {
+    bindWechatUser as authBindWechatUser,
     type CaptchaData,
+    checkQRCodeStatus as authCheckQRCodeStatus,
+    createQRCodeLogin as authCreateQRCodeLogin,
     getCaptcha as authGetCaptcha,
     getUserInfo as authGetUserInfo,
+    getWechatLoginUrl as authGetWechatLoginUrl,
     login as authLogin,
     type LoginPayload,
     logout as authLogout,
+    qrCodeLogin as authQrCodeLogin,
+    type QRCodeLoginRequest,
     register as authRegister,
-    type RegisterPayload
+    type RegisterPayload,
+    type WechatBindRequest,
+    wechatLogin as authWechatLogin,
+    type WechatLoginRequest,
+    type WechatUserInfo
 } from '@/api/auth'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '@/stores/user'
@@ -109,6 +119,142 @@ export function useAuth() {
     }
   }
 
+    // 微信登录相关方法
+    async function getWechatLoginUrl() {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authGetWechatLoginUrl()
+            return data
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '获取微信登录URL失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function wechatLogin(payload: WechatLoginRequest) {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authWechatLogin(payload)
+
+            if (data.success && data.token) {
+                userStore.setToken(data.token)
+                if (data.userInfo) {
+                    userStore.setUserInfo(data.userInfo)
+                }
+                showSuccess('微信登录成功')
+                return data
+            } else if (data.needBind) {
+                // 需要绑定账号，返回绑定信息
+                return data
+            } else {
+                throw new Error(data.message || '微信登录失败')
+            }
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '微信登录失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function bindWechatUser(payload: WechatBindRequest) {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authBindWechatUser(payload)
+
+            if (data.success && data.token) {
+                userStore.setToken(data.token)
+                if (data.userInfo) {
+                    userStore.setUserInfo(data.userInfo)
+                }
+                showSuccess('微信账号绑定成功')
+                return data
+            } else {
+                throw new Error(data.message || '绑定失败')
+            }
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '绑定失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function createQRCodeLogin(payload: QRCodeLoginRequest) {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authCreateQRCodeLogin(payload)
+            return data
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '创建二维码登录失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function checkQRCodeStatus(sceneStr: string) {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authCheckQRCodeStatus(sceneStr)
+            return data
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '检查二维码状态失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function qrCodeLogin(sceneStr: string, wechatInfo: WechatUserInfo) {
+        try {
+            loading.value = true
+            error.value = null
+            const {data} = await authQrCodeLogin(sceneStr, wechatInfo)
+
+            if (data.success && data.token) {
+                userStore.setToken(data.token)
+                if (data.userInfo) {
+                    userStore.setUserInfo(data.userInfo)
+                }
+                showSuccess('扫码登录成功')
+                return data
+            } else if (data.needBind) {
+                // 需要绑定账号
+                return data
+            } else {
+                throw new Error(data.message || '扫码登录失败')
+            }
+        } catch (err: any) {
+            error.value = err.response?.data?.detail || err.response?.data?.msg || err.message || '扫码登录失败'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // 跳转到微信登录
+    async function redirectToWechatLogin() {
+        try {
+            const data = await getWechatLoginUrl()
+            if (data?.loginUrl) {
+                window.location.href = data.loginUrl
+            } else {
+                throw new Error('获取微信登录URL失败')
+            }
+        } catch (err) {
+            error.value = '跳转微信登录失败'
+            throw err
+        }
+    }
+
   return {
     loading,
     error,
@@ -116,6 +262,14 @@ export function useAuth() {
     register,
     login,
     logout,
-    getCaptcha
+      getCaptcha,
+      // 微信登录相关方法
+      getWechatLoginUrl,
+      wechatLogin,
+      bindWechatUser,
+      createQRCodeLogin,
+      checkQRCodeStatus,
+      qrCodeLogin,
+      redirectToWechatLogin
   }
 }

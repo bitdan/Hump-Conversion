@@ -48,6 +48,58 @@ export interface UserInfo {
   permissions: string[]
 }
 
+// 微信登录相关接口
+export interface WechatLoginRequest {
+    code: string
+    state?: string
+}
+
+export interface WechatBindRequest {
+    openid: string
+    username: string
+    password: string
+}
+
+export interface WechatUserInfo {
+    openid: string
+    nickname?: string
+    sex?: number
+    province?: string
+    city?: string
+    country?: string
+    headimgurl?: string
+    unionid?: string
+}
+
+export interface WechatLoginResponse {
+    success: boolean
+    token?: string
+    userInfo?: UserInfo
+    wechatInfo?: WechatUserInfo
+    message: string
+    needBind: boolean
+}
+
+export interface QRCodeLoginRequest {
+    sceneStr: string
+}
+
+export interface QRCodeLoginResponse {
+    ticket: string
+    qrCodeUrl: string
+    sceneStr: string
+}
+
+export interface QRCodeStatusResponse {
+    status: string
+    userInfo?: WechatUserInfo
+    message?: string
+}
+
+export interface WechatLoginUrlResponse {
+    loginUrl: string
+}
+
 // 用户注册
 export function register(data: RegisterPayload) {
     return request.post<ApiResponse<RegisterData>>('/api/v1/register', data)
@@ -74,4 +126,38 @@ export function logout() {
     const userStore = useUserStore()
     userStore.clearUserInfo()
   })
+}
+
+// 微信登录相关API
+// 获取微信登录授权URL
+export function getWechatLoginUrl() {
+    return request.get<ApiResponse<WechatLoginUrlResponse>>('/api/v1/wechat/login-url')
+}
+
+// 微信登录
+export function wechatLogin(data: WechatLoginRequest) {
+    return request.post<WechatLoginResponse>('/api/v1/wechat/login', data)
+}
+
+// 绑定微信账号
+export function bindWechatUser(data: WechatBindRequest) {
+    return request.post<WechatLoginResponse>('/api/v1/wechat/bind', data)
+}
+
+// 创建二维码登录
+export function createQRCodeLogin(data: QRCodeLoginRequest) {
+    return request.post<QRCodeLoginResponse>('/api/v1/wechat/qr/create', data)
+}
+
+// 检查二维码状态
+export function checkQRCodeStatus(sceneStr: string) {
+    return request.get<QRCodeStatusResponse>(`/api/v1/wechat/qr/status/${sceneStr}`)
+}
+
+// 二维码登录确认
+export function qrCodeLogin(sceneStr: string, wechatInfo: WechatUserInfo) {
+    return request.post<WechatLoginResponse>(`/api/v1/wechat/qr/login`, {
+        scene_str: sceneStr,
+        ...wechatInfo
+    })
 }
