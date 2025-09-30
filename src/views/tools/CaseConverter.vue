@@ -26,16 +26,49 @@
         <div
           v-for="(result, index) in convertedResults"
           :key="index"
-          @click="copyToClipboard(result.value, index)"
-          class="bg-white/80 backdrop-blur-sm rounded-xl p-6 transition-all duration-300 hover:shadow-lg cursor-pointer relative group"
+          class="bg-white/80 backdrop-blur-sm rounded-xl p-6 transition-all duration-300 hover:shadow-lg relative group"
           :class="{ 'ring-2 ring-blue-500 bg-blue-50': copiedIndex === index }"
         >
-          <div class="text-sm font-medium text-gray-600 mb-2">{{ result.label }}</div>
-          <div class="font-mono text-lg text-gray-800">{{ result.value }}</div>
-          <span
-            v-if="copiedIndex === index"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 font-medium"
-          >已复制</span>
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-600 mb-2">{{ result.label }}</div>
+              <div class="font-mono text-lg text-gray-800 break-all">{{ result.value }}</div>
+            </div>
+            <button
+                @click="copyToClipboard(result.value, index)"
+                class="flex-shrink-0 p-2 rounded-lg transition-all duration-200 hover:bg-blue-100 group-hover:bg-blue-50"
+                :class="{ 'bg-blue-100 text-blue-600': copiedIndex === index }"
+            >
+              <svg
+                  v-if="copiedIndex !== index"
+                  class="w-5 h-5 text-gray-400 hover:text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+              >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <svg
+                  v-else
+                  class="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+              >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -43,7 +76,7 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue'
+import {computed, ref} from 'vue'
 
 const inputText = ref('')
 const copiedIndex = ref(-1)
