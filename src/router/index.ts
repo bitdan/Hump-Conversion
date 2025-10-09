@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuthCheck } from '@/composables/useAuthCheck'
+import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -192,6 +191,15 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '投色子',
                     icon: 'mdi-dice-6'
+                }
+            },
+            {
+                path: '/games/sudoku',
+                name: 'Sudoku',
+                component: () => import('@/views/games/Sudoku.vue'),
+                meta: {
+                    title: '数独',
+                    icon: 'mdi-grid-large'
                 }
             },
             {
