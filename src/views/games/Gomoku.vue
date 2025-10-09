@@ -239,12 +239,12 @@ const onlineGame = ref<ReturnType<typeof useGomokuGame> | null>(null)
 // 检查是否可以落子
 const canMove = (x: number, y: number) => {
   if (isOnlineMode.value) {
-    const gameData = onlineGame.value?.game.value
+    const gameData = onlineGame.value?.game
     return gameData?.isReady &&
-        !gameData.gameState.winner &&
-        gameData.gameState.board[y][x] === 0 &&
-        gameData.gameState.currentPlayer === gameData.playerColor &&
-        gameData.opponentName
+        !gameData?.gameState.winner &&
+        gameData?.gameState.board[y][x] === 0 &&
+        gameData?.gameState.currentPlayer === gameData?.playerColor &&
+        gameData?.opponentName
   } else {
     return !winner.value && !board.value[y][x]
   }
@@ -373,9 +373,52 @@ async function joinRoom(id: string) {
 // 复制房间ID
 function copyRoomId() {
   if (roomId.value) {
-    navigator.clipboard.writeText(roomId.value)
-    showSuccess('房间ID已复制到剪贴板')
+    // 尝试使用现代API
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(roomId.value).then(() => {
+        showSuccess('房间ID已复制到剪贴板')
+      }).catch(() => {
+        if (roomId.value) {
+          fallbackCopyTextToClipboard(roomId.value)
+        }
+      })
+    } else {
+      // 使用兼容性方法
+      if (roomId.value) {
+        fallbackCopyTextToClipboard(roomId.value)
+      }
+    }
   }
+}
+
+// 兼容性复制方法
+function fallbackCopyTextToClipboard(text: string) {
+  const textArea = document.createElement("textarea")
+  textArea.value = text
+
+  // 避免滚动到底部
+  textArea.style.top = "0"
+  textArea.style.left = "0"
+  textArea.style.position = "fixed"
+  textArea.style.opacity = "0"
+
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+
+  try {
+    const successful = document.execCommand('copy')
+    if (successful) {
+      showSuccess('房间ID已复制到剪贴板')
+    } else {
+      showError('复制失败，请手动复制')
+    }
+  } catch (err) {
+    console.error('复制失败:', err)
+    showError('复制失败，请手动复制')
+  }
+
+  document.body.removeChild(textArea)
 }
 
 // 开始游戏
