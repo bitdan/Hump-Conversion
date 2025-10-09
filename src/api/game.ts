@@ -104,6 +104,15 @@ export function createEventStream(roomId: string, onMessage: (event: GameEvent) 
     // 设置请求头
     eventSource.addEventListener('open', () => {
         console.log('SSE连接已建立')
+        // 通知连接成功
+        if (onMessage) {
+            onMessage({
+                type: 'connected',
+                room_id: roomId,
+                data: {},
+                timestamp: Date.now()
+            })
+        }
     })
 
     eventSource.addEventListener('message', (event) => {
