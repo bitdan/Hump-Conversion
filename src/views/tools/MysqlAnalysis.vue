@@ -167,7 +167,7 @@
               </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="(query, index) in filteredQueries" :key="index" class="hover:bg-gray-50">
+              <tr v-for="(query, index) in paginatedQueries" :key="index" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(query.timestamp) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ query.userHost }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -428,15 +428,13 @@ const filteredQueries = computed(() => {
       break;
   }
 
-  // 分页边界检查
-  const maxPage = Math.ceil(result.length / itemsPerPage.value);
-  if (currentPage.value > maxPage) {
-    currentPage.value = Math.max(1, maxPage);
-  }
+  return result;
+});
 
+const paginatedQueries = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-  return result.slice(start, end);
+  return filteredQueries.value.slice(start, end);
 });
 
 // 方法定义
