@@ -67,6 +67,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/mysql-analysis',
+                name: 'MysqlAnalysis',
+                component: () => import('@/views/tools/MysqlAnalysis.vue'),
+                meta: {
+                    title: 'MysqlAnalysis',
+                    icon: 'mdi-link-variant'
+                }
+            },
+            {
                 path: '/tools/base-converter',
                 name: 'BaseConverter',
                 component: () => import('@/views/tools/BaseConverter.vue'),
