@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-6xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+    <div class="w-full max-w-full bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
           MySQL慢查询日志分析器
@@ -92,18 +92,18 @@
           </div>
         </div>
 
-        <!-- 图表区域 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- 图表区域 - 调整为更紧凑的布局 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <!-- 查询时间分布 -->
-          <div class="bg-white/80 rounded-xl p-5 shadow">
-            <h3 class="text-lg font-semibold mb-4">查询时间分布</h3>
-            <canvas ref="timeDistributionChart"></canvas>
+          <div class="bg-white/80 rounded-xl p-3 shadow">
+            <h3 class="text-sm font-semibold mb-2 text-gray-700">查询时间分布</h3>
+            <canvas ref="timeDistributionChart" class="h-40"></canvas>
           </div>
 
           <!-- 查询类型分布 -->
-          <div class="bg-white/80 rounded-xl p-5 shadow">
-            <h3 class="text-lg font-semibold mb-4">查询类型分布</h3>
-            <canvas ref="queryTypeChart"></canvas>
+          <div class="bg-white/80 rounded-xl p-3 shadow">
+            <h3 class="text-sm font-semibold mb-2 text-gray-700">查询类型分布</h3>
+            <canvas ref="queryTypeChart" class="h-40"></canvas>
           </div>
         </div>
 
