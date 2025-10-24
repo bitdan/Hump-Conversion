@@ -126,14 +126,6 @@
                 density="comfortable"
                 hide-details
             />
-            <v-select
-                v-model="sortOption"
-                :items="sortOptions"
-                label="排序方式"
-                variant="outlined"
-                density="comfortable"
-                hide-details
-            />
             <v-btn color="secondary" @click="resetFilters" prepend-icon="mdi-refresh">
               重置筛选
             </v-btn>
@@ -146,20 +138,45 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortBy('timestamp')">
                   时间
+                  <span v-if="sortField === 'timestamp'" class="ml-1">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortBy('userHost')">
                   用户@主机
+                  <span v-if="sortField === 'userHost'" class="ml-1">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortBy('queryTime')">
                   查询时间
+                  <span v-if="sortField === 'queryTime'" class="ml-1">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortBy('lockTime')">
                   锁定时间
+                  <span v-if="sortField === 'lockTime'" class="ml-1">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortBy('rowsSent')">
                   发送行数
+                  <span v-if="sortField === 'rowsSent'" class="ml-1">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   查询语句
@@ -364,29 +381,22 @@ const statistics = ref<Statistics>({
 const searchQuery = ref('');
 const timeFilter = ref('all');
 const sortOption = ref('time-desc');
+const sortField = ref('queryTime');
+const sortDirection = ref('desc');
 
-// 图表实例
-const timeDistributionChart = ref<HTMLCanvasElement | null>(null);
-const queryTypeChart = ref<HTMLCanvasElement | null>(null);
-let timeChartInstance: Chart | null = null;
-let typeChartInstance: Chart | null = null;
+// 添加排序方法
+function sortBy(field: string) {
+  if (sortField.value === field) {
+    // 如果点击的是当前排序字段，则切换排序方向
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 如果点击的是新字段，则设置为该字段并默认降序
+    sortField.value = field;
+    sortDirection.value = 'desc';
+  }
+}
 
-// 过滤选项
-const timeFilterOptions = [
-  {title: '全部', value: 'all'},
-  {title: '超过1秒', value: 'gt1s'},
-  {title: '超过5秒', value: 'gt5s'},
-  {title: '超过10秒', value: 'gt10s'}
-];
-
-const sortOptions = [
-  {title: '执行时间降序', value: 'time-desc'},
-  {title: '执行时间升序', value: 'time-asc'},
-  {title: '锁定时间降序', value: 'lock-desc'},
-  {title: '锁定时间升序', value: 'lock-asc'}
-];
-
-// 计算属性
+// 修改 filteredQueries 计算属性以包含新的排序逻辑
 const filteredQueries = computed(() => {
   let result = [...queries.value];
 
@@ -413,23 +423,40 @@ const filteredQueries = computed(() => {
   }
 
   // 排序
-  switch (sortOption.value) {
-    case 'time-desc':
-      result.sort((a, b) => b.queryTime - a.queryTime);
-      break;
-    case 'time-asc':
-      result.sort((a, b) => a.queryTime - b.queryTime);
-      break;
-    case 'lock-desc':
-      result.sort((a, b) => b.lockTime - a.lockTime);
-      break;
-    case 'lock-asc':
-      result.sort((a, b) => a.lockTime - b.lockTime);
-      break;
-  }
+  result.sort((a, b) => {
+    let comparison = 0;
+
+    if (sortField.value === 'timestamp') {
+      comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    } else if (sortField.value === 'userHost') {
+      comparison = a.userHost.localeCompare(b.userHost);
+    } else {
+      // 对于数值类型的字段
+      comparison = (a[sortField.value] as number) - (b[sortField.value] as number);
+    }
+
+    return sortDirection.value === 'asc' ? comparison : -comparison;
+  });
 
   return result;
 });
+
+// 图表实例
+const timeDistributionChart = ref<HTMLCanvasElement | null>(null);
+const queryTypeChart = ref<HTMLCanvasElement | null>(null);
+let timeChartInstance: Chart | null = null;
+let typeChartInstance: Chart | null = null;
+
+// 过滤选项
+const timeFilterOptions = [
+  {title: '全部', value: 'all'},
+  {title: '超过1秒', value: 'gt1s'},
+  {title: '超过5秒', value: 'gt5s'},
+  {title: '超过10秒', value: 'gt10s'}
+];
+
+
+
 
 const paginatedQueries = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
@@ -519,6 +546,8 @@ function resetFilters() {
   searchQuery.value = '';
   timeFilter.value = 'all';
   sortOption.value = 'time-desc';
+  sortField.value = 'queryTime';
+  sortDirection.value = 'desc';
   currentPage.value = 1;
 }
 
@@ -833,5 +862,11 @@ watch([searchQuery, timeFilter, sortOption], () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+th span {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
 }
 </style>
