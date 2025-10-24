@@ -107,6 +107,106 @@
           </div>
         </div>
 
+        <div class="bg-white/80 rounded-xl shadow p-5 mb-6">
+          <h3 class="text-lg font-semibold mb-4 text-gray-700">查询排行</h3>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SQL摘要</th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('count')"
+                >
+                  调用次数
+                  <span v-if="rankSortBy === 'count'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('lockTime')"
+                >
+                  总锁定时间
+                  <span v-if="rankSortBy === 'lockTime'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('rowsSent')"
+                >
+                  总返回记录
+                  <span v-if="rankSortBy === 'rowsSent'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('queryTime')"
+                >
+                  总查询时间
+                  <span v-if="rankSortBy === 'queryTime'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('avgLockTime')"
+                >
+                  平均锁定时间
+                  <span v-if="rankSortBy === 'avgLockTime'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('avgRowsSent')"
+                >
+                  平均返回记录
+                  <span v-if="rankSortBy === 'avgRowsSent'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+                <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    @click="sortRankBy('avgQueryTime')"
+                >
+                  平均查询时间
+                  <span v-if="rankSortBy === 'avgQueryTime'" class="ml-1">
+              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+                </th>
+              </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+              <tr
+                  v-for="(query, index) in rankedQueries"
+                  :key="query.sqlHash"
+                  class="hover:bg-gray-50"
+                  @click="showFullSQL(query.sampleSql, 0)"
+              >
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ index + 1 }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900 max-w-xs">
+                  <div class="font-mono text-xs bg-gray-100 p-2 rounded cursor-pointer hover:bg-gray-200 truncate">
+                    {{ truncateSQL(query.sampleSql, 50) }}
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.count }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.lockTime.toFixed(3) }}s</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.rowsSent }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.queryTime.toFixed(3) }}s</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgLockTime.toFixed(3) }}s</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgRowsSent.toFixed(0) }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgQueryTime.toFixed(3) }}s</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- 过滤和搜索 -->
         <div class="bg-white/80 rounded-xl p-5 shadow mb-6">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -388,6 +488,111 @@ const statistics = ref<Statistics>({
 
 const userFilter = ref('');
 const uniqueUsers = ref<string[]>([]);
+
+// 在响应式数据部分添加
+const rankSortBy = ref('queryTime');
+const rankSortDirection = ref('desc');
+
+// 添加计算属性
+const rankedQueries = computed(() => {
+  // 首先按SQL语句分组统计
+  const queryGroups: Record<string, {
+    sqlHash: string;
+    sampleSql: string;
+    count: number;
+    lockTime: number;
+    rowsSent: number;
+    queryTime: number;
+    avgLockTime: number;
+    avgRowsSent: number;
+    avgQueryTime: number;
+  }> = {};
+
+  queries.value.forEach(query => {
+    // 简化SQL用于分组（去除注释、空格等）
+    const simplifiedSql = query.sql
+        .replace(/\/\*.*?\*\//g, '') // 去除注释
+        .replace(/\s+/g, ' ') // 压缩多个空格
+        .trim();
+
+    const sqlHash = hashString(simplifiedSql);
+
+    if (!queryGroups[sqlHash]) {
+      queryGroups[sqlHash] = {
+        sqlHash,
+        sampleSql: query.sql, // 保留原始SQL作为示例
+        count: 0,
+        lockTime: 0,
+        rowsSent: 0,
+        queryTime: 0,
+        avgLockTime: 0,
+        avgRowsSent: 0,
+        avgQueryTime: 0
+      };
+    }
+
+    const group = queryGroups[sqlHash];
+    group.count++;
+    group.lockTime += query.lockTime;
+    group.rowsSent += query.rowsSent;
+    group.queryTime += query.queryTime;
+  });
+
+  // 计算平均值
+  Object.values(queryGroups).forEach(group => {
+    group.avgLockTime = group.lockTime / group.count;
+    group.avgRowsSent = group.rowsSent / group.count;
+    group.avgQueryTime = group.queryTime / group.count;
+  });
+
+  // 转换为数组并排序
+  const result = Object.values(queryGroups);
+
+  result.sort((a, b) => {
+    let comparison = 0;
+
+    if (rankSortBy.value === 'count') {
+      comparison = a.count - b.count;
+    } else if (rankSortBy.value === 'lockTime') {
+      comparison = a.lockTime - b.lockTime;
+    } else if (rankSortBy.value === 'rowsSent') {
+      comparison = a.rowsSent - b.rowsSent;
+    } else if (rankSortBy.value === 'queryTime') {
+      comparison = a.queryTime - b.queryTime;
+    } else if (rankSortBy.value === 'avgLockTime') {
+      comparison = a.avgLockTime - b.avgLockTime;
+    } else if (rankSortBy.value === 'avgRowsSent') {
+      comparison = a.avgRowsSent - b.avgRowsSent;
+    } else if (rankSortBy.value === 'avgQueryTime') {
+      comparison = a.avgQueryTime - b.avgQueryTime;
+    }
+
+    return rankSortDirection.value === 'asc' ? comparison : -comparison;
+  });
+
+  return result.slice(0, 10); // 只返回前10条
+});
+
+// 添加方法
+function sortRankBy(field: string) {
+  if (rankSortBy.value === field) {
+    rankSortDirection.value = rankSortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    rankSortBy.value = field;
+    rankSortDirection.value = 'desc';
+  }
+}
+
+// 简单的字符串哈希函数
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(36);
+}
 
 // 在分析完成后提取所有用户
 function extractUniqueUsers() {
