@@ -114,70 +114,70 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SQL摘要</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">排名</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">SQL摘要</th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('count')"
                 >
                   调用次数
                   <span v-if="rankSortBy === 'count'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('lockTime')"
                 >
                   总锁定时间
                   <span v-if="rankSortBy === 'lockTime'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('rowsSent')"
                 >
                   总返回记录
                   <span v-if="rankSortBy === 'rowsSent'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('queryTime')"
                 >
                   总查询时间
                   <span v-if="rankSortBy === 'queryTime'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('avgLockTime')"
                 >
                   平均锁定时间
                   <span v-if="rankSortBy === 'avgLockTime'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('avgRowsSent')"
                 >
                   平均返回记录
                   <span v-if="rankSortBy === 'avgRowsSent'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortRankBy('avgQueryTime')"
                 >
                   平均查询时间
                   <span v-if="rankSortBy === 'avgQueryTime'" class="ml-1">
-              {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
               </tr>
               </thead>
@@ -248,46 +248,46 @@
               <thead class="bg-gray-50">
               <tr>
                 <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortBy('timestamp')">
                   时间
                   <span v-if="sortField === 'timestamp'" class="ml-1">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortBy('userHost')">
                   用户@主机
                   <span v-if="sortField === 'userHost'" class="ml-1">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortBy('queryTime')">
                   查询时间
                   <span v-if="sortField === 'queryTime'" class="ml-1">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortBy('lockTime')">
                   锁定时间
                   <span v-if="sortField === 'lockTime'" class="ml-1">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
                 <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     @click="sortBy('rowsSent')">
                   发送行数
                   <span v-if="sortField === 'rowsSent'" class="ml-1">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </span>
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   查询语句
                 </th>
               </tr>
@@ -321,7 +321,10 @@
               {{ Math.min(currentPage * itemsPerPage, filteredQueries.length) }} 条，
               共 {{ filteredQueries.length }} 条记录
             </div>
-            <div class="flex space-x-2">
+            <div class="flex items-center space-x-2">
+              <div class="text-sm text-gray-500 mr-2">
+                第 {{ currentPage }} 页 / 共 {{ Math.ceil(filteredQueries.length / itemsPerPage) }} 页
+              </div>
               <v-btn
                   icon
                   variant="outlined"
@@ -693,8 +696,6 @@ const timeFilterOptions = [
 ];
 
 
-
-
 const paginatedQueries = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
@@ -985,6 +986,7 @@ function drawCharts() {
     }
   }
 }
+
 async function processFile(file: File) {
   fileName.value = file.name;
   fileSize.value = file.size;
