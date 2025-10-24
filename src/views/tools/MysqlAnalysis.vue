@@ -119,6 +119,15 @@
                 hide-details
             />
             <v-select
+                v-model="userFilter"
+                :items="uniqueUsers"
+                label="用户筛选"
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                clearable
+            />
+            <v-select
                 v-model="timeFilter"
                 :items="timeFilterOptions"
                 label="执行时间筛选"
@@ -377,26 +386,24 @@ const statistics = ref<Statistics>({
   rowsExaminedToSentRatio: 0
 });
 
-// 过滤和排序
-const searchQuery = ref('');
-const timeFilter = ref('all');
-const sortOption = ref('time-desc');
-const sortField = ref('queryTime');
-const sortDirection = ref('desc');
+const userFilter = ref('');
+const uniqueUsers = ref<string[]>([]);
 
-// 添加排序方法
-function sortBy(field: string) {
-  if (sortField.value === field) {
-    // 如果点击的是当前排序字段，则切换排序方向
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    // 如果点击的是新字段，则设置为该字段并默认降序
-    sortField.value = field;
-    sortDirection.value = 'desc';
-  }
+// 在分析完成后提取所有用户
+function extractUniqueUsers() {
+  const users = new Set<string>();
+  queries.value.forEach(query => {
+    // 从 userHost 中提取用户名（例如：dw_dev[admin]@[192.168.1.1] 提取 dw_dev）
+    const match = query.userHost.match(/^([^\[]+)/);
+    if (match && match[1]) {
+      users.add(match[1]);
+    }
+  });
+  uniqueUsers.value = Array.from(users).sort();
 }
 
-// 修改 filteredQueries 计算属性以包含新的排序逻辑
+
+// 修改 filteredQueries 计算属性以包含用户筛选
 const filteredQueries = computed(() => {
   let result = [...queries.value];
 
@@ -422,6 +429,11 @@ const filteredQueries = computed(() => {
     }
   }
 
+  // 用户过滤
+  if (userFilter.value) {
+    result = result.filter(q => q.userHost.startsWith(userFilter.value));
+  }
+
   // 排序
   result.sort((a, b) => {
     let comparison = 0;
@@ -440,6 +452,26 @@ const filteredQueries = computed(() => {
 
   return result;
 });
+
+// 过滤和排序
+const searchQuery = ref('');
+const timeFilter = ref('all');
+const sortOption = ref('time-desc');
+const sortField = ref('queryTime');
+const sortDirection = ref('desc');
+
+// 添加排序方法
+function sortBy(field: string) {
+  if (sortField.value === field) {
+    // 如果点击的是当前排序字段，则切换排序方向
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 如果点击的是新字段，则设置为该字段并默认降序
+    sortField.value = field;
+    sortDirection.value = 'desc';
+  }
+}
+
 
 // 图表实例
 const timeDistributionChart = ref<HTMLCanvasElement | null>(null);
@@ -545,11 +577,12 @@ async function copySQL() {
 function resetFilters() {
   searchQuery.value = '';
   timeFilter.value = 'all';
-  sortOption.value = 'time-desc';
+  userFilter.value = '';
   sortField.value = 'queryTime';
   sortDirection.value = 'desc';
   currentPage.value = 1;
 }
+
 
 function resetCharts() {
   timeChartInstance?.destroy();
@@ -747,7 +780,6 @@ function drawCharts() {
     }
   }
 }
-
 async function processFile(file: File) {
   fileName.value = file.name;
   fileSize.value = file.size;
@@ -763,6 +795,7 @@ async function processFile(file: File) {
     });
 
     queries.value = parseSlowLogEntry(content);
+    extractUniqueUsers(); // 新增这行
     updateStatistics();
     analysisComplete.value = true;
 
@@ -805,7 +838,7 @@ onUnmounted(() => {
 });
 
 // 监听筛选条件变化
-watch([searchQuery, timeFilter, sortOption], () => {
+watch([searchQuery, timeFilter, userFilter], () => {
   currentPage.value = 1;
 });
 </script>
