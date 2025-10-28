@@ -336,8 +336,8 @@ const parseSqlToEr = (sql) => {
   const entities = []
   const relations = []
 
-  // 处理反引号、注释和 ENGINE 等额外信息
-  const createTableRegex = /CREATE\s+TABLE\s+(?:`?(\w+)`?)\s*\(([\s\S]+?)\)(?:\s*(?:ENGINE\s*=\s*\w+|AUTO_INCREMENT\s*=\s*\d+|COMMENT\s*=\s*'[^']*')\s*)*;/g
+  // 增强的正则表达式，处理更多语法情况
+  const createTableRegex = /CREATE\s+TABLE\s+(?:`?(\w+)`?)\s*\(([\s\S]+?)\)(?:\s*(?:ENGINE\s*=\s*\w+|AUTO_INCREMENT\s*=\s*\d+|DEFAULT\s+CHARSET\s*=\s*\w+|COMMENT\s*=\s*'[^']*')\s*)*;/g
   let tableMatch
 
   while ((tableMatch = createTableRegex.exec(sql)) !== null) {
@@ -348,43 +348,35 @@ const parseSqlToEr = (sql) => {
     let primaryKey = null
     const foreignKeys = []
 
-    // 解析表字段 - 处理反引号、注释和默认值
+    // 解析表字段 - 处理更多语法情况
     const columnLines = tableBody.split('\n')
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('--') && !line.startsWith('/*'))
 
     for (const line of columnLines) {
-      // 跳过约束行
-      if (line.startsWith('PRIMARY KEY') || line.startsWith('FOREIGN KEY') || line.startsWith('UNIQUE') || line.startsWith('KEY')) {
-        // 处理主键约束
-        if (line.startsWith('PRIMARY KEY')) {
-          const pkMatch = line.match(/PRIMARY\s+KEY\s*(?:\(`?(\w+)`?\)|USING\s+\w+\s*\(`?(\w+)`?\))/)
-          if (pkMatch) {
-            primaryKey = pkMatch[1] || pkMatch[2]
-          }
-        }
-        // 处理外键约束
-        if (line.startsWith('FOREIGN KEY')) {
-          const fkMatch = line.match(/FOREIGN\s+KEY\s*\(`?(\w+)`?\)\s*REFERENCES\s+(?:`?(\w+)`?)\s*\(`?(\w+)`?\)/)
-          if (fkMatch) {
-            foreignKeys.push({
-              column: fkMatch[1],
-              refTable: fkMatch[2],
-              refColumn: fkMatch[3]
-            })
-          }
+      // 处理主键约束
+      if (line.startsWith('PRIMARY KEY')) {
+        const pkMatch = line.match(/PRIMARY\s+KEY\s*(?:\(`?(\w+)`?\)|USING\s+\w+\s*\(`?(\w+)`?\))/)
+        if (pkMatch) {
+          primaryKey = pkMatch[1] || pkMatch[2]
         }
         continue
       }
 
-      // 解析字段定义 - 处理反引号、类型、默认值和注释
-      const columnMatch = line.match(/^`?(\w+)`?\s+([\w\(\)]+)\s*(?:NOT\s+NULL)?\s*(?:DEFAULT\s+(?:NULL|'[^']*'|\d+))?\s*(?:AUTO_INCREMENT)?\s*(?:COMMENT\s+'[^']*')?/)
+      // 处理唯一约束
+      if (line.startsWith('UNIQUE KEY')) {
+        continue
+      }
+
+      // 处理普通字段定义
+      const columnMatch = line.match(/^`?(\w+)`?\s+([\w\(\)]+)\s*(?:NOT\s+NULL)?\s*(?:DEFAULT\s+(?:NULL|b?'[^']*'|'[^']*'|\d+))?\s*(?:AUTO_INCREMENT)?\s*(?:COMMENT\s+'[^']*')?/)
       if (columnMatch) {
         const columnName = columnMatch[1]
         const columnType = columnMatch[2]
 
-        const isPk = columnName === primaryKey || line.includes('PRIMARY KEY')
-        const isFk = foreignKeys.some(fk => fk.column === columnName)
+        const isPk = columnName === primaryKey
+        // 检查是否是外键（根据命名约定）
+        const isFk = columnName.endsWith('_id') && columnName !== 'id'
 
         attributes.push({
           name: columnName,
@@ -392,6 +384,16 @@ const parseSqlToEr = (sql) => {
           pk: isPk,
           fk: isFk
         })
+
+        // 如果是外键，添加关系
+        if (isFk && columnName !== 'tenant_id') {
+          const referencedTable = columnName.replace(/_id$/, '')
+          foreignKeys.push({
+            column: columnName,
+            refTable: referencedTable,
+            refColumn: 'id'
+          })
+        }
       }
     }
 
@@ -400,7 +402,7 @@ const parseSqlToEr = (sql) => {
       attributes: attributes,
       x: 0,
       y: 0,
-      width: 220,  // 增加宽度以容纳更长的字段名
+      width: 220,
       height: 40 + attributes.length * 25
     })
 
@@ -410,26 +412,6 @@ const parseSqlToEr = (sql) => {
         from: tableName,
         to: fk.refTable,
         label: `${fk.column} → ${fk.refColumn}`
-      })
-    }
-  }
-
-  // 处理多对多关系（通过中间表）
-  const studentCourseTable = entities.find(e => e.name === 't_student_course')
-  if (studentCourseTable) {
-    const studentIdAttr = studentCourseTable.attributes.find(a => a.name === 'student_id')
-    const courseIdAttr = studentCourseTable.attributes.find(a => a.name === 'course_id')
-
-    if (studentIdAttr && courseIdAttr) {
-      relations.push({
-        from: 't_student',
-        to: 't_student_course',
-        label: '多对多'
-      })
-      relations.push({
-        from: 't_course',
-        to: 't_student_course',
-        label: '多对多'
       })
     }
   }
