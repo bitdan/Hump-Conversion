@@ -196,6 +196,7 @@
                       {{ attr.name }}: {{ attr.type }}
                       <tspan v-if="attr.pk" fill="#ef4444"> PK</tspan>
                       <tspan v-if="attr.fk" fill="#10b981"> FK</tspan>
+                      <tspan v-if="attr.comment" fill="#6b7280"> // {{ attr.comment }}</tspan>
                     </text>
                   </g>
                 </g>
@@ -369,10 +370,11 @@ const parseSqlToEr = (sql) => {
       }
 
       // 处理普通字段定义
-      const columnMatch = line.match(/^`?(\w+)`?\s+([\w\(\)]+)\s*(?:NOT\s+NULL)?\s*(?:DEFAULT\s+(?:NULL|b?'[^']*'|'[^']*'|\d+))?\s*(?:AUTO_INCREMENT)?\s*(?:COMMENT\s+'[^']*')?/)
+      const columnMatch = line.match(/^`?(\w+)`?\s+([\w\(\)]+)\s*(?:NOT\s+NULL)?\s*(?:DEFAULT\s+(?:NULL|b?'[^']*'|'[^']*'|\d+))?\s*(?:AUTO_INCREMENT)?\s*(?:COMMENT\s+'([^']*)')?/)
       if (columnMatch) {
         const columnName = columnMatch[1]
         const columnType = columnMatch[2]
+        const columnComment = columnMatch[3] // 新增：提取注释
 
         const isPk = columnName === primaryKey
         // 检查是否是外键（根据命名约定）
@@ -382,7 +384,8 @@ const parseSqlToEr = (sql) => {
           name: columnName,
           type: columnType,
           pk: isPk,
-          fk: isFk
+          fk: isFk,
+          comment: columnComment // 新增：添加注释
         })
 
         // 如果是外键，添加关系
@@ -589,5 +592,11 @@ textarea {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+tspan.comment {
+  font-size: 10px;
+  fill: #6b7280;
+  font-style: italic;
 }
 </style>
