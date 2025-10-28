@@ -8,8 +8,26 @@
         <p class="text-gray-600 mt-2">输入 SQL 语句，自动生成实体关系图</p>
       </div>
 
+      <!-- 解析结果摘要 -->
+      <div v-if="hasDiagram" class="bg-white/80 rounded-lg p-4 border border-gray-200 mb-6">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div class="p-2">
+            <div class="text-2xl font-bold text-blue-600">{{ entities.length }}</div>
+            <div class="text-sm text-gray-600">实体</div>
+          </div>
+          <div class="p-2">
+            <div class="text-2xl font-bold text-indigo-600">{{ relations.length }}</div>
+            <div class="text-sm text-gray-600">关系</div>
+          </div>
+          <div class="p-2">
+            <div class="text-2xl font-bold text-green-600">{{ totalAttributes }}</div>
+            <div class="text-sm text-gray-600">属性</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 输入区域 -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 gap-6">
         <!-- SQL 输入区 -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -37,11 +55,11 @@
             </div>
           </div>
 
-          <div class="relative h-full">
+          <div class="relative h-96">
             <textarea
                 v-model="sqlInput"
                 placeholder="输入 SQL 语句，例如 CREATE TABLE 语句..."
-                class="w-full h-96 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 resize-none font-mono"
+                class="w-full h-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 resize-none font-mono"
                 spellcheck="false"
             ></textarea>
             <div class="absolute bottom-4 right-4 text-sm text-gray-500">
@@ -66,10 +84,21 @@
                 </svg>
                 下载图片
               </button>
+              <button
+                  @click="resetZoom"
+                  class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                  :disabled="!hasDiagram"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+                重置视图
+              </button>
             </div>
           </div>
 
-          <div class="relative h-96 bg-white rounded-lg border border-gray-300 overflow-hidden">
+          <div class="relative h-[600px] bg-white rounded-lg border border-gray-300 overflow-hidden">
             <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
               <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
@@ -85,9 +114,22 @@
               </div>
             </div>
 
-            <div v-if="hasDiagram && !loading" ref="diagramContainer" class="h-full w-full p-4 overflow-auto">
+            <div
+                v-if="hasDiagram && !loading"
+                ref="diagramContainer"
+                class="h-full w-full overflow-auto"
+                @mousedown="startDrag"
+                @mousemove="doDrag"
+                @mouseup="endDrag"
+                @mouseleave="endDrag"
+            >
               <!-- ER 图将通过 SVG 渲染在这里 -->
-              <svg :width="svgWidth" :height="svgHeight" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                  :width="svgWidth"
+                  :height="svgHeight"
+                  xmlns="http://www.w3.org/2000/svg"
+                  :style="`transform: translate(${translateX}px, ${translateY}px) scale(${scale}); transform-origin: 0 0;`"
+              >
                 <!-- 绘制关系线 -->
                 <g v-for="(relation, index) in relations" :key="'relation-' + index">
                   <path
@@ -174,24 +216,6 @@
               </svg>
             </div>
           </div>
-
-          <!-- 解析结果摘要 -->
-          <div v-if="hasDiagram" class="bg-white/80 rounded-lg p-4 border border-gray-200">
-            <div class="grid grid-cols-3 gap-4 text-center">
-              <div class="p-2">
-                <div class="text-2xl font-bold text-blue-600">{{ entities.length }}</div>
-                <div class="text-sm text-gray-600">实体</div>
-              </div>
-              <div class="p-2">
-                <div class="text-2xl font-bold text-indigo-600">{{ relations.length }}</div>
-                <div class="text-sm text-gray-600">关系</div>
-              </div>
-              <div class="p-2">
-                <div class="text-2xl font-bold text-green-600">{{ totalAttributes }}</div>
-                <div class="text-sm text-gray-600">属性</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -220,8 +244,16 @@ const diagramContainer = ref(null)
 // ER 图数据
 const entities = ref([])
 const relations = ref([])
-const svgWidth = ref(1200)  // 增加宽度以容纳更多表
-const svgHeight = ref(800)  // 增加高度以容纳更多表
+const svgWidth = ref(1600)  // 增加宽度以容纳更多表
+const svgHeight = ref(1200)  // 增加高度以容纳更多表
+
+// 拖拽和缩放状态
+const isDragging = ref(false)
+const startX = ref(0)
+const startY = ref(0)
+const translateX = ref(0)
+const translateY = ref(0)
+const scale = ref(1)
 
 // 计算属性
 const hasDiagram = computed(() => entities.value.length > 0)
@@ -235,6 +267,35 @@ const clearAll = () => {
   entities.value = []
   relations.value = []
   errorMessage.value = ''
+  resetZoom()
+}
+
+// 重置视图
+const resetZoom = () => {
+  translateX.value = 0
+  translateY.value = 0
+  scale.value = 1
+}
+
+// 拖拽功能
+const startDrag = (e) => {
+  isDragging.value = true
+  startX.value = e.clientX - translateX.value
+  startY.value = e.clientY - translateY.value
+  diagramContainer.value.style.cursor = 'grabbing'
+}
+
+const doDrag = (e) => {
+  if (!isDragging.value) return
+  translateX.value = e.clientX - startX.value
+  translateY.value = e.clientY - startY.value
+}
+
+const endDrag = () => {
+  isDragging.value = false
+  if (diagramContainer.value) {
+    diagramContainer.value.style.cursor = 'grab'
+  }
 }
 
 // 解析 SQL
@@ -246,6 +307,7 @@ const parseSql = () => {
 
   loading.value = true
   errorMessage.value = ''
+  resetZoom()
 
   try {
     // 模拟解析过程
@@ -512,31 +574,38 @@ const fallbackExport = () => {
   opacity: 0;
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s;
-}
-
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-}
-
 /* 增加 SVG 容器的滚动条样式 */
+.diagram-container {
+  cursor: grab;
+}
+
 .diagram-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 .diagram-container::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .diagram-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .diagram-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 文本区域和ER图区域高度调整 */
+textarea {
+  min-height: 300px;
+}
+
+/* 按钮禁用状态 */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
