@@ -76,6 +76,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/sql-to-er',
+                name: 'SqlToErDiagram',
+                component: () => import('@/views/tools/SqlToErDiagram.vue'),
+                meta: {
+                    title: 'SQL转ER图',
+                    icon: 'mdi-database-eye'
+                }
+            },
+            {
                 path: '/tools/base-converter',
                 name: 'BaseConverter',
                 component: () => import('@/views/tools/BaseConverter.vue'),
