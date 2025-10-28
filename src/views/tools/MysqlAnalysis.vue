@@ -108,8 +108,11 @@
         </div>
 
         <div class="bg-white/80 rounded-xl shadow p-5 mb-6">
-          <h3 class="text-lg font-semibold mb-4 text-gray-700">查询排行</h3>
-
+          <div class="mt-8 mb-4 flex items-center">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <h2 class="mx-4 text-lg font-semibold text-gray-700">查询排行</h2>
+            <div class="flex-grow border-t border-gray-300"></div>
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -183,12 +186,14 @@
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
               <tr
-                  v-for="(query, index) in rankedQueries"
+                  v-for="(query, index) in paginatedRankedQueries"
                   :key="query.sqlHash"
                   class="hover:bg-gray-50"
                   @click="showFullSQL(query.sampleSql, 0)"
               >
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ index + 1 }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  {{ (currentRankPage - 1) * rankItemsPerPage + index + 1 }}
+                </td>
                 <td class="px-4 py-3 text-sm text-gray-900 max-w-xs">
                   <div class="font-mono text-xs bg-gray-100 p-2 rounded cursor-pointer hover:bg-gray-200 truncate">
                     {{ truncateSQL(query.sampleSql, 50) }}
@@ -205,6 +210,50 @@
               </tbody>
             </table>
           </div>
+          <!-- 查询排行表格下方添加分页 -->
+          <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+            <div class="text-sm text-gray-700">
+              显示第 {{ (currentRankPage - 1) * rankItemsPerPage + 1 }} 到
+              {{ Math.min(currentRankPage * rankItemsPerPage, rankedQueries.length) }} 条，
+              共 {{ rankedQueries.length }} 条记录
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="text-sm text-gray-500 mr-2">
+                第 {{ currentRankPage }} 页 / 共 {{ Math.ceil(rankedQueries.length / rankItemsPerPage) }} 页
+              </div>
+              <v-btn
+                  icon
+                  variant="outlined"
+                  :disabled="currentRankPage === 1"
+                  @click="currentRankPage--"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </v-btn>
+
+              <v-btn
+                  icon
+                  variant="outlined"
+                  :disabled="currentRankPage * rankItemsPerPage >= rankedQueries.length"
+                  @click="currentRankPage++"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </v-btn>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 mb-4 flex items-center">
+          <div class="flex-grow border-t border-gray-300"></div>
+          <h2 class="mx-4 text-lg font-semibold text-gray-700">详细慢查询日志</h2>
+          <div class="flex-grow border-t border-gray-300"></div>
         </div>
 
         <!-- 过滤和搜索 -->
@@ -461,6 +510,16 @@ interface Statistics {
   rowsExaminedToSentRatio: number;
 }
 
+const currentRankPage = ref(1);
+const rankItemsPerPage = ref(10);
+
+// 修改 rankedQueries 计算属性，只返回当前页的数据
+const paginatedRankedQueries = computed(() => {
+  const start = (currentRankPage.value - 1) * rankItemsPerPage.value;
+  const end = start + rankItemsPerPage.value;
+  return rankedQueries.value.slice(start, end);
+});
+
 // 响应式数据
 const fileInput = ref<HTMLInputElement | null>(null);
 const fileName = ref('');
@@ -573,7 +632,7 @@ const rankedQueries = computed(() => {
     return rankSortDirection.value === 'asc' ? comparison : -comparison;
   });
 
-  return result.slice(0, 10); // 只返回前10条
+  return result;
 });
 
 // 添加方法
@@ -787,6 +846,7 @@ function resetFilters() {
   sortField.value = 'queryTime';
   sortDirection.value = 'desc';
   currentPage.value = 1;
+  currentRankPage.value = 1;
 }
 
 
@@ -1042,6 +1102,11 @@ function readFileWithProgress(file: File, onProgress: (loaded: number, total: nu
 // 组件卸载时清理
 onUnmounted(() => {
   resetCharts();
+});
+
+// 监听排序条件变化
+watch([rankSortBy, rankSortDirection], () => {
+  currentRankPage.value = 1;
 });
 
 // 监听筛选条件变化
