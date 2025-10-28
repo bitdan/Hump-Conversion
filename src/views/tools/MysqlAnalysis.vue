@@ -73,37 +73,96 @@
       <!-- 分析结果 -->
       <div v-if="analysisComplete" class="space-y-6">
         <!-- 统计概览 -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-5 shadow">
-            <div class="text-3xl font-bold">{{ statistics.totalQueries }}</div>
-            <div class="text-sm">总查询数</div>
-          </div>
-          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-5 shadow">
-            <div class="text-3xl font-bold">{{ statistics.avgQueryTime.toFixed(3) }}s</div>
-            <div class="text-sm">平均执行时间</div>
-          </div>
-          <div class="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl p-5 shadow">
-            <div class="text-3xl font-bold">{{ statistics.maxQueryTime.toFixed(3) }}s</div>
-            <div class="text-sm">最长执行时间</div>
-          </div>
-          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-5 shadow">
-            <div class="text-3xl font-bold">{{ statistics.lockTimeSum.toFixed(3) }}s</div>
-            <div class="text-sm">总锁定时间</div>
+        <div class="bg-white/80 rounded-xl p-4 mb-4 shadow">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- 总查询数 -->
+            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
+              <div class="bg-blue-100 p-2 rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20"
+                     fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500">总查询数</div>
+                <div class="text-lg font-semibold">{{ statistics.totalQueries }}</div>
+              </div>
+            </div>
+
+            <!-- 平均执行时间 -->
+            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
+              <div class="bg-green-100 p-2 rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20"
+                     fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500">平均执行时间</div>
+                <div class="text-lg font-semibold">{{ statistics.avgQueryTime.toFixed(3) }}s</div>
+              </div>
+            </div>
+
+            <!-- 最长执行时间 -->
+            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
+              <div class="bg-amber-100 p-2 rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600" viewBox="0 0 20 20"
+                     fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500">最长执行时间</div>
+                <div class="text-lg font-semibold">{{ statistics.maxQueryTime.toFixed(3) }}s</div>
+              </div>
+            </div>
+
+            <!-- 总锁定时间 -->
+            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
+              <div class="bg-purple-100 p-2 rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" viewBox="0 0 20 20"
+                     fill="currentColor">
+                  <path fill-rule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500">总锁定时间</div>
+                <div class="text-lg font-semibold">{{ statistics.lockTimeSum.toFixed(3) }}s</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 图表区域 - 调整为更紧凑的布局 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <!-- 查询时间分布 -->
-          <div class="bg-white/80 rounded-xl p-3 shadow">
-            <h3 class="text-sm font-semibold mb-2 text-gray-700">查询时间分布</h3>
-            <canvas ref="timeDistributionChart" class="h-40"></canvas>
+        <!-- 图表区域 - 改为横向排列的迷你图表 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <!-- 查询时间分布 - 改为水平条形图 -->
+          <div class="bg-white/80 rounded-xl p-4 shadow">
+            <h3 class="text-sm font-semibold mb-3 text-gray-700 flex items-center">
+              <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              查询时间分布
+            </h3>
+            <div class="h-40">
+              <canvas ref="timeDistributionChart"></canvas>
+            </div>
           </div>
 
-          <!-- 查询类型分布 -->
-          <div class="bg-white/80 rounded-xl p-3 shadow">
-            <h3 class="text-sm font-semibold mb-2 text-gray-700">查询类型分布</h3>
-            <canvas ref="queryTypeChart" class="h-40"></canvas>
+          <!-- 查询类型分布 - 改为环形图 -->
+          <div class="bg-white/80 rounded-xl p-4 shadow">
+            <h3 class="text-sm font-semibold mb-3 text-gray-700 flex items-center">
+              <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              查询类型分布
+            </h3>
+            <div class="h-40">
+              <canvas ref="queryTypeChart"></canvas>
+            </div>
           </div>
         </div>
 
@@ -951,7 +1010,7 @@ function parseSlowLogEntry(logText: string): QueryLog[] {
 function drawCharts() {
   resetCharts();
 
-  // 查询时间分布图表
+  // 查询时间分布图表 - 水平条形图
   if (timeDistributionChart.value) {
     const ctx = timeDistributionChart.value.getContext('2d');
     if (ctx) {
@@ -974,27 +1033,44 @@ function drawCharts() {
             label: '查询数量',
             data: counts,
             backgroundColor: [
-              'rgba(54, 162, 235, 0.7)',
-              'rgba(255, 206, 86, 0.7)',
-              'rgba(255, 159, 64, 0.7)',
-              'rgba(255, 99, 132, 0.7)',
-              'rgba(153, 102, 255, 0.7)'
+              'rgba(59, 130, 246, 0.7)',
+              'rgba(16, 185, 129, 0.7)',
+              'rgba(245, 158, 11, 0.7)',
+              'rgba(239, 68, 68, 0.7)',
+              'rgba(139, 92, 246, 0.7)'
             ],
-            borderWidth: 1
+            borderWidth: 0,
+            borderRadius: 4
           }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {display: false},
-            title: {display: true, text: '查询时间分布'}
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.parsed.x} 次查询`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {display: false},
+              ticks: {padding: 5}
+            },
+            y: {
+              grid: {display: false},
+              ticks: {padding: 10}
+            }
           }
         }
       });
     }
   }
 
-  // 查询类型分布图表
+  // 查询类型分布图表 - 环形图
   if (queryTypeChart.value) {
     const ctx = queryTypeChart.value.getContext('2d');
     if (ctx) {
@@ -1015,31 +1091,50 @@ function drawCharts() {
         }
       });
 
+      // 过滤掉数量为0的类型
       const labels = Object.keys(typeCounts).filter(k => typeCounts[k] > 0);
       const data = labels.map(k => typeCounts[k]);
       const backgroundColors = [
-        'rgba(54, 162, 235, 0.7)',
-        'rgba(75, 192, 192, 0.7)',
-        'rgba(255, 206, 86, 0.7)',
-        'rgba(255, 99, 132, 0.7)',
-        'rgba(153, 102, 255, 0.7)'
+        'rgba(59, 130, 246, 0.7)',
+        'rgba(16, 185, 129, 0.7)',
+        'rgba(245, 158, 11, 0.7)',
+        'rgba(239, 68, 68, 0.7)',
+        'rgba(139, 92, 246, 0.7)'
       ].slice(0, labels.length);
 
       typeChartInstance = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
           labels,
           datasets: [{
             data,
             backgroundColor: backgroundColors,
-            borderWidth: 1
+            borderWidth: 0,
+            borderRadius: 4
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
           plugins: {
-            legend: {position: 'right'},
-            title: {display: true, text: '查询类型分布'}
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                padding: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((context.raw / total) * 100);
+                  return `${context.label}: ${context.raw} (${percentage}%)`;
+                }
+              }
+            }
           }
         }
       });
