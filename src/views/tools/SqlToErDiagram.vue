@@ -389,7 +389,7 @@ const parseSqlToEr = (sql) => {
         })
 
         // 如果是外键，添加关系
-        if (isFk && columnName !== 'tenant_id') {
+        if (isFk) {
           const referencedTable = columnName.replace(/_id$/, '')
           foreignKeys.push({
             column: columnName,
