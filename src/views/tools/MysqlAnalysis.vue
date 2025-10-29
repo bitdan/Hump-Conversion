@@ -24,11 +24,7 @@
               @change="handleFileSelect"
           />
           <div class="flex flex-col items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24"
-                 stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
+            <v-icon size="48" color="grey" class="mb-3">mdi-cloud-upload</v-icon>
             <p class="text-lg font-medium text-gray-700">拖拽文件到这里或点击选择文件</p>
             <p class="text-gray-500 mt-1">支持 .log 和 .txt 格式</p>
             <v-btn color="primary" class="mt-4" prepend-icon="mdi-file-upload">选择日志文件</v-btn>
@@ -37,21 +33,12 @@
 
         <div v-if="fileName" class="mt-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg">
           <div class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20"
-                 fill="currentColor">
-              <path fill-rule="evenodd"
-                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                    clip-rule="evenodd"/>
-            </svg>
+            <v-icon color="blue" class="mr-2">mdi-file-document</v-icon>
             <span class="font-medium">{{ fileName }}</span>
             <span class="ml-2 text-sm text-gray-500">({{ formatFileSize(fileSize) }})</span>
           </div>
           <v-btn icon variant="text" @click="clearFile">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clip-rule="evenodd"/>
-            </svg>
+            <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>
       </div>
@@ -78,12 +65,7 @@
             <!-- 总查询数 -->
             <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
               <div class="bg-blue-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20"
-                     fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                        clip-rule="evenodd"/>
-                </svg>
+                <v-icon color="blue">mdi-database</v-icon>
               </div>
               <div>
                 <div class="text-sm text-gray-500">总查询数</div>
@@ -94,12 +76,7 @@
             <!-- 平均执行时间 -->
             <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
               <div class="bg-green-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20"
-                     fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                        clip-rule="evenodd"/>
-                </svg>
+                <v-icon color="green">mdi-clock-outline</v-icon>
               </div>
               <div>
                 <div class="text-sm text-gray-500">平均执行时间</div>
@@ -110,12 +87,7 @@
             <!-- 最长执行时间 -->
             <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
               <div class="bg-amber-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600" viewBox="0 0 20 20"
-                     fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-                        clip-rule="evenodd"/>
-                </svg>
+                <v-icon color="amber">mdi-alert</v-icon>
               </div>
               <div>
                 <div class="text-sm text-gray-500">最长执行时间</div>
@@ -126,12 +98,7 @@
             <!-- 总锁定时间 -->
             <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center">
               <div class="bg-purple-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" viewBox="0 0 20 20"
-                     fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                        clip-rule="evenodd"/>
-                </svg>
+                <v-icon color="purple">mdi-lock</v-icon>
               </div>
               <div>
                 <div class="text-sm text-gray-500">总锁定时间</div>
@@ -141,9 +108,9 @@
           </div>
         </div>
 
-        <!-- 图表区域 - 改为横向排列的迷你图表 -->
+        <!-- 图表区域 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          <!-- 查询时间分布 - 改为水平条形图 -->
+          <!-- 查询时间分布 -->
           <div class="bg-white/80 rounded-xl p-4 shadow">
             <h3 class="text-sm font-semibold mb-3 text-gray-700 flex items-center">
               <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
@@ -154,7 +121,7 @@
             </div>
           </div>
 
-          <!-- 查询类型分布 - 改为环形图 -->
+          <!-- 查询类型分布 -->
           <div class="bg-white/80 rounded-xl p-4 shadow">
             <h3 class="text-sm font-semibold mb-3 text-gray-700 flex items-center">
               <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
@@ -166,310 +133,158 @@
           </div>
         </div>
 
+        <!-- 查询排行 -->
         <div class="bg-white/80 rounded-xl shadow p-5 mb-6">
           <div class="mt-8 mb-4 flex items-center">
             <div class="flex-grow border-t border-gray-300"></div>
             <h2 class="mx-4 text-lg font-semibold text-gray-700">查询排行</h2>
             <div class="flex-grow border-t border-gray-300"></div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">排名</th>
-                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">SQL摘要</th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('count')"
-                >
-                  调用次数
-                  <span v-if="rankSortBy === 'count'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('lockTime')"
-                >
-                  总锁定时间
-                  <span v-if="rankSortBy === 'lockTime'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('rowsSent')"
-                >
-                  总返回记录
-                  <span v-if="rankSortBy === 'rowsSent'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('queryTime')"
-                >
-                  总查询时间
-                  <span v-if="rankSortBy === 'queryTime'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('avgLockTime')"
-                >
-                  平均锁定时间
-                  <span v-if="rankSortBy === 'avgLockTime'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('avgRowsSent')"
-                >
-                  平均返回记录
-                  <span v-if="rankSortBy === 'avgRowsSent'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th
-                    class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortRankBy('avgQueryTime')"
-                >
-                  平均查询时间
-                  <span v-if="rankSortBy === 'avgQueryTime'" class="ml-1">
-            {{ rankSortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-              </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-              <tr
-                  v-for="(query, index) in paginatedRankedQueries"
-                  :key="query.sqlHash"
-                  class="hover:bg-gray-50"
-                  @click="showFullSQL(query.sampleSql, 0)"
+
+          <v-data-table
+              :headers="rankHeaders"
+              :items="rankedQueries"
+              :items-per-page="10"
+              :sort-by="[{ key: 'queryTime', order: 'desc' }]"
+              class="elevation-1"
+          >
+            <template #item.sampleSql="{ item }">
+              <div
+                  class="font-mono text-xs bg-grey-lighten-4 pa-2 rounded cursor-pointer hover:bg-grey-lighten-3 truncate"
+                  @click="showFullSQL(item.sampleSql, 0)"
+                  :title="item.sampleSql"
               >
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  {{ (currentRankPage - 1) * rankItemsPerPage + index + 1 }}
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-900 max-w-xs">
-                  <div class="font-mono text-xs bg-gray-100 p-2 rounded cursor-pointer hover:bg-gray-200 truncate">
-                    {{ truncateSQL(query.sampleSql, 50) }}
-                  </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.count }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.lockTime.toFixed(3) }}s</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.rowsSent }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.queryTime.toFixed(3) }}s</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgLockTime.toFixed(3) }}s</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgRowsSent.toFixed(0) }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ query.avgQueryTime.toFixed(3) }}s</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <!-- 查询排行表格下方添加分页 -->
-          <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-            <div class="text-sm text-gray-700">
-              显示第 {{ (currentRankPage - 1) * rankItemsPerPage + 1 }} 到
-              {{ Math.min(currentRankPage * rankItemsPerPage, rankedQueries.length) }} 条，
-              共 {{ rankedQueries.length }} 条记录
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="text-sm text-gray-500 mr-2">
-                第 {{ currentRankPage }} 页 / 共 {{ Math.ceil(rankedQueries.length / rankItemsPerPage) }} 页
+                {{ truncateSQL(item.sampleSql, 50) }}
               </div>
-              <v-btn
-                  icon
-                  variant="outlined"
-                  :disabled="currentRankPage === 1"
-                  @click="currentRankPage--"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clip-rule="evenodd"/>
-                </svg>
-              </v-btn>
+            </template>
 
-              <v-btn
-                  icon
-                  variant="outlined"
-                  :disabled="currentRankPage * rankItemsPerPage >= rankedQueries.length"
-                  @click="currentRankPage++"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"/>
-                </svg>
-              </v-btn>
-            </div>
+            <template #item.count="{ item }">
+              <span class="font-medium">{{ item.count }}</span>
+            </template>
+
+            <template #item.lockTime="{ item }">
+              {{ item.lockTime.toFixed(3) }}s
+            </template>
+
+            <template #item.rowsSent="{ item }">
+              {{ item.rowsSent.toLocaleString() }}
+            </template>
+
+            <template #item.queryTime="{ item }">
+              <span :class="getTimeClass(item.avgQueryTime)">
+                {{ item.queryTime.toFixed(3) }}s
+              </span>
+            </template>
+
+            <template #item.avgLockTime="{ item }">
+              {{ item.avgLockTime.toFixed(3) }}s
+            </template>
+
+            <template #item.avgRowsSent="{ item }">
+              {{ item.avgRowsSent.toFixed(0) }}
+            </template>
+
+            <template #item.avgQueryTime="{ item }">
+              <span :class="getTimeClass(item.avgQueryTime)">
+                {{ item.avgQueryTime.toFixed(3) }}s
+              </span>
+            </template>
+          </v-data-table>
+        </div>
+
+        <!-- 详细慢查询日志 -->
+        <div class="bg-white/80 rounded-xl shadow p-5">
+          <div class="mt-8 mb-4 flex items-center">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <h2 class="mx-4 text-lg font-semibold text-gray-700">详细慢查询日志</h2>
+            <div class="flex-grow border-t border-gray-300"></div>
           </div>
-        </div>
 
-        <div class="mt-8 mb-4 flex items-center">
-          <div class="flex-grow border-t border-gray-300"></div>
-          <h2 class="mx-4 text-lg font-semibold text-gray-700">详细慢查询日志</h2>
-          <div class="flex-grow border-t border-gray-300"></div>
-        </div>
-
-        <!-- 过滤和搜索 -->
-        <div class="bg-white/80 rounded-xl p-5 shadow mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- 搜索和过滤 -->
+          <div class="mb-4">
             <v-text-field
-                v-model="searchQuery"
-                label="搜索查询语句"
-                variant="outlined"
-                density="comfortable"
+                v-model="search"
+                label="搜索查询语句、用户等"
                 prepend-inner-icon="mdi-magnify"
-                hide-details
-            />
-            <v-select
-                v-model="userFilter"
-                :items="uniqueUsers"
-                label="用户筛选"
                 variant="outlined"
-                density="comfortable"
                 hide-details
-                clearable
+                class="mb-4"
             />
-            <v-select
-                v-model="timeFilter"
-                :items="timeFilterOptions"
-                label="执行时间筛选"
-                variant="outlined"
-                density="comfortable"
-                hide-details
-            />
-            <v-btn color="secondary" @click="resetFilters" prepend-icon="mdi-refresh">
-              重置筛选
-            </v-btn>
-          </div>
-        </div>
 
-        <!-- 查询列表 -->
-        <div class="bg-white/80 rounded-xl shadow overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-              <tr>
-                <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortBy('timestamp')">
-                  时间
-                  <span v-if="sortField === 'timestamp'" class="ml-1">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortBy('userHost')">
-                  用户@主机
-                  <span v-if="sortField === 'userHost'" class="ml-1">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortBy('queryTime')">
-                  查询时间
-                  <span v-if="sortField === 'queryTime'" class="ml-1">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortBy('lockTime')">
-                  锁定时间
-                  <span v-if="sortField === 'lockTime'" class="ml-1">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    @click="sortBy('rowsSent')">
-                  发送行数
-                  <span v-if="sortField === 'rowsSent'" class="ml-1">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </span>
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  查询语句
-                </th>
-              </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="(query, index) in paginatedQueries" :key="index" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(query.timestamp) }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ query.userHost }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span :class="getTimeClass(query.queryTime)">{{ query.queryTime.toFixed(3) }}s</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ query.lockTime.toFixed(3) }}s</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ query.rowsSent }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900 max-w-md">
-                  <div
-                      class="font-mono text-xs bg-gray-100 p-2 rounded cursor-pointer hover:bg-gray-200 transition-colors truncate"
-                      :title="query.sql"
-                      @click="showFullSQL(query.sql, index)"
-                  >
-                    {{ truncateSQL(query.sql) }}
-                  </div>
-                </td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
+            <div class="flex gap-4 flex-wrap">
+              <v-select
+                  v-model="userFilter"
+                  :items="uniqueUsers"
+                  label="用户筛选"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  clearable
+                  style="min-width: 200px;"
+              />
 
-          <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-            <div class="text-sm text-gray-700">
-              显示第 {{ (currentPage - 1) * itemsPerPage + 1 }} 到
-              {{ Math.min(currentPage * itemsPerPage, filteredQueries.length) }} 条，
-              共 {{ filteredQueries.length }} 条记录
+              <v-select
+                  v-model="timeFilter"
+                  :items="timeFilterOptions"
+                  label="执行时间筛选"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  style="min-width: 200px;"
+              />
+
+              <v-btn color="secondary" @click="resetFilters" prepend-icon="mdi-refresh">
+                重置筛选
+              </v-btn>
             </div>
-            <div class="flex items-center space-x-2">
-              <div class="text-sm text-gray-500 mr-2">
-                第 {{ currentPage }} 页 / 共 {{ Math.ceil(filteredQueries.length / itemsPerPage) }} 页
+          </div>
+
+          <v-data-table
+              :headers="headers"
+              :items="filteredQueries"
+              :search="search"
+              :items-per-page="10"
+              :sort-by="[{ key: 'queryTime', order: 'desc' }]"
+              class="elevation-1"
+          >
+            <template #item.timestamp="{ item }">
+              {{ formatDate(item.timestamp) }}
+            </template>
+
+            <template #item.userHost="{ item }">
+              <span class="font-mono text-xs">{{ item.userHost }}</span>
+            </template>
+
+            <template #item.queryTime="{ item }">
+              <span :class="getTimeClass(item.queryTime)">
+                {{ item.queryTime.toFixed(3) }}s
+              </span>
+            </template>
+
+            <template #item.lockTime="{ item }">
+              {{ item.lockTime.toFixed(3) }}s
+            </template>
+
+            <template #item.rowsSent="{ item }">
+              {{ item.rowsSent.toLocaleString() }}
+            </template>
+
+            <template #item.sql="{ item }">
+              <div
+                  class="font-mono text-xs bg-grey-lighten-4 pa-2 rounded cursor-pointer hover:bg-grey-lighten-3 truncate"
+                  @click="showFullSQL(item.sql, getQueryIndex(item))"
+                  :title="item.sql"
+              >
+                {{ truncateSQL(item.sql) }}
               </div>
-              <v-btn
-                  icon
-                  variant="outlined"
-                  :disabled="currentPage === 1"
-                  @click="currentPage--"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clip-rule="evenodd"/>
-                </svg>
-              </v-btn>
-
-              <v-btn
-                  icon
-                  variant="outlined"
-                  :disabled="currentPage * itemsPerPage >= filteredQueries.length"
-                  @click="currentPage++"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"/>
-                </svg>
-              </v-btn>
-            </div>
-          </div>
+            </template>
+          </v-data-table>
         </div>
       </div>
 
       <!-- 空状态 -->
       <div v-else-if="!isAnalyzing && !fileName" class="text-center py-12">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24"
-             stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
+        <v-icon size="64" color="grey" class="mb-4">mdi-file-document-outline</v-icon>
         <h3 class="mt-4 text-lg font-medium text-gray-900">请上传MySQL慢查询日志文件</h3>
         <p class="mt-1 text-gray-500">支持 .log 和 .txt 格式的慢查询日志文件</p>
       </div>
@@ -498,7 +313,7 @@
                   <strong>锁定时间:</strong> {{ currentQuery?.lockTime.toFixed(3) }}s
                 </div>
                 <div>
-                  <strong>返回行数:</strong> {{ currentQuery?.rowsSent }}
+                  <strong>返回行数:</strong> {{ currentQuery?.rowsSent.toLocaleString() }}
                 </div>
               </div>
             </div>
@@ -530,7 +345,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onUnmounted, ref, watch} from 'vue';
+import {computed, nextTick, onUnmounted, ref} from 'vue';
 import {
   ArcElement,
   BarController,
@@ -569,15 +384,17 @@ interface Statistics {
   rowsExaminedToSentRatio: number;
 }
 
-const currentRankPage = ref(1);
-const rankItemsPerPage = ref(10);
-
-// 修改 rankedQueries 计算属性，只返回当前页的数据
-const paginatedRankedQueries = computed(() => {
-  const start = (currentRankPage.value - 1) * rankItemsPerPage.value;
-  const end = start + rankItemsPerPage.value;
-  return rankedQueries.value.slice(start, end);
-});
+interface RankedQuery {
+  sqlHash: string;
+  sampleSql: string;
+  count: number;
+  lockTime: number;
+  rowsSent: number;
+  queryTime: number;
+  avgLockTime: number;
+  avgRowsSent: number;
+  avgQueryTime: number;
+}
 
 // 响应式数据
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -586,8 +403,7 @@ const fileSize = ref(0);
 const isAnalyzing = ref(false);
 const progress = ref(0);
 const analysisComplete = ref(false);
-const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const search = ref('');
 
 // SQL 弹窗相关
 const showSQLDialog = ref(false);
@@ -608,32 +424,46 @@ const statistics = ref<Statistics>({
 });
 
 const userFilter = ref('');
+const timeFilter = ref('all');
 const uniqueUsers = ref<string[]>([]);
 
-// 在响应式数据部分添加
-const rankSortBy = ref('queryTime');
-const rankSortDirection = ref('desc');
+// 表格头部定义
+const headers = ref([
+  {title: '时间', key: 'timestamp', sortable: true},
+  {title: '用户@主机', key: 'userHost', sortable: true},
+  {title: '查询时间', key: 'queryTime', sortable: true},
+  {title: '锁定时间', key: 'lockTime', sortable: true},
+  {title: '发送行数', key: 'rowsSent', sortable: true},
+  {title: '查询语句', key: 'sql', sortable: false}
+]);
 
-// 添加计算属性
+const rankHeaders = ref([
+  {title: 'SQL摘要', key: 'sampleSql', sortable: false},
+  {title: '调用次数', key: 'count', sortable: true},
+  {title: '总锁定时间', key: 'lockTime', sortable: true},
+  {title: '总返回记录', key: 'rowsSent', sortable: true},
+  {title: '总查询时间', key: 'queryTime', sortable: true},
+  {title: '平均锁定时间', key: 'avgLockTime', sortable: true},
+  {title: '平均返回记录', key: 'avgRowsSent', sortable: true},
+  {title: '平均查询时间', key: 'avgQueryTime', sortable: true}
+]);
+
+// 过滤选项
+const timeFilterOptions = [
+  {title: '全部', value: 'all'},
+  {title: '超过1秒', value: 'gt1s'},
+  {title: '超过5秒', value: 'gt5s'},
+  {title: '超过10秒', value: 'gt10s'}
+];
+
+// 计算属性
 const rankedQueries = computed(() => {
-  // 首先按SQL语句分组统计
-  const queryGroups: Record<string, {
-    sqlHash: string;
-    sampleSql: string;
-    count: number;
-    lockTime: number;
-    rowsSent: number;
-    queryTime: number;
-    avgLockTime: number;
-    avgRowsSent: number;
-    avgQueryTime: number;
-  }> = {};
+  const queryGroups: Record<string, RankedQuery> = {};
 
   queries.value.forEach(query => {
-    // 简化SQL用于分组（去除注释、空格等）
     const simplifiedSql = query.sql
-        .replace(/\/\*.*?\*\//g, '') // 去除注释
-        .replace(/\s+/g, ' ') // 压缩多个空格
+        .replace(/\/\*.*?\*\//g, '')
+        .replace(/\s+/g, ' ')
         .trim();
 
     const sqlHash = hashString(simplifiedSql);
@@ -641,7 +471,7 @@ const rankedQueries = computed(() => {
     if (!queryGroups[sqlHash]) {
       queryGroups[sqlHash] = {
         sqlHash,
-        sampleSql: query.sql, // 保留原始SQL作为示例
+        sampleSql: query.sql,
         count: 0,
         lockTime: 0,
         rowsSent: 0,
@@ -666,81 +496,11 @@ const rankedQueries = computed(() => {
     group.avgQueryTime = group.queryTime / group.count;
   });
 
-  // 转换为数组并排序
-  const result = Object.values(queryGroups);
-
-  result.sort((a, b) => {
-    let comparison = 0;
-
-    if (rankSortBy.value === 'count') {
-      comparison = a.count - b.count;
-    } else if (rankSortBy.value === 'lockTime') {
-      comparison = a.lockTime - b.lockTime;
-    } else if (rankSortBy.value === 'rowsSent') {
-      comparison = a.rowsSent - b.rowsSent;
-    } else if (rankSortBy.value === 'queryTime') {
-      comparison = a.queryTime - b.queryTime;
-    } else if (rankSortBy.value === 'avgLockTime') {
-      comparison = a.avgLockTime - b.avgLockTime;
-    } else if (rankSortBy.value === 'avgRowsSent') {
-      comparison = a.avgRowsSent - b.avgRowsSent;
-    } else if (rankSortBy.value === 'avgQueryTime') {
-      comparison = a.avgQueryTime - b.avgQueryTime;
-    }
-
-    return rankSortDirection.value === 'asc' ? comparison : -comparison;
-  });
-
-  return result;
+  return Object.values(queryGroups);
 });
 
-// 添加方法
-function sortRankBy(field: string) {
-  if (rankSortBy.value === field) {
-    rankSortDirection.value = rankSortDirection.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    rankSortBy.value = field;
-    rankSortDirection.value = 'desc';
-  }
-}
-
-// 简单的字符串哈希函数
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash.toString(36);
-}
-
-// 在分析完成后提取所有用户
-function extractUniqueUsers() {
-  const users = new Set<string>();
-  queries.value.forEach(query => {
-    // 从 userHost 中提取用户名（例如：dw_dev[admin]@[192.168.1.1] 提取 dw_dev）
-    const match = query.userHost.match(/^([^\[]+)/);
-    if (match && match[1]) {
-      users.add(match[1]);
-    }
-  });
-  uniqueUsers.value = Array.from(users).sort();
-}
-
-
-// 修改 filteredQueries 计算属性以包含用户筛选
 const filteredQueries = computed(() => {
   let result = [...queries.value];
-
-  // 搜索过滤
-  if (searchQuery.value) {
-    const search = searchQuery.value.toLowerCase();
-    result = result.filter(q =>
-        q.sql.toLowerCase().includes(search) ||
-        q.userHost.toLowerCase().includes(search)
-    );
-  }
 
   // 时间过滤
   if (timeFilter.value !== 'all') {
@@ -760,64 +520,7 @@ const filteredQueries = computed(() => {
     result = result.filter(q => q.userHost.startsWith(userFilter.value));
   }
 
-  // 排序
-  result.sort((a, b) => {
-    let comparison = 0;
-
-    if (sortField.value === 'timestamp') {
-      comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-    } else if (sortField.value === 'userHost') {
-      comparison = a.userHost.localeCompare(b.userHost);
-    } else {
-      // 对于数值类型的字段
-      comparison = (a[sortField.value] as number) - (b[sortField.value] as number);
-    }
-
-    return sortDirection.value === 'asc' ? comparison : -comparison;
-  });
-
   return result;
-});
-
-// 过滤和排序
-const searchQuery = ref('');
-const timeFilter = ref('all');
-const sortOption = ref('time-desc');
-const sortField = ref('queryTime');
-const sortDirection = ref('desc');
-
-// 添加排序方法
-function sortBy(field: string) {
-  if (sortField.value === field) {
-    // 如果点击的是当前排序字段，则切换排序方向
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    // 如果点击的是新字段，则设置为该字段并默认降序
-    sortField.value = field;
-    sortDirection.value = 'desc';
-  }
-}
-
-
-// 图表实例
-const timeDistributionChart = ref<HTMLCanvasElement | null>(null);
-const queryTypeChart = ref<HTMLCanvasElement | null>(null);
-let timeChartInstance: Chart | null = null;
-let typeChartInstance: Chart | null = null;
-
-// 过滤选项
-const timeFilterOptions = [
-  {title: '全部', value: 'all'},
-  {title: '超过1秒', value: 'gt1s'},
-  {title: '超过5秒', value: 'gt5s'},
-  {title: '超过10秒', value: 'gt10s'}
-];
-
-
-const paginatedQueries = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return filteredQueries.value.slice(start, end);
 });
 
 // 方法定义
@@ -874,6 +577,10 @@ function truncateSQL(sql: string, maxLength: number = 100): string {
   return sql.substring(0, maxLength) + '...';
 }
 
+function getQueryIndex(query: QueryLog): number {
+  return queries.value.indexOf(query);
+}
+
 function showFullSQL(sql: string, index: number) {
   currentSQL.value = sql;
   currentSQLIndex.value = index;
@@ -884,10 +591,7 @@ function showFullSQL(sql: string, index: number) {
 async function copySQL() {
   try {
     await navigator.clipboard.writeText(currentSQL.value);
-    // 可以添加复制成功的提示
-    console.log('SQL已复制到剪贴板');
   } catch (err) {
-    console.error('复制失败:', err);
     // 降级方案
     const textArea = document.createElement('textarea');
     textArea.value = currentSQL.value;
@@ -899,15 +603,37 @@ async function copySQL() {
 }
 
 function resetFilters() {
-  searchQuery.value = '';
+  search.value = '';
   timeFilter.value = 'all';
   userFilter.value = '';
-  sortField.value = 'queryTime';
-  sortDirection.value = 'desc';
-  currentPage.value = 1;
-  currentRankPage.value = 1;
 }
 
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
+function extractUniqueUsers() {
+  const users = new Set<string>();
+  queries.value.forEach(query => {
+    const match = query.userHost.match(/^([^\[]+)/);
+    if (match && match[1]) {
+      users.add(match[1]);
+    }
+  });
+  uniqueUsers.value = Array.from(users).sort();
+}
+
+// 图表实例
+const timeDistributionChart = ref<HTMLCanvasElement | null>(null);
+const queryTypeChart = ref<HTMLCanvasElement | null>(null);
+let timeChartInstance: Chart | null = null;
+let typeChartInstance: Chart | null = null;
 
 function resetCharts() {
   timeChartInstance?.destroy();
@@ -972,10 +698,6 @@ function parseSlowLogEntry(logText: string): QueryLog[] {
 
       const rowsExaminedMatch = section.match(/Rows_examined: (\d+)/);
       if (rowsExaminedMatch) entry.rowsExamined = parseInt(rowsExaminedMatch[1]) || 0;
-
-      // 解析数据库
-      const useMatch = section.match(/use ([^;]+);/);
-      if (useMatch) entry.database = useMatch[1];
 
       // 提取SQL语句
       const timestampIndex = section.indexOf('SET timestamp=');
@@ -1129,9 +851,9 @@ function drawCharts() {
             tooltip: {
               callbacks: {
                 label: (context) => {
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((context.raw / total) * 100);
-                  return `${context.label}: ${context.raw} (${percentage}%)`;
+                  const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                  const percentage = Math.round((context.parsed / total) * 100);
+                  return `${context.label}: ${context.parsed} (${percentage}%)`;
                 }
               }
             }
@@ -1157,7 +879,7 @@ async function processFile(file: File) {
     });
 
     queries.value = parseSlowLogEntry(content);
-    extractUniqueUsers(); // 新增这行
+    extractUniqueUsers();
     updateStatistics();
     analysisComplete.value = true;
 
@@ -1198,23 +920,9 @@ function readFileWithProgress(file: File, onProgress: (loaded: number, total: nu
 onUnmounted(() => {
   resetCharts();
 });
-
-// 监听排序条件变化
-watch([rankSortBy, rankSortDirection], () => {
-  currentRankPage.value = 1;
-});
-
-// 监听筛选条件变化
-watch([searchQuery, timeFilter, userFilter], () => {
-  currentPage.value = 1;
-});
 </script>
 
 <style scoped>
-.transition-opacity {
-  transition: opacity 0.3s ease-in-out;
-}
-
 .sql-detail-content {
   max-height: 60vh;
   overflow: auto;
@@ -1238,35 +946,9 @@ watch([searchQuery, timeFilter, userFilter], () => {
   color: #333;
 }
 
-/* SQL 语法高亮（基础版本） */
-.sql-code .keyword {
-  color: #d73a49;
-  font-weight: bold;
-}
-
-.sql-code .string {
-  color: #032f62;
-}
-
-.sql-code .comment {
-  color: #6a737d;
-  font-style: italic;
-}
-
-/* 表格中SQL显示优化 */
-.font-mono {
-  font-family: 'Courier New', monospace;
-}
-
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-th span {
-  display: inline-block;
-  width: 1em;
-  text-align: center;
 }
 </style>
