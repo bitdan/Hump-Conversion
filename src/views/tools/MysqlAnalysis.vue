@@ -146,7 +146,7 @@
               :items="rankedQueries"
               :items-per-page="10"
               :sort-by="[{ key: 'queryTime', order: 'desc' }]"
-              class="elevation-1"
+              class="elevation-1 fixed-width-table"
           >
             <template #item.sampleSql="{ item }">
               <div
@@ -245,7 +245,7 @@
               :search="search"
               :items-per-page="10"
               :sort-by="[{ key: 'queryTime', order: 'desc' }]"
-              class="elevation-1"
+              class="elevation-1 fixed-width-table"
           >
             <template #item.timestamp="{ item }">
               {{ formatDate(item.timestamp) }}
@@ -429,23 +429,93 @@ const uniqueUsers = ref<string[]>([]);
 
 // 表格头部定义
 const headers = ref([
-  {title: '时间', key: 'timestamp', sortable: true},
-  {title: '用户@主机', key: 'userHost', sortable: true},
-  {title: '查询时间', key: 'queryTime', sortable: true},
-  {title: '锁定时间', key: 'lockTime', sortable: true},
-  {title: '发送行数', key: 'rowsSent', sortable: true},
-  {title: '查询语句', key: 'sql', sortable: false}
+  {
+    title: '时间',
+    key: 'timestamp',
+    sortable: true,
+    width: '130px'
+  },
+  {
+    title: '用户@主机',
+    key: 'userHost',
+    sortable: true,
+    width: '220px'
+  },
+  {
+    title: '查询时间',
+    key: 'queryTime',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '锁定时间',
+    key: 'lockTime',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '发送行数',
+    key: 'rowsSent',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '查询语句',
+    key: 'sql',
+    sortable: false,
+    width: '300px'
+  }
 ]);
 
 const rankHeaders = ref([
-  {title: 'SQL摘要', key: 'sampleSql', sortable: false},
-  {title: '调用次数', key: 'count', sortable: true},
-  {title: '总锁定时间', key: 'lockTime', sortable: true},
-  {title: '总返回记录', key: 'rowsSent', sortable: true},
-  {title: '总查询时间', key: 'queryTime', sortable: true},
-  {title: '平均锁定时间', key: 'avgLockTime', sortable: true},
-  {title: '平均返回记录', key: 'avgRowsSent', sortable: true},
-  {title: '平均查询时间', key: 'avgQueryTime', sortable: true}
+  {
+    title: 'SQL摘要',
+    key: 'sampleSql',
+    sortable: false,
+    width: '250px'
+  },
+  {
+    title: '调用次数',
+    key: 'count',
+    sortable: true,
+    width: '100px'
+  },
+  {
+    title: '总锁定时间',
+    key: 'lockTime',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '总返回记录',
+    key: 'rowsSent',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '总查询时间',
+    key: 'queryTime',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '平均锁定时间',
+    key: 'avgLockTime',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '平均返回记录',
+    key: 'avgRowsSent',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: '平均查询时间',
+    key: 'avgQueryTime',
+    sortable: true,
+    width: '120px'
+  }
 ]);
 
 // 过滤选项
@@ -923,6 +993,140 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.sql-detail-content {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.sql-meta-info {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sql-code-container {
+  background-color: #f5f5f5;
+}
+
+.sql-code {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #333;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 添加固定宽度表格样式 */
+.fixed-width-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.fixed-width-table :deep(table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.fixed-width-table :deep(th),
+.fixed-width-table :deep(td) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.fixed-width-table :deep(.v-data-table__td) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 确保表头也固定宽度 */
+.fixed-width-table :deep(.v-data-table__thead th) {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 为特定列设置最小宽度 */
+.fixed-width-table :deep(th:nth-child(1)),
+.fixed-width-table :deep(td:nth-child(1)) {
+  width: 180px;
+  min-width: 180px;
+}
+
+.fixed-width-table :deep(th:nth-child(2)),
+.fixed-width-table :deep(td:nth-child(2)) {
+  width: 150px;
+  min-width: 150px;
+}
+
+.fixed-width-table :deep(th:nth-child(3)),
+.fixed-width-table :deep(td:nth-child(3)) {
+  width: 120px;
+  min-width: 120px;
+}
+
+.fixed-width-table :deep(th:nth-child(4)),
+.fixed-width-table :deep(td:nth-child(4)) {
+  width: 120px;
+  min-width: 120px;
+}
+
+.fixed-width-table :deep(th:nth-child(5)),
+.fixed-width-table :deep(td:nth-child(5)) {
+  width: 120px;
+  min-width: 120px;
+}
+
+.fixed-width-table :deep(th:nth-child(6)),
+.fixed-width-table :deep(td:nth-child(6)) {
+  width: 300px;
+  min-width: 300px;
+}
+
+/* 查询排行表格的特殊列宽 */
+.fixed-width-table.rank-table :deep(th:nth-child(1)),
+.fixed-width-table.rank-table :deep(td:nth-child(1)) {
+  width: 250px;
+  min-width: 250px;
+}
+
+.fixed-width-table.rank-table :deep(th:nth-child(2)),
+.fixed-width-table.rank-table :deep(td:nth-child(2)) {
+  width: 100px;
+  min-width: 100px;
+}
+
+.fixed-width-table.rank-table :deep(th:nth-child(3)),
+.fixed-width-table.rank-table :deep(td:nth-child(3)),
+.fixed-width-table.rank-table :deep(th:nth-child(4)),
+.fixed-width-table.rank-table :deep(td:nth-child(4)),
+.fixed-width-table.rank-table :deep(th:nth-child(5)),
+.fixed-width-table.rank-table :deep(td:nth-child(5)),
+.fixed-width-table.rank-table :deep(th:nth-child(6)),
+.fixed-width-table.rank-table :deep(td:nth-child(6)),
+.fixed-width-table.rank-table :deep(th:nth-child(7)),
+.fixed-width-table.rank-table :deep(td:nth-child(7)),
+.fixed-width-table.rank-table :deep(th:nth-child(8)),
+.fixed-width-table.rank-table :deep(td:nth-child(8)) {
+  width: 120px;
+  min-width: 120px;
+}
+
+/* 排序按钮样式 */
+.fixed-width-table :deep(.v-data-table-header__sort-badge) {
+  font-size: 12px;
+}
+
 .sql-detail-content {
   max-height: 60vh;
   overflow: auto;
