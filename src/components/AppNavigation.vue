@@ -457,4 +457,44 @@ const filteredRoutes = computed<RouteItem[]>(() => {
 .user-info :deep(.v-avatar) {
   border: 2px solid rgba(79, 70, 229, 0.2);
 }
+
+.v-navigation-drawer {
+  width: 280px !important;
+  transition: all 0.3s ease;
+}
+
+/* 防止文字换行，超出部分显示省略号 */
+.v-list-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 调整菜单项内边距 */
+.v-list-item {
+  padding: 0 12px !important;
+  min-height: 44px;
+}
+
+/* 调整图标和文字的间距 */
+.v-list-item__prepend {
+  margin-right: 12px !important;
+}
+
+/* 子菜单项缩进 */
+.v-list-group__items .v-list-item {
+  padding-left: 32px !important;
+}
+
+/* 激活状态样式 */
+.v-list-item--active {
+  background: rgba(79, 70, 229, 0.1) !important;
+  color: #4f46e5 !important;
+  font-weight: 500;
+}
+
+/* Rail模式下隐藏文字 */
+.v-navigation-drawer--rail .v-list-item__title {
+  display: none;
+}
 </style>

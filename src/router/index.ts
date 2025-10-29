@@ -62,7 +62,7 @@ export const routes: RouteRecordRaw[] = [
                 name: 'DockerComposeGenerator',
                 component: () => import('@/views/tools/DockerComposeGenerator.vue'),
                 meta: {
-                    title: 'Docker Compose 生成器',
+                    title: 'DockerCompose生成器',
                     icon: 'mdi-docker'
                 }
             },
