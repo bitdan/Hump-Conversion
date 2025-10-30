@@ -117,7 +117,7 @@
             <div
                 v-if="hasDiagram && !loading"
                 ref="diagramContainer"
-                class="h-full w-full overflow-auto"
+                class="h-full w-full overflow-auto diagram-container"
                 @mousedown="startDrag"
                 @mousemove="doDrag"
                 @mouseup="endDrag"
@@ -422,37 +422,37 @@ const parseSqlToEr = (sql) => {
   return {entities, relations}
 }
 
-// 调整图表布局 - 改进版
+// 调整图表布局 - 自适应大型表格
 const adjustDiagramLayout = () => {
   nextTick(() => {
     if (entities.value.length === 0) return
 
-    // 根据表数量决定布局方式
-    if (entities.value.length <= 3) {
-      // 少于等于3个表，使用三角形布局
-      const centerX = svgWidth.value / 2
-      const centerY = svgHeight.value / 2
-      const radius = Math.min(svgWidth.value, svgHeight.value) * 0.35
-      const angleStep = (2 * Math.PI) / entities.value.length
+    // 计算网格参数，按最大实体尺寸自适应
+    const count = entities.value.length
+    const cols = Math.ceil(Math.sqrt(count))
+    const rows = Math.ceil(count / cols)
 
-      entities.value.forEach((entity, index) => {
-        const angle = index * angleStep
-        entity.x = centerX + Math.cos(angle) * radius - entity.width / 2
-        entity.y = centerY + Math.sin(angle) * radius - entity.height / 2
-      })
-    } else {
-      // 多于3个表，使用网格布局
-      const cols = Math.ceil(Math.sqrt(entities.value.length))
-      const cellWidth = svgWidth.value / (cols + 1)
-      const cellHeight = svgHeight.value / (cols + 1)
+    const maxEntityWidth = Math.max(...entities.value.map(e => e.width))
+    const maxEntityHeight = Math.max(...entities.value.map(e => e.height))
+    const horizontalPadding = 120
+    const verticalPadding = 120
 
-      entities.value.forEach((entity, index) => {
-        const row = Math.floor(index / cols)
-        const col = index % cols
-        entity.x = (col + 1) * cellWidth - entity.width / 2
-        entity.y = (row + 1) * cellHeight - entity.height / 2
-      })
-    }
+    const cellWidth = maxEntityWidth + horizontalPadding
+    const cellHeight = maxEntityHeight + verticalPadding
+
+    // 自适应扩展 SVG 画布，避免超出和重叠
+    svgWidth.value = Math.max(svgWidth.value, cols * cellWidth + horizontalPadding)
+    svgHeight.value = Math.max(svgHeight.value, rows * cellHeight + verticalPadding)
+
+    // 放置实体位置（网格布局，顶对齐，避免重叠）
+    entities.value.forEach((entity, index) => {
+      const row = Math.floor(index / cols)
+      const col = index % cols
+      const originX = horizontalPadding / 2 + col * cellWidth
+      const originY = verticalPadding / 2 + row * cellHeight
+      entity.x = originX + (cellWidth - entity.width) / 2
+      entity.y = originY + (cellHeight - entity.height) / 2
+    })
 
     // 计算关系路径
     relations.value.forEach(relation => {
