@@ -145,7 +145,7 @@
               :headers="rankHeaders"
               :items="rankedQueries"
               :items-per-page="10"
-              :sort-by="[{ key: 'queryTime', order: 'desc' }]"
+              :sort-by="[{ key: 'count', order: 'desc' }]"
               class="elevation-1 fixed-width-table"
           >
             <template #item.sampleSql="{ item }">
@@ -244,7 +244,7 @@
               :items="filteredQueries"
               :search="search"
               :items-per-page="10"
-              :sort-by="[{ key: 'queryTime', order: 'desc' }]"
+              :sort-by="[{ key: 'timestamp', order: 'desc' }]"
               class="elevation-1 fixed-width-table"
           >
             <template #item.timestamp="{ item }">
