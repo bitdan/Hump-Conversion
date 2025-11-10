@@ -141,6 +141,18 @@
             <div class="flex-grow border-t border-gray-300"></div>
           </div>
 
+          <div class="mb-4 flex justify-end">
+            <v-btn
+                color="success"
+                variant="elevated"
+                prepend-icon="mdi-file-excel"
+                :disabled="rankedQueries.length === 0"
+                @click="exportRankToCSV"
+            >
+              导出查询排行
+            </v-btn>
+          </div>
+
           <v-data-table
               :headers="rankHeaders"
               :items="rankedQueries"
@@ -235,6 +247,16 @@
 
               <v-btn color="secondary" @click="resetFilters" prepend-icon="mdi-refresh">
                 重置筛选
+              </v-btn>
+
+              <v-btn
+                  color="success"
+                  variant="elevated"
+                  prepend-icon="mdi-file-excel"
+                  :disabled="filteredQueries.length === 0"
+                  @click="exportDetailToCSV"
+              >
+                导出详细日志
               </v-btn>
             </div>
           </div>
@@ -990,6 +1012,61 @@ function readFileWithProgress(file: File, onProgress: (loaded: number, total: nu
 onUnmounted(() => {
   resetCharts();
 });
+
+// ===== 导出相关 =====
+function exportRankToCSV() {
+  const header = ['SQL摘要', '调用次数', '总锁定时间(s)', '总返回记录', '总查询时间(s)', '平均锁定时间(s)', '平均返回记录', '平均查询时间(s)'];
+  const rows = rankedQueries.value.map(r => [
+    sanitizeForCSV(r.sampleSql),
+    r.count,
+    r.lockTime.toFixed(3),
+    r.rowsSent,
+    r.queryTime.toFixed(3),
+    r.avgLockTime.toFixed(3),
+    r.avgRowsSent.toFixed(0),
+    r.avgQueryTime.toFixed(3)
+  ]);
+  downloadCSV('mysql_slowlog_rank.csv', header, rows);
+}
+
+function exportDetailToCSV() {
+  const header = ['时间', '用户@主机', '查询时间(s)', '锁定时间(s)', '发送行数', '查询语句'];
+  const rows = filteredQueries.value.map(q => [
+    formatDate(q.timestamp),
+    q.userHost,
+    q.queryTime.toFixed(3),
+    q.lockTime.toFixed(3),
+    q.rowsSent.toString(),
+    sanitizeForCSV(q.sql)
+  ]);
+  downloadCSV('mysql_slowlog_detail.csv', header, rows);
+}
+
+function sanitizeForCSV(text: string): string {
+  const value = (text ?? '').toString().replace(/\r/g, '').replace(/\n/g, ' ');
+  if (/[",\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function downloadCSV(filename: string, headersRow: (string | number)[], rows: (string | number)[][]) {
+  const lines: string[] = [];
+  lines.push(headersRow.map(v => sanitizeForCSV(String(v))).join(','));
+  for (const row of rows) {
+    lines.push(row.map(v => sanitizeForCSV(String(v))).join(','));
+  }
+  const csvContent = '\uFEFF' + lines.join('\n');
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 </script>
 
 <style scoped>
