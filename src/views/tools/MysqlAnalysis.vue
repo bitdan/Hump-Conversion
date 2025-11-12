@@ -141,7 +141,31 @@
             <div class="flex-grow border-t border-gray-300"></div>
           </div>
 
-          <div class="mb-4 flex justify-end">
+          <!-- 查询排行筛选 -->
+          <div class="mb-4 flex gap-4 flex-wrap items-center justify-end">
+            <v-text-field
+                v-model="rankStartDate"
+                type="date"
+                label="开始日期"
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                style="min-width: 180px;"
+                prepend-inner-icon="mdi-calendar-start"
+            />
+            <v-text-field
+                v-model="rankEndDate"
+                type="date"
+                label="结束日期"
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                style="min-width: 180px;"
+                prepend-inner-icon="mdi-calendar-end"
+            />
+            <v-btn color="secondary" @click="resetRankFilters" prepend-icon="mdi-refresh">
+              重置筛选
+            </v-btn>
             <v-btn
                 color="success"
                 variant="elevated"
@@ -168,6 +192,10 @@
               >
                 {{ truncateSQL(item.sampleSql, 50) }}
               </div>
+            </template>
+
+            <template #item.primaryUser="{ item }">
+              <span class="font-mono text-xs">{{ item.primaryUser }}</span>
             </template>
 
             <template #item.count="{ item }">
@@ -235,14 +263,26 @@
                   style="min-width: 200px;"
               />
 
-              <v-select
-                  v-model="timeFilter"
-                  :items="timeFilterOptions"
-                  label="执行时间筛选"
+              <v-text-field
+                  v-model="startDate"
+                  type="date"
+                  label="开始日期"
                   variant="outlined"
                   density="comfortable"
                   hide-details
-                  style="min-width: 200px;"
+                  style="min-width: 180px;"
+                  prepend-inner-icon="mdi-calendar-start"
+              />
+
+              <v-text-field
+                  v-model="endDate"
+                  type="date"
+                  label="结束日期"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  style="min-width: 180px;"
+                  prepend-inner-icon="mdi-calendar-end"
               />
 
               <v-btn color="secondary" @click="resetFilters" prepend-icon="mdi-refresh">
@@ -416,6 +456,8 @@ interface RankedQuery {
   avgLockTime: number;
   avgRowsSent: number;
   avgQueryTime: number;
+  users: string[]; // 执行该SQL的用户列表
+  primaryUser: string; // 主要用户（执行次数最多的）
 }
 
 // 响应式数据
@@ -446,7 +488,10 @@ const statistics = ref<Statistics>({
 });
 
 const userFilter = ref('');
-const timeFilter = ref('all');
+const startDate = ref<string>(''); // 开始日期
+const endDate = ref<string>(''); // 结束日期
+const rankStartDate = ref<string>(''); // 查询排行的开始日期
+const rankEndDate = ref<string>(''); // 查询排行的结束日期
 const uniqueUsers = ref<string[]>([]);
 
 // 表格头部定义
@@ -497,6 +542,12 @@ const rankHeaders = ref([
     width: '250px'
   },
   {
+    title: '用户',
+    key: 'primaryUser',
+    sortable: true,
+    width: '150px'
+  },
+  {
     title: '调用次数',
     key: 'count',
     sortable: true,
@@ -540,25 +591,60 @@ const rankHeaders = ref([
   }
 ]);
 
-// 过滤选项
-const timeFilterOptions = [
-  {title: '全部', value: 'all'},
-  {title: '超过1秒', value: 'gt1s'},
-  {title: '超过5秒', value: 'gt5s'},
-  {title: '超过10秒', value: 'gt10s'}
-];
+// 日期范围筛选辅助函数
+function isDateInRange(timestamp: string, startDate: string, endDate: string): boolean {
+  if (!startDate && !endDate) return true;
+
+  try {
+    const queryDate = new Date(timestamp);
+    if (isNaN(queryDate.getTime())) return true; // 无效日期，不过滤
+
+    // 只比较日期部分，忽略时间
+    const queryDateOnly = new Date(queryDate.getFullYear(), queryDate.getMonth(), queryDate.getDate());
+
+    if (startDate) {
+      const start = new Date(startDate + 'T00:00:00');
+      if (isNaN(start.getTime())) return true; // 无效日期，不过滤
+      const startDateOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      if (queryDateOnly < startDateOnly) return false;
+    }
+
+    if (endDate) {
+      const end = new Date(endDate + 'T23:59:59');
+      if (isNaN(end.getTime())) return true; // 无效日期，不过滤
+      const endDateOnly = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      if (queryDateOnly > endDateOnly) return false;
+    }
+
+    return true;
+  } catch (e) {
+    // 解析失败，不过滤
+    return true;
+  }
+}
 
 // 计算属性
 const rankedQueries = computed(() => {
-  const queryGroups: Record<string, RankedQuery> = {};
+  // 先进行日期范围筛选
+  let filteredQueries = [...queries.value];
 
-  queries.value.forEach(query => {
+  filteredQueries = filteredQueries.filter(q =>
+      isDateInRange(q.timestamp, rankStartDate.value, rankEndDate.value)
+  );
+
+  const queryGroups: Record<string, RankedQuery & { userCounts: Record<string, number> }> = {};
+
+  filteredQueries.forEach(query => {
     const simplifiedSql = query.sql
         .replace(/\/\*.*?\*\//g, '')
         .replace(/\s+/g, ' ')
         .trim();
 
     const sqlHash = hashString(simplifiedSql);
+
+    // 提取用户名
+    const userMatch = query.userHost.match(/^([^\[]+)/);
+    const userName = userMatch && userMatch[1] ? userMatch[1] : query.userHost;
 
     if (!queryGroups[sqlHash]) {
       queryGroups[sqlHash] = {
@@ -570,7 +656,10 @@ const rankedQueries = computed(() => {
         queryTime: 0,
         avgLockTime: 0,
         avgRowsSent: 0,
-        avgQueryTime: 0
+        avgQueryTime: 0,
+        users: [],
+        primaryUser: '',
+        userCounts: {}
       };
     }
 
@@ -579,33 +668,51 @@ const rankedQueries = computed(() => {
     group.lockTime += query.lockTime;
     group.rowsSent += query.rowsSent;
     group.queryTime += query.queryTime;
+
+    // 统计用户
+    if (!group.userCounts[userName]) {
+      group.userCounts[userName] = 0;
+      group.users.push(userName);
+    }
+    group.userCounts[userName]++;
   });
 
-  // 计算平均值
+  // 计算平均值和主要用户
   Object.values(queryGroups).forEach(group => {
     group.avgLockTime = group.lockTime / group.count;
     group.avgRowsSent = group.rowsSent / group.count;
     group.avgQueryTime = group.queryTime / group.count;
+
+    // 找出执行次数最多的用户
+    let maxCount = 0;
+    let primaryUser = '';
+    for (const [user, count] of Object.entries(group.userCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        primaryUser = user;
+      }
+    }
+    group.primaryUser = primaryUser || (group.users.length > 0 ? group.users[0] : '');
+
+    // 如果有多个用户，在主要用户后显示数量
+    if (group.users.length > 1) {
+      group.primaryUser += ` (${group.users.length}个用户)`;
+    }
+
+    // 清理临时属性
+    delete (group as any).userCounts;
   });
 
-  return Object.values(queryGroups);
+  return Object.values(queryGroups) as RankedQuery[];
 });
 
 const filteredQueries = computed(() => {
   let result = [...queries.value];
 
-  // 时间过滤
-  if (timeFilter.value !== 'all') {
-    const threshold = {
-      'gt1s': 1,
-      'gt5s': 5,
-      'gt10s': 10
-    }[timeFilter.value];
-
-    if (threshold) {
-      result = result.filter(q => q.queryTime > threshold);
-    }
-  }
+  // 日期范围过滤
+  result = result.filter(q =>
+      isDateInRange(q.timestamp, startDate.value, endDate.value)
+  );
 
   // 用户过滤
   if (userFilter.value) {
@@ -696,8 +803,14 @@ async function copySQL() {
 
 function resetFilters() {
   search.value = '';
-  timeFilter.value = 'all';
+  startDate.value = '';
+  endDate.value = '';
   userFilter.value = '';
+}
+
+function resetRankFilters() {
+  rankStartDate.value = '';
+  rankEndDate.value = '';
 }
 
 function hashString(str: string): string {
@@ -1015,9 +1128,10 @@ onUnmounted(() => {
 
 // ===== 导出相关 =====
 function exportRankToCSV() {
-  const header = ['SQL摘要', '调用次数', '总锁定时间(s)', '总返回记录', '总查询时间(s)', '平均锁定时间(s)', '平均返回记录', '平均查询时间(s)'];
+  const header = ['SQL摘要', '用户', '调用次数', '总锁定时间(s)', '总返回记录', '总查询时间(s)', '平均锁定时间(s)', '平均返回记录', '平均查询时间(s)'];
   const rows = rankedQueries.value.map(r => [
     sanitizeForCSV(r.sampleSql),
+    r.primaryUser,
     r.count,
     r.lockTime.toFixed(3),
     r.rowsSent,
