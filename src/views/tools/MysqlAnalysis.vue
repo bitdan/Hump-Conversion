@@ -143,6 +143,16 @@
 
           <!-- 查询排行筛选 -->
           <div class="mb-4 flex gap-4 flex-wrap items-center justify-end">
+            <v-select
+                v-model="rankUserFilter"
+                :items="uniqueUsers"
+                label="用户筛选"
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                clearable
+                style="min-width: 200px;"
+            />
             <v-text-field
                 v-model="rankStartDate"
                 type="date"
@@ -492,6 +502,7 @@ const startDate = ref<string>(''); // 开始日期
 const endDate = ref<string>(''); // 结束日期
 const rankStartDate = ref<string>(''); // 查询排行的开始日期
 const rankEndDate = ref<string>(''); // 查询排行的结束日期
+const rankUserFilter = ref(''); // 查询排行的用户筛选
 const uniqueUsers = ref<string[]>([]);
 
 // 表格头部定义
@@ -625,12 +636,18 @@ function isDateInRange(timestamp: string, startDate: string, endDate: string): b
 
 // 计算属性
 const rankedQueries = computed(() => {
-  // 先进行日期范围筛选
+  // 先进行日期范围筛选和用户筛选
   let filteredQueries = [...queries.value];
 
+  // 日期范围筛选
   filteredQueries = filteredQueries.filter(q =>
       isDateInRange(q.timestamp, rankStartDate.value, rankEndDate.value)
   );
+
+  // 用户筛选
+  if (rankUserFilter.value) {
+    filteredQueries = filteredQueries.filter(q => q.userHost.startsWith(rankUserFilter.value));
+  }
 
   const queryGroups: Record<string, RankedQuery & { userCounts: Record<string, number> }> = {};
 
@@ -811,6 +828,7 @@ function resetFilters() {
 function resetRankFilters() {
   rankStartDate.value = '';
   rankEndDate.value = '';
+  rankUserFilter.value = '';
 }
 
 function hashString(str: string): string {
