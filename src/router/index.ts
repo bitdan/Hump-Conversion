@@ -191,6 +191,15 @@ export const routes: RouteRecordRaw[] = [
                     title: 'Jetbrain 激活工具',
                     icon: 'mdi-link-variant'
                 }
+            },
+            {
+                path: '/tools/stock-watchlist',
+                name: 'StockWatchlist',
+                component: () => import('@/views/tools/StockWatchlist.vue'),
+                meta: {
+                    title: '股票自选',
+                    icon: 'mdi-chart-line'
+                }
             }
         ]
     },
