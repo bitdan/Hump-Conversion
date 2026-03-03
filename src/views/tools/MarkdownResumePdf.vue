@@ -10,14 +10,27 @@ const editorRef = ref<any>(null)
 const pageMarginMm = ref(8)
 const baseFontSize = ref(13.5)
 const lineHeight = ref(1.4)
-const marginOptions = ['8', '10', '12', '14', '16', '18']
-const fontSizeOptions = ['12', '13', '13.5', '14', '15', '16']
-const lineHeightOptions = ['1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9']
+const fontFamily = ref('pingfang-medium')
+const fontFamilyOptions = [
+  {title: '苹果方正Medium', value: 'pingfang-medium'},
+  {title: '阿里普惠体2-55-Regular', value: 'alibaba-55'},
+  {title: '思源黑体2.0 Normal', value: 'source-han-sans'},
+  {title: '思源宋体', value: 'source-han-serif'},
+  {title: 'Times-New-Roman', value: 'times-new-roman'}
+]
+const fontFamilyMap: Record<string, string> = {
+  'pingfang-medium': '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  'alibaba-55': '"Alibaba PuHuiTi 2.0", "AlibabaPuHuiTi-2-55-Regular", "PingFang SC", "Microsoft YaHei", sans-serif',
+  'source-han-sans': '"Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  'source-han-serif': '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif',
+  'times-new-roman': '"Times New Roman", Times, serif'
+}
 const renderedHtml = computed(() => DOMPurify.sanitize(markdownToHtml(markdownContent.value)))
 const previewStyle = computed(() => ({
   padding: `${pageMarginMm.value}mm`,
   fontSize: `${baseFontSize.value}px`,
-  lineHeight: String(lineHeight.value)
+  lineHeight: String(lineHeight.value),
+  fontFamily: fontFamilyMap[fontFamily.value] || fontFamilyMap['pingfang-medium']
 }))
 
 function tidyMarkdown() {
@@ -45,7 +58,7 @@ function exportToPdf() {
   <title>${escapeHtml(title)}</title>
   <style>
     @page { size: A4; margin: ${pageMarginMm.value}mm; }
-    html, body { margin: 0; padding: 0; background: #fff; color: #0f172a; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    html, body { margin: 0; padding: 0; background: #fff; color: #0f172a; font-family: ${fontFamilyMap[fontFamily.value] || fontFamilyMap['pingfang-medium']}; }
     .resume-preview { font-size: ${baseFontSize.value}px; line-height: ${lineHeight.value}; }
     .resume-preview h1, .resume-preview h2, .resume-preview h3, .resume-preview h4 { margin: 0.55em 0 0.3em; font-weight: 700; }
     .resume-preview h1 { font-size: 28px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; text-align: center; }
@@ -413,35 +426,55 @@ function escapeHtml(text: string): string {
             <v-btn size="small" variant="tonal" @click="prefixSelection('### ')">小标题</v-btn>
           </div>
           <div class="toolbar-group toolbar-group-right">
-            <v-combobox
+            <v-text-field
                 :model-value="String(pageMarginMm)"
-                :items="marginOptions"
                 label="页边距(mm)"
                 variant="outlined"
                 density="compact"
+                type="number"
+                min="6"
+                max="25"
+                step="1"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateMargin"
             />
-            <v-combobox
+            <v-text-field
                 :model-value="String(baseFontSize)"
-                :items="fontSizeOptions"
                 label="字号(px)"
                 variant="outlined"
                 density="compact"
+                type="number"
+                min="6"
+                max="18"
+                step="0.5"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateFontSize"
             />
-            <v-combobox
+            <v-text-field
                 :model-value="String(lineHeight)"
-                :items="lineHeightOptions"
                 label="行高"
                 variant="outlined"
                 density="compact"
+                type="number"
+                min="1"
+                max="2"
+                step="0.1"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateLineHeight"
+            />
+            <v-select
+                v-model="fontFamily"
+                :items="fontFamilyOptions"
+                item-title="title"
+                item-value="value"
+                label="字体"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="cfg-font"
             />
             <v-text-field
                 v-model="fileName"
@@ -529,6 +562,10 @@ function escapeHtml(text: string): string {
 
 .cfg-field {
   width: 120px;
+}
+
+.cfg-font {
+  width: 170px;
 }
 
 .cfg-file {
