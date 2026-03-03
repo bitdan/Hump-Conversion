@@ -1,18 +1,19 @@
 <template>
   <v-app-bar v-if="isMobile" elevation="0" color="white" border>
-    <v-app-bar-nav-icon @click="mobileDrawer = !mobileDrawer"/>
+    <v-app-bar-nav-icon @click="drawer = !drawer"/>
   </v-app-bar>
 
   <v-navigation-drawer
-      v-if="!isMobile"
-      v-model="desktopDrawer"
-      permanent
-      :rail="rail"
+      v-model="drawer"
+      :temporary="isMobile"
+      :permanent="!isMobile"
+      :rail="!isMobile && rail"
       :rail-width="72"
+      location="left"
       width="280"
       class="side-nav"
   >
-    <div class="px-2 pt-2 pb-1 flex justify-end">
+    <div class="px-2 pt-2 pb-1 flex justify-end" v-if="!isMobile">
       <v-btn
           variant="text"
           :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
@@ -20,7 +21,7 @@
       />
     </div>
 
-    <div v-if="!rail" class="px-3 pb-2">
+    <div class="px-3 pb-2" v-if="!rail || isMobile">
       <v-text-field
           v-model="keyword"
           density="compact"
@@ -38,13 +39,12 @@
           v-for="section in filteredSections"
           :key="section.key"
           v-model="openGroups[section.key]"
-          :value="section.key"
       >
         <template #activator="{ props }">
           <v-list-item
               v-bind="props"
               :prepend-icon="section.icon"
-              :title="rail ? '' : section.title"
+              :title="!isMobile && rail ? '' : section.title"
               rounded="lg"
           />
         </template>
@@ -58,11 +58,12 @@
             rounded="lg"
             class="menu-item"
             :class="{ 'menu-item-active': route.path === item.path }"
+            @click="handleMenuClick"
         />
       </v-list-group>
     </v-list>
 
-    <template #append>
+    <template #append v-if="!isMobile">
       <v-divider/>
       <div class="user-footer">
         <v-menu location="top start">
@@ -90,62 +91,11 @@
       </div>
     </template>
   </v-navigation-drawer>
-
-  <v-navigation-drawer
-      v-else
-      v-model="mobileDrawer"
-      temporary
-      location="left"
-      width="280"
-      class="side-nav"
-  >
-    <div class="px-3 pb-2">
-      <v-text-field
-          v-model="keyword"
-          density="compact"
-          variant="outlined"
-          hide-details
-          prepend-inner-icon="mdi-magnify"
-          placeholder="搜索菜单..."
-      />
-    </div>
-
-    <v-divider class="my-2"/>
-
-    <v-list density="compact" nav>
-      <v-list-group
-          v-for="section in filteredSections"
-          :key="section.key"
-          v-model="openGroups[section.key]"
-      >
-        <template #activator="{ props }">
-          <v-list-item
-              v-bind="props"
-              :prepend-icon="section.icon"
-              :title="section.title"
-              rounded="lg"
-          />
-        </template>
-
-        <v-list-item
-            v-for="item in section.items"
-            :key="item.path"
-            :to="item.path"
-            :title="item.title"
-            :prepend-icon="item.icon"
-            rounded="lg"
-            class="menu-item"
-            :class="{ 'menu-item-active': route.path === item.path }"
-            @click="mobileDrawer = false"
-        />
-      </v-list-group>
-    </v-list>
-  </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
 import {computed, reactive, ref, watch} from 'vue'
-import {type RouteRecordRaw, useRoute, useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useDisplay} from 'vuetify'
 import {useUserStore} from '@/stores/user'
 import {useAuth} from '@/composables/useAuth'
@@ -170,8 +120,7 @@ const userStore = useUserStore()
 const {mdAndDown} = useDisplay()
 
 const isMobile = computed(() => mdAndDown.value)
-const desktopDrawer = ref(true)
-const mobileDrawer = ref(false)
+const drawer = ref(true)
 const rail = ref(false)
 const keyword = ref('')
 
@@ -180,43 +129,29 @@ const openGroups = reactive<Record<string, boolean>>({
   games: false
 })
 
-function extractSection(path: string): string {
-  if (path.startsWith('/tools')) return 'tools'
-  if (path.startsWith('/games')) return 'games'
-  return ''
-}
-
-function mapSection(routeRecord: RouteRecordRaw): MenuSection | null {
-  if (!routeRecord.children || !routeRecord.meta?.title || !routeRecord.meta?.icon) return null
-  const key = routeRecord.path.replace('/', '')
-  if (key !== 'tools' && key !== 'games') return null
-
-  const items: MenuItem[] = routeRecord.children
-      .filter(child => !!child.path && !!child.meta?.title)
-      .map(child => ({
-        path: child.path,
-        title: child.meta?.title as string,
-        icon: (child.meta?.icon as string) || 'mdi-chevron-right'
-      }))
-
-  return {
-    key,
-    title: routeRecord.meta.title as string,
-    icon: routeRecord.meta.icon as string,
-    items
-  }
-}
-
-const sections = computed<MenuSection[]>(() =>
-    router.options.routes
-        .map(mapSection)
-        .filter((section): section is MenuSection => !!section)
-)
+const sections = computed<MenuSection[]>(() => {
+  const groupRoutes = router.options.routes.filter(item => item.path === '/tools' || item.path === '/games')
+  return groupRoutes.map(routeRecord => {
+    const key = routeRecord.path.replace('/', '')
+    const children = routeRecord.children || []
+    return {
+      key,
+      title: String(routeRecord.meta?.title || key),
+      icon: String(routeRecord.meta?.icon || 'mdi-view-grid'),
+      items: children
+          .filter(child => !!child.path && !!child.meta?.title)
+          .map(child => ({
+            path: child.path,
+            title: String(child.meta?.title || child.name || child.path),
+            icon: String(child.meta?.icon || 'mdi-chevron-right')
+          }))
+    }
+  })
+})
 
 const filteredSections = computed<MenuSection[]>(() => {
   const q = keyword.value.trim().toLowerCase()
   if (!q) return sections.value
-
   return sections.value
       .map(section => ({
         ...section,
@@ -228,13 +163,20 @@ const filteredSections = computed<MenuSection[]>(() => {
 watch(
     () => route.path,
     (path) => {
-      const activeSection = extractSection(path)
-      if (activeSection) {
-        openGroups[activeSection] = true
-      }
+      if (path.startsWith('/tools')) openGroups.tools = true
+      if (path.startsWith('/games')) openGroups.games = true
+      if (isMobile.value) drawer.value = false
     },
     {immediate: true}
 )
+
+watch(isMobile, (mobile) => {
+  drawer.value = !mobile
+})
+
+function handleMenuClick() {
+  if (isMobile.value) drawer.value = false
+}
 
 async function handleLogout() {
   try {
