@@ -200,6 +200,15 @@ export const routes: RouteRecordRaw[] = [
                     title: '股票自选',
                     icon: 'mdi-chart-line'
                 }
+            },
+            {
+                path: '/tools/markdown-resume-pdf',
+                name: 'MarkdownResumePdf',
+                component: () => import('@/views/tools/MarkdownResumePdf.vue'),
+                meta: {
+                    title: 'Markdown简历转PDF',
+                    icon: 'mdi-file-pdf-box'
+                }
             }
         ]
     },
