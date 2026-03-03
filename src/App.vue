@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <AppNavigation/>
+    <component :is="NavigationComponent"/>
 
     <v-main class="bg-gray-100">
       <v-container>
@@ -16,7 +16,11 @@
   </v-app>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import AppNavigation from '@/components/AppNavigation.vue'
+
+const NavigationComponent = AppNavigation
+</script>
 
 <style>
 .fade-enter-active,
