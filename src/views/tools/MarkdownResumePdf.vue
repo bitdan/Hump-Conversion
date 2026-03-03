@@ -7,9 +7,12 @@ const markdownContent = ref(``)
 
 const previewRef = ref<HTMLElement | null>(null)
 const editorRef = ref<any>(null)
-const pageMarginMm = ref(12)
+const pageMarginMm = ref(8)
 const baseFontSize = ref(13.5)
-const lineHeight = ref(1.7)
+const lineHeight = ref(1.4)
+const marginOptions = ['8', '10', '12', '14', '16', '18']
+const fontSizeOptions = ['12', '13', '13.5', '14', '15', '16']
+const lineHeightOptions = ['1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9']
 const renderedHtml = computed(() => DOMPurify.sanitize(markdownToHtml(markdownContent.value)))
 const previewStyle = computed(() => ({
   padding: `${pageMarginMm.value}mm`,
@@ -106,16 +109,22 @@ function prefixSelection(prefix: string) {
   el.focus()
 }
 
-function adjustMargin(delta: number) {
-  pageMarginMm.value = Number(Math.min(25, Math.max(6, pageMarginMm.value + delta)).toFixed(0))
+function updateMargin(value: unknown) {
+  const n = Number(value)
+  if (Number.isNaN(n)) return
+  pageMarginMm.value = Number(Math.min(25, Math.max(6, n)).toFixed(0))
 }
 
-function adjustFontSize(delta: number) {
-  baseFontSize.value = Number(Math.min(18, Math.max(11, baseFontSize.value + delta)).toFixed(1))
+function updateFontSize(value: unknown) {
+  const n = Number(value)
+  if (Number.isNaN(n)) return
+  baseFontSize.value = Number(Math.min(18, Math.max(11, n)).toFixed(1))
 }
 
-function adjustLineHeight(delta: number) {
-  lineHeight.value = Number(Math.min(2, Math.max(1.3, lineHeight.value + delta)).toFixed(2))
+function updateLineHeight(value: unknown) {
+  const n = Number(value)
+  if (Number.isNaN(n)) return
+  lineHeight.value = Number(Math.min(2, Math.max(1.3, n)).toFixed(2))
 }
 
 function transformLineType(transform: (line: string) => string) {
@@ -391,39 +400,59 @@ function escapeHtml(text: string): string {
     <div class="mx-auto max-w-[1450px]">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Markdown 简历转 PDF</h1>
-        <div class="flex flex-wrap items-center gap-2">
-          <v-text-field
-              v-model="fileName"
-              variant="outlined"
-              density="comfortable"
-              hide-details
-              class="w-[220px] bg-white rounded-lg"
-              label="导出文件名"
-          />
-          <v-btn variant="tonal" prepend-icon="mdi-format-align-left" @click="tidyMarkdown">自动整理格式</v-btn>
-          <v-btn color="primary" prepend-icon="mdi-file-pdf-box" @click="exportToPdf">导出 PDF</v-btn>
-        </div>
       </div>
 
-      <div class="mb-4 rounded-xl bg-white/85 px-3 py-2 shadow-sm">
-        <div class="layout-toolbar">
-          <div class="layout-item">
-            <span class="layout-label">页边距</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustMargin(-1)"/>
-            <span class="layout-value">{{ pageMarginMm }}mm</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustMargin(1)"/>
+      <div class="mb-4 rounded-xl bg-white/90 px-3 py-3 shadow-sm">
+        <div class="top-toolbar">
+          <div class="toolbar-group">
+            <v-btn size="small" variant="tonal" @click="wrapSelection('**', '**', '加粗文本')">加粗</v-btn>
+            <v-btn size="small" variant="tonal" @click="wrapSelection('*', '*', '斜体文本')">斜体</v-btn>
+            <v-btn size="small" variant="tonal" @click="wrapSelection('<u>', '</u>', '下划线文本')">下划线</v-btn>
+            <v-btn size="small" variant="tonal" @click="wrapSelection('<mark>', '</mark>', '高亮文本')">高亮</v-btn>
+            <v-btn size="small" variant="tonal" @click="prefixSelection('- ')">列表</v-btn>
+            <v-btn size="small" variant="tonal" @click="prefixSelection('### ')">小标题</v-btn>
           </div>
-          <div class="layout-item">
-            <span class="layout-label">字号</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustFontSize(-0.5)"/>
-            <span class="layout-value">{{ baseFontSize.toFixed(1) }}px</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustFontSize(0.5)"/>
-          </div>
-          <div class="layout-item">
-            <span class="layout-label">行高</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustLineHeight(-0.05)"/>
-            <span class="layout-value">{{ lineHeight.toFixed(2) }}</span>
-            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustLineHeight(0.05)"/>
+          <div class="toolbar-group toolbar-group-right">
+            <v-combobox
+                :model-value="String(pageMarginMm)"
+                :items="marginOptions"
+                label="页边距(mm)"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="cfg-field"
+                @update:model-value="updateMargin"
+            />
+            <v-combobox
+                :model-value="String(baseFontSize)"
+                :items="fontSizeOptions"
+                label="字号(px)"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="cfg-field"
+                @update:model-value="updateFontSize"
+            />
+            <v-combobox
+                :model-value="String(lineHeight)"
+                :items="lineHeightOptions"
+                label="行高"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="cfg-field"
+                @update:model-value="updateLineHeight"
+            />
+            <v-text-field
+                v-model="fileName"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="cfg-file bg-white rounded-lg"
+                label="导出文件名"
+            />
+            <v-btn variant="tonal" prepend-icon="mdi-format-align-left" @click="tidyMarkdown">整理</v-btn>
+            <v-btn color="primary" prepend-icon="mdi-file-pdf-box" @click="exportToPdf">导出 PDF</v-btn>
           </div>
         </div>
       </div>
@@ -432,14 +461,6 @@ function escapeHtml(text: string): string {
         <v-card class="rounded-xl">
           <v-card-title class="text-base font-semibold text-slate-700">Markdown 原文</v-card-title>
           <v-card-text>
-            <div class="mb-3 flex flex-wrap gap-2">
-              <v-btn size="small" variant="tonal" @click="wrapSelection('**', '**', '加粗文本')">加粗</v-btn>
-              <v-btn size="small" variant="tonal" @click="wrapSelection('*', '*', '斜体文本')">斜体</v-btn>
-              <v-btn size="small" variant="tonal" @click="wrapSelection('<u>', '</u>', '下划线文本')">下划线</v-btn>
-              <v-btn size="small" variant="tonal" @click="wrapSelection('<mark>', '</mark>', '高亮文本')">高亮</v-btn>
-              <v-btn size="small" variant="tonal" @click="prefixSelection('- ')">列表</v-btn>
-              <v-btn size="small" variant="tonal" @click="prefixSelection('### ')">小标题</v-btn>
-            </div>
             <div class="mb-3 text-xs text-slate-500">
               快捷键：Ctrl/Cmd+1~6 标题级别，Ctrl/Cmd+0 段落，Ctrl/Cmd+B 加粗，Ctrl/Cmd+I 斜体，Ctrl/Cmd+U
               下划线，Ctrl/Cmd+Shift+H 高亮
@@ -486,33 +507,32 @@ function escapeHtml(text: string): string {
   grid-template-columns: 1fr;
 }
 
-.layout-toolbar {
+.top-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  justify-content: space-between;
 }
 
-.layout-item {
-  display: inline-flex;
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 4px 8px;
 }
 
-.layout-label {
-  font-size: 12px;
-  color: #475569;
+.toolbar-group-right {
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
-.layout-value {
-  min-width: 62px;
-  text-align: center;
-  font-size: 12px;
-  color: #0f172a;
+.cfg-field {
+  width: 120px;
+}
+
+.cfg-file {
+  width: 180px;
 }
 
 .preview-scroll {
