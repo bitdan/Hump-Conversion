@@ -3,7 +3,7 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - refactor/ts-conversion
+      - refactor/new-nav
   workflow_dispatch:   # ✅ 支持手动触发
 
 jobs:
