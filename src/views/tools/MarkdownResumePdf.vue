@@ -106,6 +106,91 @@ function prefixSelection(prefix: string) {
   el.focus()
 }
 
+function adjustMargin(delta: number) {
+  pageMarginMm.value = Number(Math.min(25, Math.max(6, pageMarginMm.value + delta)).toFixed(0))
+}
+
+function adjustFontSize(delta: number) {
+  baseFontSize.value = Number(Math.min(18, Math.max(11, baseFontSize.value + delta)).toFixed(1))
+}
+
+function adjustLineHeight(delta: number) {
+  lineHeight.value = Number(Math.min(2, Math.max(1.3, lineHeight.value + delta)).toFixed(2))
+}
+
+function transformLineType(transform: (line: string) => string) {
+  const el = getEditorEl()
+  if (!el) return
+
+  const fullText = el.value
+  const selectStart = el.selectionStart ?? 0
+  const selectEnd = el.selectionEnd ?? 0
+  const start = fullText.lastIndexOf('\n', Math.max(selectStart - 1, 0)) + 1
+  const endBreak = fullText.indexOf('\n', selectEnd)
+  const end = endBreak === -1 ? fullText.length : endBreak
+
+  const selectedBlock = fullText.slice(start, end)
+  const transformed = selectedBlock
+      .split('\n')
+      .map(line => transform(line))
+      .join('\n')
+
+  el.setRangeText(transformed, start, end, 'select')
+  markdownContent.value = el.value
+  el.focus()
+}
+
+function setHeading(level: number) {
+  const headingPrefix = `${'#'.repeat(level)} `
+  transformLineType(line => {
+    if (!line.trim()) return line
+    const stripped = line.replace(/^\s{0,3}#{1,6}\s+/, '').trimStart()
+    return `${headingPrefix}${stripped}`
+  })
+}
+
+function setParagraph() {
+  transformLineType(line => line.replace(/^\s{0,3}#{1,6}\s+/, ''))
+}
+
+function onEditorKeydown(event: KeyboardEvent) {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+
+  const key = event.key.toLowerCase()
+  if (key >= '0' && key <= '6') {
+    event.preventDefault()
+    if (key === '0') {
+      setParagraph()
+    } else {
+      setHeading(Number(key))
+    }
+    return
+  }
+
+  if (key === 'b') {
+    event.preventDefault()
+    wrapSelection('**', '**', '加粗文本')
+    return
+  }
+
+  if (key === 'i') {
+    event.preventDefault()
+    wrapSelection('*', '*', '斜体文本')
+    return
+  }
+
+  if (key === 'u') {
+    event.preventDefault()
+    wrapSelection('<u>', '</u>', '下划线文本')
+    return
+  }
+
+  if (event.shiftKey && key === 'h') {
+    event.preventDefault()
+    wrapSelection('<mark>', '</mark>', '高亮文本')
+  }
+}
+
 function markdownToHtml(markdown: string): string {
   const codeBlocks: string[] = []
   const withTokens = markdown.replace(/```([\s\S]*?)```/g, (_, code: string) => {
@@ -201,7 +286,7 @@ function markdownToHtml(markdown: string): string {
       continue
     }
 
-    const unordered = line.match(/^[-*+]\s+(.+)$/)
+    const unordered = line.match(/^\s{0,3}[-*+]\s+(.+)$/)
     if (unordered) {
       flushParagraph()
       flushBlockquote()
@@ -211,7 +296,7 @@ function markdownToHtml(markdown: string): string {
       continue
     }
 
-    const ordered = line.match(/^\d+\.\s+(.+)$/)
+    const ordered = line.match(/^\s{0,3}\d+\.\s+(.+)$/)
     if (ordered) {
       flushParagraph()
       flushBlockquote()
@@ -320,24 +405,28 @@ function escapeHtml(text: string): string {
         </div>
       </div>
 
-      <v-card class="mb-4 rounded-xl">
-        <v-card-text class="py-3">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <div class="text-sm text-slate-600 mb-2">页边距(mm)</div>
-              <v-slider v-model="pageMarginMm" :min="6" :max="25" :step="1" color="primary" thumb-label/>
-            </div>
-            <div>
-              <div class="text-sm text-slate-600 mb-2">字体大小(px)</div>
-              <v-slider v-model="baseFontSize" :min="11" :max="18" :step="0.5" color="primary" thumb-label/>
-            </div>
-            <div>
-              <div class="text-sm text-slate-600 mb-2">行高</div>
-              <v-slider v-model="lineHeight" :min="1.3" :max="2" :step="0.05" color="primary" thumb-label/>
-            </div>
+      <div class="mb-4 rounded-xl bg-white/85 px-3 py-2 shadow-sm">
+        <div class="layout-toolbar">
+          <div class="layout-item">
+            <span class="layout-label">页边距</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustMargin(-1)"/>
+            <span class="layout-value">{{ pageMarginMm }}mm</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustMargin(1)"/>
           </div>
-        </v-card-text>
-      </v-card>
+          <div class="layout-item">
+            <span class="layout-label">字号</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustFontSize(-0.5)"/>
+            <span class="layout-value">{{ baseFontSize.toFixed(1) }}px</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustFontSize(0.5)"/>
+          </div>
+          <div class="layout-item">
+            <span class="layout-label">行高</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-minus" @click="adjustLineHeight(-0.05)"/>
+            <span class="layout-value">{{ lineHeight.toFixed(2) }}</span>
+            <v-btn size="x-small" variant="tonal" icon="mdi-plus" @click="adjustLineHeight(0.05)"/>
+          </div>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <v-card class="rounded-xl">
@@ -351,6 +440,10 @@ function escapeHtml(text: string): string {
               <v-btn size="small" variant="tonal" @click="prefixSelection('- ')">列表</v-btn>
               <v-btn size="small" variant="tonal" @click="prefixSelection('### ')">小标题</v-btn>
             </div>
+            <div class="mb-3 text-xs text-slate-500">
+              快捷键：Ctrl/Cmd+1~6 标题级别，Ctrl/Cmd+0 段落，Ctrl/Cmd+B 加粗，Ctrl/Cmd+I 斜体，Ctrl/Cmd+U
+              下划线，Ctrl/Cmd+Shift+H 高亮
+            </div>
             <v-textarea
                 ref="editorRef"
                 v-model="markdownContent"
@@ -360,6 +453,7 @@ function escapeHtml(text: string): string {
                 :rows="34"
                 placeholder="粘贴完整简历 Markdown（不会拆分内容）"
                 hide-details
+                @keydown="onEditorKeydown"
             />
           </v-card-text>
         </v-card>
@@ -385,6 +479,35 @@ function escapeHtml(text: string): string {
 <style scoped>
 .font-mono {
   font-family: Consolas, Monaco, "Courier New", monospace;
+}
+
+.layout-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.layout-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px 8px;
+}
+
+.layout-label {
+  font-size: 12px;
+  color: #475569;
+}
+
+.layout-value {
+  min-width: 62px;
+  text-align: center;
+  font-size: 12px;
+  color: #0f172a;
 }
 
 .preview-scroll {
