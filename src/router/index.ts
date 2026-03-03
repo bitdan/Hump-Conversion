@@ -62,7 +62,7 @@ export const routes: RouteRecordRaw[] = [
                 name: 'DockerComposeGenerator',
                 component: () => import('@/views/tools/DockerComposeGenerator.vue'),
                 meta: {
-                    title: 'DockerCompose生成器',
+                    title: 'DockerFile',
                     icon: 'mdi-docker'
                 }
             },
@@ -188,7 +188,7 @@ export const routes: RouteRecordRaw[] = [
                 name: 'JetbrainChecker',
                 component: () => import('@/views/tools/JetbrainChecker.vue'),
                 meta: {
-                    title: 'Jetbrain 激活工具',
+                    title: 'Jetbrain 激活',
                     icon: 'mdi-link-variant'
                 }
             },
@@ -206,7 +206,7 @@ export const routes: RouteRecordRaw[] = [
                 name: 'MarkdownResumePdf',
                 component: () => import('@/views/tools/MarkdownResumePdf.vue'),
                 meta: {
-                    title: 'Markdown简历转PDF',
+                    title: '简历转PDF',
                     icon: 'mdi-file-pdf-box'
                 }
             }
