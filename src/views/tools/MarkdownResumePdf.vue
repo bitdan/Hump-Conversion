@@ -10,6 +10,16 @@ const editorRef = ref<any>(null)
 const pageMarginMm = ref(8)
 const baseFontSize = ref(13.5)
 const lineHeight = ref(1.4)
+const LAYOUT_LIMITS = {
+  margin: {min: 5, max: 25, step: 1},
+  fontSize: {min: 5, max: 20, step: 0.5},
+  lineHeight: {min: 1.1, max: 2, step: 0.1}
+}
+const QUICK_LAYOUTS = [
+  {label: '紧凑', margin: 6, fontSize: 12.5, lineHeight: 1.35},
+  {label: '标准', margin: 8, fontSize: 13.5, lineHeight: 1.4},
+  {label: '宽松', margin: 12, fontSize: 14, lineHeight: 1.6}
+]
 const fontFamily = ref('pingfang-medium')
 const fontFamilyOptions = [
   {title: '苹果方正Medium', value: 'pingfang-medium'},
@@ -125,19 +135,25 @@ function prefixSelection(prefix: string) {
 function updateMargin(value: unknown) {
   const n = Number(value)
   if (Number.isNaN(n)) return
-  pageMarginMm.value = Number(Math.min(25, Math.max(6, n)).toFixed(0))
+  pageMarginMm.value = Number(Math.min(LAYOUT_LIMITS.margin.max, Math.max(LAYOUT_LIMITS.margin.min, n)).toFixed(0))
 }
 
 function updateFontSize(value: unknown) {
   const n = Number(value)
   if (Number.isNaN(n)) return
-  baseFontSize.value = Number(Math.min(18, Math.max(11, n)).toFixed(1))
+  baseFontSize.value = Number(Math.min(LAYOUT_LIMITS.fontSize.max, Math.max(LAYOUT_LIMITS.fontSize.min, n)).toFixed(1))
 }
 
 function updateLineHeight(value: unknown) {
   const n = Number(value)
   if (Number.isNaN(n)) return
-  lineHeight.value = Number(Math.min(2, Math.max(1.3, n)).toFixed(2))
+  lineHeight.value = Number(Math.min(LAYOUT_LIMITS.lineHeight.max, Math.max(LAYOUT_LIMITS.lineHeight.min, n)).toFixed(2))
+}
+
+function applyQuickLayout(layout: { margin: number; fontSize: number; lineHeight: number }) {
+  updateMargin(layout.margin)
+  updateFontSize(layout.fontSize)
+  updateLineHeight(layout.lineHeight)
 }
 
 function transformLineType(transform: (line: string) => string) {
@@ -426,15 +442,27 @@ function escapeHtml(text: string): string {
             <v-btn size="small" variant="tonal" @click="prefixSelection('### ')">小标题</v-btn>
           </div>
           <div class="toolbar-group toolbar-group-right">
+            <div class="quick-layouts">
+              <span class="quick-layouts-label">快速配置</span>
+              <v-btn
+                  v-for="layout in QUICK_LAYOUTS"
+                  :key="layout.label"
+                  size="small"
+                  variant="tonal"
+                  @click="applyQuickLayout(layout)"
+              >
+                {{ layout.label }}
+              </v-btn>
+            </div>
             <v-text-field
                 :model-value="String(pageMarginMm)"
                 label="页边距(mm)"
                 variant="outlined"
                 density="compact"
                 type="number"
-                min="6"
-                max="25"
-                step="1"
+                :min="LAYOUT_LIMITS.margin.min"
+                :max="LAYOUT_LIMITS.margin.max"
+                :step="LAYOUT_LIMITS.margin.step"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateMargin"
@@ -445,9 +473,9 @@ function escapeHtml(text: string): string {
                 variant="outlined"
                 density="compact"
                 type="number"
-                min="6"
-                max="18"
-                step="0.5"
+                :min="LAYOUT_LIMITS.fontSize.min"
+                :max="LAYOUT_LIMITS.fontSize.max"
+                :step="LAYOUT_LIMITS.fontSize.step"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateFontSize"
@@ -458,9 +486,9 @@ function escapeHtml(text: string): string {
                 variant="outlined"
                 density="compact"
                 type="number"
-                min="1"
-                max="2"
-                step="0.1"
+                :min="LAYOUT_LIMITS.lineHeight.min"
+                :max="LAYOUT_LIMITS.lineHeight.max"
+                :step="LAYOUT_LIMITS.lineHeight.step"
                 hide-details
                 class="cfg-field"
                 @update:model-value="updateLineHeight"
@@ -558,6 +586,18 @@ function escapeHtml(text: string): string {
 .toolbar-group-right {
   justify-content: flex-end;
   margin-left: auto;
+}
+
+.quick-layouts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 2px;
+}
+
+.quick-layouts-label {
+  font-size: 12px;
+  color: #64748b;
 }
 
 .cfg-field {
