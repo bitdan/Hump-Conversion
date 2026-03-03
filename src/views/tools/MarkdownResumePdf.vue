@@ -300,8 +300,8 @@ function markdownToHtml(markdown: string): string {
     if (ordered) {
       flushParagraph()
       flushBlockquote()
-      if (listType && listType !== 'ol') flushList()
-      listType = 'ol'
+      if (listType && listType !== 'ul') flushList()
+      listType = 'ul'
       listItems.push(`<li>${applyInlineFormat(ordered[1])}</li>`)
       continue
     }
@@ -428,7 +428,7 @@ function escapeHtml(text: string): string {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div class="resume-layout gap-4 items-start">
         <v-card class="rounded-xl">
           <v-card-title class="text-base font-semibold text-slate-700">Markdown 原文</v-card-title>
           <v-card-text>
@@ -481,6 +481,11 @@ function escapeHtml(text: string): string {
   font-family: Consolas, Monaco, "Courier New", monospace;
 }
 
+.resume-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
 .layout-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -511,8 +516,8 @@ function escapeHtml(text: string): string {
 }
 
 .preview-scroll {
-  max-height: calc(100vh - 180px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .resume-preview {
@@ -564,9 +569,17 @@ function escapeHtml(text: string): string {
   padding: 0;
 }
 
+:deep(.resume-preview ul) {
+  list-style-type: disc;
+}
+
 :deep(.resume-preview li) {
   margin: 0.2em 0;
   color: #1f2937;
+}
+
+:deep(.resume-preview ul li::marker) {
+  color: #000;
 }
 
 :deep(.resume-preview hr) {
@@ -625,6 +638,12 @@ function escapeHtml(text: string): string {
   .resume-preview {
     width: 100%;
     min-height: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .resume-layout {
+    grid-template-columns: 45% 55%;
   }
 }
 
