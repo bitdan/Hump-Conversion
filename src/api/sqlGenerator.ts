@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export interface SqlGeneratorRequest {
-    account: string
+    account?: string
     question: string
 }
 

@@ -6,17 +6,6 @@
         按固定安全规则把自然语言问题转换为 MySQL 5.7 查询 JSON。
       </p>
 
-      <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <v-text-field
-            v-model="form.account"
-            label="account"
-            placeholder="例如：QD-US"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-        />
-      </div>
-
       <div class="mt-4">
         <v-textarea
             v-model="form.question"
@@ -24,7 +13,7 @@
             variant="outlined"
             rows="5"
             auto-grow
-            placeholder="例如：近30天销量最高的10个SKU"
+            placeholder="例如：近30天销量最高的10个SKU；或：账号站点是QD-US，近30天销量最高的10个SKU"
         />
       </div>
 
@@ -58,7 +47,6 @@ const loading = ref(false)
 const result = ref<SqlGeneratorResponse | null>(null)
 
 const form = ref({
-  account: '',
   question: ''
 })
 
@@ -76,15 +64,9 @@ async function handleGenerate() {
     showError('用户问题不能为空')
     return
   }
-  if (!form.value.account.trim()) {
-    showError('account 不能为空')
-    return
-  }
-
   loading.value = true
   try {
     const data = await generateMysqlAnalysisSql({
-      account: form.value.account.trim(),
       question: form.value.question.trim()
     })
     result.value = data
@@ -99,7 +81,6 @@ async function handleGenerate() {
 
 function handleReset() {
   form.value = {
-    account: '',
     question: ''
   }
   result.value = null
