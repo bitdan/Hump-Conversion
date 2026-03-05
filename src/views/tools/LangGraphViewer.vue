@@ -149,7 +149,12 @@ async function fetchFromApi(): Promise<void> {
     if (currentToken === streamingToken.value && data.trace && data.trace.length > 0) {
       const traceText =
           '<strong>🧭 LangGraph 执行轨迹：</strong><br>' +
-          data.trace.map((t, idx) => `${idx + 1}. ${t}`).join('<br>');
+          data.trace
+              .map(
+                  (t, idx) =>
+                      `${idx + 1}. <strong>${t.node}</strong> | ${t.input_summary} -> ${t.output_summary} | 决策=${t.decision} | ${t.latency_ms}ms`
+              )
+              .join('<br>');
       messages.value.push({role: 'assistant', content: traceText});
       await nextTick();
       scrollToBottom();
