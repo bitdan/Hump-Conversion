@@ -6,6 +6,7 @@ export interface LangGraphData {
   draft: string;
   corrections: string[];
   attempts: number;
+    trace?: string[];
 }
 
 // 从 API 获取 LangGraph 数据

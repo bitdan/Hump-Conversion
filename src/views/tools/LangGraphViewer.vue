@@ -40,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
-import { useMessage } from '../../composables/useMessage';
-import { getLangGraphData } from '@/api/langGraph';
+import {nextTick, ref, watch} from 'vue';
+import {useMessage} from '../../composables/useMessage';
+import {getLangGraphData} from '@/api/langGraph';
 
 const { showSuccess, showError } = useMessage();
 
@@ -142,6 +142,15 @@ async function fetchFromApi(): Promise<void> {
           .map((c, idx) => `${idx + 1}. ${c.replace(/\n/g, '<br>')}`)
           .join('<br><br>');
       messages.value.push({ role: 'assistant', content: correctionsText });
+      await nextTick();
+      scrollToBottom();
+    }
+
+    if (currentToken === streamingToken.value && data.trace && data.trace.length > 0) {
+      const traceText =
+          '<strong>🧭 LangGraph 执行轨迹：</strong><br>' +
+          data.trace.map((t, idx) => `${idx + 1}. ${t}`).join('<br>');
+      messages.value.push({role: 'assistant', content: traceText});
       await nextTick();
       scrollToBottom();
     }
