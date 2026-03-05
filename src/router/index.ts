@@ -76,6 +76,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/amazon-sql-generator',
+                name: 'AmazonSqlGenerator',
+                component: () => import('@/views/tools/AmazonSqlGenerator.vue'),
+                meta: {
+                    title: 'Amazon SQL生成',
+                    icon: 'mdi-database-search'
+                }
+            },
+            {
                 path: '/tools/sql-to-er',
                 name: 'SqlToErDiagram',
                 component: () => import('@/views/tools/SqlToErDiagram.vue'),
