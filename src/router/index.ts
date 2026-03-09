@@ -218,6 +218,15 @@ export const routes: RouteRecordRaw[] = [
                     title: '简历转PDF',
                     icon: 'mdi-file-pdf-box'
                 }
+            },
+            {
+                path: '/tools/data-structure-trainer',
+                name: 'DataStructureTrainer',
+                component: () => import('@/views/tools/DataStructureTrainer.vue'),
+                meta: {
+                    title: '算法训练场',
+                    icon: 'mdi-graph'
+                }
             }
         ]
     },
