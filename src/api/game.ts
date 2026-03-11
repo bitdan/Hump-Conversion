@@ -95,7 +95,8 @@ export function getRoomInfo(roomId: string) {
 // 创建SSE事件流
 export function createEventStream(roomId: string, onMessage: (event: GameEvent) => void, onError?: (error: Event) => void, onClose?: () => void): EventSource {
     const token = localStorage.getItem('token')
-    const url = `${import.meta.env.VITE_API_BASE_URL}/api/v1/game/events/${roomId}?access_token=${token}`
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    const url = `${apiBaseUrl}/api/v1/game/events/${roomId}?access_token=${token}`
 
     const eventSource = new EventSource(url, {
         withCredentials: true
