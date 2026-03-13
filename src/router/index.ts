@@ -20,13 +20,13 @@ export const routes: RouteRecordRaw[] = [
                 path: 'login',
                 name: 'login',
                 component: () => import('@/views/auth/LoginView.vue'),
-                meta: { requiresAuth: false }
+                meta: {requiresAuth: false}
             },
             {
                 path: 'register',
                 name: 'register',
                 component: () => import('@/views/auth/RegisterView.vue'),
-                meta: { requiresAuth: false }
+                meta: {requiresAuth: false}
             }
         ]
     },
@@ -57,15 +57,15 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-brain'
                 }
             },
-            {
-                path: '/tools/docker-compose-generator',
-                name: 'DockerComposeGenerator',
-                component: () => import('@/views/tools/DockerComposeGenerator.vue'),
-                meta: {
-                    title: 'DockerFile',
-                    icon: 'mdi-docker'
-                }
-            },
+            /*            {
+                            path: '/tools/docker-compose-generator',
+                            name: 'DockerComposeGenerator',
+                            component: () => import('@/views/tools/DockerComposeGenerator.vue'),
+                            meta: {
+                                title: 'DockerFile',
+                                icon: 'mdi-docker'
+                            }
+                        },*/
             {
                 path: '/tools/mysql-analysis',
                 name: 'MysqlAnalysis',
@@ -201,15 +201,15 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-link-variant'
                 }
             },
-            {
-                path: '/tools/stock-watchlist',
-                name: 'StockWatchlist',
-                component: () => import('@/views/tools/StockWatchlist.vue'),
-                meta: {
-                    title: '股票自选',
-                    icon: 'mdi-chart-line'
-                }
-            },
+            /*            {
+                            path: '/tools/stock-watchlist',
+                            name: 'StockWatchlist',
+                            component: () => import('@/views/tools/StockWatchlist.vue'),
+                            meta: {
+                                title: '股票自选',
+                                icon: 'mdi-chart-line'
+                            }
+                        },*/
             {
                 path: '/tools/markdown-resume-pdf',
                 name: 'MarkdownResumePdf',
