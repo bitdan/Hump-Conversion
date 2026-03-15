@@ -85,14 +85,32 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
-                path: '/tools/sql-to-er',
-                name: 'SqlToErDiagram',
-                component: () => import('@/views/tools/SqlToErDiagram.vue'),
+                path: '/tools/string-generator',
+                name: 'StringGenerator',
+                component: () => import('@/views/tools/StringGenerator.vue'),
                 meta: {
-                    title: 'SQL转ER图',
-                    icon: 'mdi-database-eye'
+                    title: '字符串生成',
+                    icon: 'mdi-format-letter-case'
                 }
             },
+            {
+                path: '/tools/case-converter',
+                name: 'CaseConverter',
+                component: () => import('@/views/tools/CaseConverter.vue'),
+                meta: {
+                    title: '驼峰转换',
+                    icon: 'mdi-format-letter-case'
+                }
+            },
+            /*            {
+                            path: '/tools/sql-to-er',
+                            name: 'SqlToErDiagram',
+                            component: () => import('@/views/tools/SqlToErDiagram.vue'),
+                            meta: {
+                                title: 'SQL转ER图',
+                                icon: 'mdi-database-eye'
+                            }
+                        },*/
             {
                 path: '/tools/base-converter',
                 name: 'BaseConverter',
@@ -112,15 +130,6 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
-                path: '/tools/case-converter',
-                name: 'CaseConverter',
-                component: () => import('@/views/tools/CaseConverter.vue'),
-                meta: {
-                    title: '驼峰转换',
-                    icon: 'mdi-format-letter-case'
-                }
-            },
-            {
                 path: '/tools/json-editor',
                 name: 'JsonEditor',
                 component: () => import('@/views/tools/JsonEditor.vue'),
@@ -136,15 +145,6 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '计算稿纸',
                     icon: 'mdi-calculator'
-                }
-            },
-            {
-                path: '/tools/string-generator',
-                name: 'StringGenerator',
-                component: () => import('@/views/tools/StringGenerator.vue'),
-                meta: {
-                    title: '字符串生成',
-                    icon: 'mdi-format-letter-case'
                 }
             },
             {
