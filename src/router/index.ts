@@ -85,6 +85,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/mcp-tester',
+                name: 'McpTester',
+                component: () => import('@/views/tools/McpTester.vue'),
+                meta: {
+                    title: 'MCP 测试台',
+                    icon: 'mdi-connection'
+                }
+            },
+            {
                 path: '/tools/sql-to-er',
                 name: 'SqlToErDiagram',
                 component: () => import('@/views/tools/SqlToErDiagram.vue'),
