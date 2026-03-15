@@ -156,6 +156,7 @@ const connecting = ref(false)
 const calling = ref(false)
 const initialized = ref(false)
 const messageCounter = ref(1)
+const pendingResponses = new Map<number, any>()
 
 const pendingRequests = new Map<number, { resolve: (value: any) => void, reject: (reason?: any) => void }>()
 
@@ -267,6 +268,8 @@ async function connect() {
           } else {
             promise.resolve(payload.result)
           }
+        } else if (payload.id != null) {
+          pendingResponses.set(payload.id, payload)
         }
       } catch (error: any) {
         addLog('error', `解析 message 事件失败: ${error?.message || error}`)
@@ -320,6 +323,16 @@ async function sendRpc(method: string, params: Record<string, any>) {
   }
   addLog('send', safeJson(payload))
 
+  const responsePromise = new Promise((resolve, reject) => {
+    pendingRequests.set(id, { resolve, reject })
+    window.setTimeout(() => {
+      if (pendingRequests.has(id)) {
+        pendingRequests.delete(id)
+        reject(new Error(`MCP request timeout: ${method}`))
+      }
+    }, 8000)
+  })
+
   const response = await fetch(messageEndpoint.value, {
     method: 'POST',
     headers: {
@@ -329,18 +342,21 @@ async function sendRpc(method: string, params: Record<string, any>) {
   })
 
   if (!response.ok) {
+    pendingRequests.delete(id)
     throw new Error(`HTTP ${response.status}`)
   }
 
-  return new Promise((resolve, reject) => {
-    pendingRequests.set(id, { resolve, reject })
-    window.setTimeout(() => {
-      if (pendingRequests.has(id)) {
-        pendingRequests.delete(id)
-        reject(new Error(`MCP request timeout: ${method}`))
-      }
-    }, 8000)
-  })
+  if (pendingResponses.has(id)) {
+    const payload = pendingResponses.get(id)
+    pendingResponses.delete(id)
+    pendingRequests.delete(id)
+    if (payload.error) {
+      throw new Error(payload.error.message || 'MCP request failed')
+    }
+    return payload.result
+  }
+
+  return responsePromise
 }
 
 async function loadTools() {
@@ -368,6 +384,24 @@ function resetToolArguments() {
     }, null, 2)
     return
   }
+  if (selectedToolName.value === 'sql_exporter_tool') {
+    toolArguments.value = JSON.stringify({
+      db_kind: 'sqlite',
+      db_path: 'D:/java/leetcode/skills/nl-to-sql-executor/tmp_demo.sqlite',
+      sql: 'SELECT name FROM sqlite_master ORDER BY name LIMIT 20',
+      export: 'json',
+      output: 'D:/java/leetcode/skills/sql-exporter/tmp/mcp-result.json',
+      max_rows: 100
+    }, null, 2)
+    return
+  }
+  if (selectedToolName.value === 'nl_to_sql_generator_tool') {
+    toolArguments.value = JSON.stringify({
+      question: '近30天销量最高的10个SKU',
+      account: 'QD-US'
+    }, null, 2)
+    return
+  }
   toolArguments.value = '{}'
 }
 
@@ -392,7 +426,7 @@ async function callTool() {
       name: selectedToolName.value,
       arguments: args,
     })
-    resultText.value = safeJson(result)
+    resultText.value = safeJson(result?.structuredContent ?? result)
     showSuccess('工具调用成功')
   } catch (error: any) {
     showError(error?.message || '工具调用失败')
