@@ -149,13 +149,38 @@ const sections = computed<MenuSection[]>(() => {
   })
 })
 
+function normalizeSearchText(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, '')
+}
+
+function isSubsequenceMatch(query: string, target: string) {
+  if (!query) return true
+
+  let queryIndex = 0
+  for (const char of target) {
+    if (char === query[queryIndex]) {
+      queryIndex += 1
+      if (queryIndex === query.length) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+function matchesMenuItem(query: string, title: string) {
+  const normalizedTitle = normalizeSearchText(title)
+  return normalizedTitle.includes(query) || isSubsequenceMatch(query, normalizedTitle)
+}
+
 const filteredSections = computed<MenuSection[]>(() => {
-  const q = keyword.value.trim().toLowerCase()
+  const q = normalizeSearchText(keyword.value)
   if (!q) return sections.value
   return sections.value
       .map(section => ({
         ...section,
-        items: section.items.filter(item => item.title.toLowerCase().includes(q))
+        items: section.items.filter(item => matchesMenuItem(q, item.title))
       }))
       .filter(section => section.items.length > 0)
 })
