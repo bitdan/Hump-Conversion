@@ -78,10 +78,12 @@
 
         <v-textarea
           v-model="toolArguments"
-          label="调用参数 JSON"
+          :label="toolArgumentsLabel"
           variant="outlined"
           rows="12"
           auto-grow
+          :hint="toolArgumentsHint"
+          persistent-hint
         />
 
         <div class="button-row">
@@ -120,8 +122,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useMessage } from '@/composables/useMessage'
+import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {useMessage} from '@/composables/useMessage'
 
 interface McpLogEntry {
   id: number
@@ -175,6 +177,17 @@ const toolSchemaText = computed(() => {
 })
 
 const canCallTool = computed(() => Boolean(messageEndpoint.value && initialized.value && selectedToolName.value))
+
+const isJavaStacktraceTool = computed(() => selectedToolName.value === 'analyze_java_stacktrace_tool')
+
+const toolArgumentsLabel = computed(() => isJavaStacktraceTool.value ? '调用参数 / 原生堆栈' : '调用参数 JSON')
+
+const toolArgumentsHint = computed(() => {
+  if (isJavaStacktraceTool.value) {
+    return '支持直接粘贴原生 Java 堆栈；如果不是 JSON，会自动包装为 { "stacktrace": "..." }'
+  }
+  return '请输入合法 JSON'
+})
 
 const connectionStateClass = computed(() => {
   if (eventSource.value && initialized.value) {
@@ -377,7 +390,7 @@ async function loadTools() {
 }
 
 function resetToolArguments() {
-  if (selectedToolName.value === 'analyze_java_stacktrace_tool') {
+  if (isJavaStacktraceTool.value) {
     toolArguments.value = JSON.stringify({
       stacktrace: 'java.lang.NullPointerException: Cannot invoke "com.example.demo.service.UserService.getUserById(java.lang.Long)" because "this.userService" is null\n    at com.example.demo.controller.UserController.getUser(UserController.java:32)',
       context: 'Spring Boot 接口调用时报错'
@@ -405,6 +418,27 @@ function resetToolArguments() {
   toolArguments.value = '{}'
 }
 
+function buildStacktraceArgsFromRawInput(rawInput: string) {
+  const normalized = rawInput.replace(/\r\n/g, '\n').trim()
+  if (!normalized) {
+    throw new Error('请输入堆栈内容或合法 JSON')
+  }
+  return {
+    stacktrace: normalized,
+  }
+}
+
+function parseToolArguments(rawInput: string) {
+  try {
+    return JSON.parse(rawInput || '{}')
+  } catch (error: any) {
+    if (isJavaStacktraceTool.value) {
+      return buildStacktraceArgsFromRawInput(rawInput)
+    }
+    throw error
+  }
+}
+
 async function callTool() {
   if (!selectedToolName.value) {
     showWarning('请先选择工具')
@@ -413,9 +447,10 @@ async function callTool() {
 
   let args: Record<string, any>
   try {
-    args = JSON.parse(toolArguments.value || '{}')
+    args = parseToolArguments(toolArguments.value)
   } catch (error: any) {
-    showError(`参数 JSON 非法: ${error?.message || error}`)
+    const message = error?.message || error
+    showError(isJavaStacktraceTool.value ? `参数解析失败: ${message}` : `参数 JSON 非法: ${message}`)
     return
   }
 
