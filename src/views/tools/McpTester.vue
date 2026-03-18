@@ -415,6 +415,24 @@ function resetToolArguments() {
     }, null, 2)
     return
   }
+  if (selectedToolName.value === 'leetcode_coach_tool') {
+    toolArguments.value = JSON.stringify({
+      title: 'Two Sum',
+      problem_statement: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+      constraints: [
+        '2 <= nums.length <= 10^4',
+        '-10^9 <= nums[i] <= 10^9'
+      ],
+      examples: [
+        'Input: nums = [2,7,11,15], target = 9 Output: [0,1]'
+      ],
+      code: 'class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    for (int i = 0; i < nums.length; i++) {\n    }\n    return new int[0];\n  }\n}',
+      language: 'java',
+      user_question: '我知道暴力解，但不知道怎么优化到 O(n)',
+      mode: 'hint'
+    }, null, 2)
+    return
+  }
   toolArguments.value = '{}'
 }
 

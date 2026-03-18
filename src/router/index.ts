@@ -49,13 +49,17 @@ export const routes: RouteRecordRaw[] = [
         },
         children: [
             {
-                path: '/tools/langgraph-viewer',
-                name: 'LangGraphViewer',
-                component: () => import('@/views/tools/LangGraphViewer.vue'),
+                path: '/tools/skill-chat-workspace',
+                name: 'SkillChatWorkspace',
+                component: () => import('@/views/tools/SkillChatWorkspace.vue'),
                 meta: {
-                    title: 'LangGraph ',
-                    icon: 'mdi-brain'
+                    title: 'AI 对话工作台',
+                    icon: 'mdi-robot-outline'
                 }
+            },
+            {
+                path: '/tools/langgraph-viewer',
+                redirect: '/tools/skill-chat-workspace'
             },
             {
                 path: '/tools/mysql-analysis',
