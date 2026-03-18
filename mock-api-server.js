@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // 模拟LangGraph API响应
-app.post('/api/v1/chat', (req, res) => {
+app.post('/api/v1/agent/chat', (req, res) => {
   const { topic } = req.body;
   
   if (!topic) {
@@ -38,5 +38,5 @@ app.get('/health', (req, res) => {
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Mock API server running at http://0.0.0.0:${port}`);
-  console.log(`API endpoint: http://0.0.0.0:${port}/api/v1/chat`);
+    console.log(`API endpoint: http://0.0.0.0:${port}/api/v1/agent/chat`);
 });

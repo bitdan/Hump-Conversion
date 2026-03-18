@@ -1,43 +1,42 @@
 <template>
   <div class="chat-shell">
-    <section class="hero-panel">
+    <header class="topbar">
       <div>
-        <p class="eyebrow">AI Skill Router</p>
-        <h1 class="hero-title">Chat Agent Workspace</h1>
-        <p class="hero-copy">
-          像 ChatGPT 一样直接发消息。后端会自动判断是否使用 LeetCode 陪练、Java 堆栈诊断、SQL 生成或通用工作流。
-        </p>
+        <p class="topbar-kicker">AI Skill Router</p>
+        <h1 class="topbar-title">Chat Agent Workspace</h1>
       </div>
-      <div class="hero-badges">
-        <span class="hero-badge">Auto Skill</span>
-        <span class="hero-badge">Chat UI</span>
-        <span class="hero-badge">Tool Routing</span>
+      <div class="topbar-actions">
+        <v-btn size="small" variant="text" :disabled="messages.length === 0" @click="messages = []">
+          清空
+        </v-btn>
+        <v-btn size="small" variant="outlined" @click="fillExample('leetcode')">
+          LeetCode 示例
+        </v-btn>
+        <v-btn size="small" variant="outlined" @click="fillExample('stacktrace')">
+          堆栈示例
+        </v-btn>
       </div>
-    </section>
+    </header>
 
-    <section class="panel chat-panel">
-      <div class="panel-header">
-        <h2>对话</h2>
-        <div class="panel-actions">
-          <v-btn size="small" variant="text" :disabled="messages.length === 0" @click="messages = []">
-            清空
-          </v-btn>
-        </div>
-      </div>
-
+    <main class="chat-main">
       <div class="chat-messages" ref="messageContainer">
-        <div v-if="messages.length === 0" class="empty-hint">
-          直接输入你的问题、题目、代码、堆栈或分析需求。<br>
-          例如：<br>
-          1. 粘贴 LeetCode 题目和代码，让它自动进入陪练模式<br>
-          2. 粘贴 Java stacktrace，让它自动诊断<br>
-          3. 输入销量分析问题，让它尝试转 SQL
+        <div v-if="messages.length === 0" class="empty-state">
+          <div class="empty-card">
+            <h2>直接开始对话</h2>
+            <p>输入题目、代码、异常堆栈或分析需求，后端会自动选择 skill。</p>
+            <div class="empty-pills">
+              <span>LeetCode 陪练</span>
+              <span>Java 堆栈诊断</span>
+              <span>SQL 生成</span>
+              <span>通用工作流</span>
+            </div>
+          </div>
         </div>
 
         <div
             v-for="(msg, index) in messages"
             :key="index"
-            class="message-wrapper"
+            class="message-row"
             :class="msg.role"
         >
           <div class="message-card">
@@ -49,30 +48,28 @@
           </div>
         </div>
       </div>
+    </main>
 
-      <div class="chat-input">
+    <footer class="composer-shell">
+      <div class="composer">
         <v-textarea
             v-model="userInput"
             auto-grow
-            rows="3"
+            rows="1"
+            max-rows="8"
             placeholder="输入问题，按 Ctrl+Enter 发送。可以直接粘贴代码块、题目描述或异常堆栈。"
-            variant="outlined"
-            class="input-box"
+            variant="plain"
+            class="composer-input"
             @keydown.ctrl.enter.prevent="submit"
         />
-        <div class="button-row">
-          <v-btn color="success" :loading="loading" @click="submit">
+        <div class="composer-actions">
+          <span class="composer-hint">Ctrl+Enter 发送</span>
+          <v-btn color="success" rounded="pill" :loading="loading" @click="submit">
             发送
-          </v-btn>
-          <v-btn variant="outlined" @click="fillExample('leetcode')">
-            LeetCode 示例
-          </v-btn>
-          <v-btn variant="outlined" @click="fillExample('stacktrace')">
-            堆栈示例
           </v-btn>
         </div>
       </div>
-    </section>
+    </footer>
   </div>
 </template>
 
@@ -122,10 +119,10 @@ function delay(ms: number): Promise<void> {
 }
 
 function getDelayForChar(char: string): number {
-  if (char === '\n') return 50
-  if (/[\.\!\?]/.test(char)) return 80
-  if (/[,:;，。；：]/.test(char)) return 50
-  return 10
+  if (char === '\n') return 30
+  if (/[\.\!\?]/.test(char)) return 55
+  if (/[,:;，。；：]/.test(char)) return 35
+  return 8
 }
 
 async function typeWriter(
@@ -223,124 +220,123 @@ async function submit(): Promise<void> {
 
 <style scoped>
 .chat-shell {
-  min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 24%),
-  radial-gradient(circle at top right, rgba(14, 116, 144, 0.18), transparent 24%),
-  linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
-  padding: 20px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100vh - 40px);
+  padding: 16px 20px 20px;
+  background: radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 22%),
+  radial-gradient(circle at top right, rgba(14, 116, 144, 0.12), transparent 22%),
+  linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }
 
-.hero-panel,
-.panel {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 24px;
-  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
-}
-
-.hero-panel {
+.topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 28px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-.eyebrow {
-  margin: 0 0 8px;
+.topbar-kicker {
+  margin: 0 0 4px;
   color: #0f766e;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 11px;
 }
 
-.hero-title {
+.topbar-title {
   margin: 0;
-  font-size: clamp(28px, 4vw, 42px);
-  line-height: 1.05;
   color: #0f172a;
+  font-size: 24px;
+  line-height: 1.1;
 }
 
-.hero-copy {
-  max-width: 760px;
-  margin: 14px 0 0;
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chat-main {
+  min-height: 0;
+}
+
+.chat-messages {
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px 0 20px;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+.empty-card {
+  width: min(720px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
+  text-align: center;
+}
+
+.empty-card h2 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.empty-card p {
+  margin: 0;
   color: #475569;
   font-size: 15px;
   line-height: 1.7;
 }
 
-.hero-badges {
+.empty-pills {
   display: flex;
   flex-wrap: wrap;
-  align-content: flex-start;
+  justify-content: center;
   gap: 10px;
+  margin-top: 18px;
 }
 
-.hero-badge,
+.empty-pills span,
 .route-pill {
   display: inline-flex;
   align-items: center;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
 }
 
-.hero-badge {
-  padding: 10px 14px;
-  background: #0f172a;
-  color: #f8fafc;
+.empty-pills span {
+  background: #e2e8f0;
+  color: #334155;
 }
 
-.chat-panel {
-  padding: 24px;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.panel-header h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 20px;
-}
-
-.chat-messages {
-  min-height: 62vh;
-  max-height: 62vh;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.empty-hint {
-  color: #64748b;
-  text-align: center;
-  margin-top: 80px;
-  font-size: 15px;
-  line-height: 1.8;
-}
-
-.message-wrapper {
+.message-row {
   display: flex;
   margin-bottom: 18px;
 }
 
-.message-wrapper.user {
+.message-row.user {
   justify-content: flex-end;
 }
 
-.message-wrapper.assistant {
+.message-row.assistant {
   justify-content: flex-start;
 }
 
 .message-card {
-  max-width: 82%;
+  max-width: min(920px, 82%);
 }
 
 .message-meta {
@@ -351,13 +347,12 @@ async function submit(): Promise<void> {
 }
 
 .route-pill {
-  padding: 4px 10px;
   background: #dbeafe;
   color: #1d4ed8;
 }
 
 .route-title {
-  color: #475569;
+  color: #64748b;
   font-size: 13px;
 }
 
@@ -376,23 +371,41 @@ async function submit(): Promise<void> {
 }
 
 .assistant .message-bubble {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid #e5e7eb;
   color: #0f172a;
 }
 
-.chat-input {
-  margin-top: 18px;
+.composer-shell {
+  padding-top: 8px;
 }
 
-.input-box {
-  margin-bottom: 12px;
+.composer {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-radius: 28px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
+  padding: 10px 14px 12px;
 }
 
-.button-row {
+.composer-input :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.composer-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.composer-hint {
+  color: #64748b;
+  font-size: 12px;
 }
 
 :deep(.code-block) {
@@ -407,17 +420,23 @@ async function submit(): Promise<void> {
 }
 
 @media (max-width: 960px) {
-  .hero-panel {
-    flex-direction: column;
+  .chat-shell {
+    height: calc(100vh - 24px);
+    padding: 12px;
   }
 
-  .chat-messages {
-    min-height: 56vh;
-    max-height: 56vh;
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .message-card {
     max-width: 100%;
+  }
+
+  .composer-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 </style>
