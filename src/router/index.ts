@@ -57,15 +57,6 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-brain'
                 }
             },
-            /*            {
-                            path: '/tools/docker-compose-generator',
-                            name: 'DockerComposeGenerator',
-                            component: () => import('@/views/tools/DockerComposeGenerator.vue'),
-                            meta: {
-                                title: 'DockerFile',
-                                icon: 'mdi-docker'
-                            }
-                        },*/
             {
                 path: '/tools/mysql-analysis',
                 name: 'MysqlAnalysis',
@@ -102,15 +93,7 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-format-letter-case'
                 }
             },
-            /*            {
-                            path: '/tools/sql-to-er',
-                            name: 'SqlToErDiagram',
-                            component: () => import('@/views/tools/SqlToErDiagram.vue'),
-                            meta: {
-                                title: 'SQL转ER图',
-                                icon: 'mdi-database-eye'
-                            }
-                        },*/
+
             {
                 path: '/tools/base-converter',
                 name: 'BaseConverter',
@@ -201,15 +184,6 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-link-variant'
                 }
             },
-            /*            {
-                            path: '/tools/stock-watchlist',
-                            name: 'StockWatchlist',
-                            component: () => import('@/views/tools/StockWatchlist.vue'),
-                            meta: {
-                                title: '股票自选',
-                                icon: 'mdi-chart-line'
-                            }
-                        },*/
             {
                 path: '/tools/markdown-resume-pdf',
                 name: 'MarkdownResumePdf',
@@ -217,15 +191,6 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '简历转PDF',
                     icon: 'mdi-file-pdf-box'
-                }
-            },
-            {
-                path: '/tools/data-structure-trainer',
-                name: 'DataStructureTrainer',
-                component: () => import('@/views/tools/DataStructureTrainer.vue'),
-                meta: {
-                    title: '算法训练场',
-                    icon: 'mdi-graph'
                 }
             }
         ]
