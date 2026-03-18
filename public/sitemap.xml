@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://tool.linger.host/</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/case-converter</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/json-editor</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/file-diff</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/timestamp</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/qr-code-generator</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/tools/skill-chat-workspace</loc>
+    </url>
+    <url>
+        <loc>https://tool.linger.host/games/gomoku</loc>
+    </url>
+</urlset>

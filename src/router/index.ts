@@ -3,6 +3,7 @@ import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
 declare module 'vue-router' {
     interface RouteMeta {
         title?: string;
+        description?: string;
         icon?: string;
         requiresAuth?: boolean;
     }
@@ -11,7 +12,12 @@ declare module 'vue-router' {
 export const routes: RouteRecordRaw[] = [
     {
         path: '/',
-        redirect: '/tools/case-converter'
+        name: 'home',
+        component: () => import('@/components/Home.vue'),
+        meta: {
+            title: 'Tool Hub - 在线开发者工具箱与小游戏集合',
+            description: 'Tool Hub 提供在线驼峰转换、JSON 编辑器、文件 Diff、二维码生成、时间戳转换、MCP 测试台以及多种网页小游戏。'
+        }
     },
     {
         path: '/auth',
@@ -20,13 +26,21 @@ export const routes: RouteRecordRaw[] = [
                 path: 'login',
                 name: 'login',
                 component: () => import('@/views/auth/LoginView.vue'),
-                meta: {requiresAuth: false}
+                meta: {
+                    requiresAuth: false,
+                    title: '登录 - Tool Hub',
+                    description: '登录 Tool Hub，使用在线开发工具和小游戏。'
+                }
             },
             {
                 path: 'register',
                 name: 'register',
                 component: () => import('@/views/auth/RegisterView.vue'),
-                meta: {requiresAuth: false}
+                meta: {
+                    requiresAuth: false,
+                    title: '注册 - Tool Hub',
+                    description: '注册 Tool Hub 账号，使用在线开发工具和小游戏。'
+                }
             }
         ]
     },
@@ -54,7 +68,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/SkillChatWorkspace.vue'),
                 meta: {
                     title: 'AI 对话工作台',
-                    icon: 'mdi-robot-outline'
+                    icon: 'mdi-robot-outline',
+                    description: 'Tool Hub AI 对话工作台，支持技能路由、多轮对话和结构化结果展示。'
                 }
             },
             {
@@ -67,7 +82,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/MysqlAnalysis.vue'),
                 meta: {
                     title: 'MysqlAnalysis',
-                    icon: 'mdi-link-variant'
+                    icon: 'mdi-link-variant',
+                    description: '在线 MySQL 慢 SQL 与日志分析工具。'
                 }
             },
             {
@@ -76,7 +92,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/McpTester.vue'),
                 meta: {
                     title: 'MCP 测试台',
-                    icon: 'mdi-connection'
+                    icon: 'mdi-connection',
+                    description: '在线测试 MCP SSE 连接、工具列表与工具调用结果。'
                 }
             },
             {
@@ -85,7 +102,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/StringGenerator.vue'),
                 meta: {
                     title: '字符串生成',
-                    icon: 'mdi-format-letter-case'
+                    icon: 'mdi-format-letter-case',
+                    description: '在线字符串生成工具，快速生成随机文本与测试数据。'
                 }
             },
             {
@@ -94,7 +112,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/CaseConverter.vue'),
                 meta: {
                     title: '驼峰转换',
-                    icon: 'mdi-format-letter-case'
+                    icon: 'mdi-format-letter-case',
+                    description: '在线驼峰转换工具，支持驼峰、下划线、中划线、大小写格式互转。'
                 }
             },
 
@@ -104,7 +123,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/BaseConverter.vue'),
                 meta: {
                     title: '进制转换',
-                    icon: 'mdi-compare'
+                    icon: 'mdi-compare',
+                    description: '在线进制转换工具，支持常见数字进制的快速换算。'
                 }
             },
             {
@@ -113,7 +133,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/FileDiff.vue'),
                 meta: {
                     title: '文件对比 Diff',
-                    icon: 'mdi-file-compare'
+                    icon: 'mdi-file-compare',
+                    description: '在线文件 Diff 对比工具，快速比较文本与代码差异。'
                 }
             },
             {
@@ -122,7 +143,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/JsonEditor.vue'),
                 meta: {
                     title: 'JSON 编辑器',
-                    icon: 'mdi-code-json'
+                    icon: 'mdi-code-json',
+                    description: '在线 JSON 编辑器，支持格式化、校验与结构化浏览。'
                 }
             },
             {
@@ -131,7 +153,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/Calculator.vue'),
                 meta: {
                     title: '计算稿纸',
-                    icon: 'mdi-calculator'
+                    icon: 'mdi-calculator',
+                    description: '在线计算稿纸工具，适合快速演算与中间过程记录。'
                 }
             },
             {
@@ -140,7 +163,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/TimestampTool.vue'),
                 meta: {
                     title: '时间戳工具',
-                    icon: 'mdi-clock-outline'
+                    icon: 'mdi-clock-outline',
+                    description: '在线时间戳转换工具，支持时间与 Unix 时间戳互转。'
                 }
             },
             {
@@ -149,7 +173,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/DataEncryption.vue'),
                 meta: {
                     title: '数据加密解密',
-                    icon: 'mdi-shield-lock-outline'
+                    icon: 'mdi-shield-lock-outline',
+                    description: '在线数据加密解密工具，便于常见文本加解密处理。'
                 }
             },
             {
@@ -158,7 +183,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/FileConverter.vue'),
                 meta: {
                     title: '文件格式转换',
-                    icon: 'mdi-file-sync'
+                    icon: 'mdi-file-sync',
+                    description: '在线文件格式转换工具，简化常见文件处理流程。'
                 }
             },
             {
@@ -167,7 +193,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/JsonToEntity.vue'),
                 meta: {
                     title: 'JSON转实体类',
-                    icon: 'mdi-code-json'
+                    icon: 'mdi-code-json',
+                    description: '在线 JSON 转实体类工具，辅助快速生成代码模型。'
                 }
             },
             {
@@ -176,7 +203,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/QrCodeGenerator.vue'),
                 meta: {
                     title: '文字转二维码',
-                    icon: 'mdi-qrcode'
+                    icon: 'mdi-qrcode',
+                    description: '在线二维码生成工具，支持文本与链接即时转二维码。'
                 }
             },
             {
@@ -185,7 +213,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/JetbrainChecker.vue'),
                 meta: {
                     title: 'Jetbrain 激活',
-                    icon: 'mdi-link-variant'
+                    icon: 'mdi-link-variant',
+                    description: 'JetBrains 相关校验与辅助工具页面。'
                 }
             },
             {
@@ -194,7 +223,8 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/tools/MarkdownResumePdf.vue'),
                 meta: {
                     title: '简历转PDF',
-                    icon: 'mdi-file-pdf-box'
+                    icon: 'mdi-file-pdf-box',
+                    description: '在线将 Markdown 简历转换为 PDF，适合快速导出简历。'
                 }
             }
         ]
@@ -367,6 +397,48 @@ export const routes: RouteRecordRaw[] = [
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes
+})
+
+const DEFAULT_TITLE = 'Tool Hub - 在线开发者工具箱与小游戏集合'
+const DEFAULT_DESCRIPTION = 'Tool Hub 提供在线开发者工具、文本处理工具、文件对比工具、二维码生成以及多种网页小游戏。'
+
+function updateMetaTag(name: string, content: string) {
+    let tag = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null
+    if (!tag) {
+        tag = document.createElement('meta')
+        tag.setAttribute('name', name)
+        document.head.appendChild(tag)
+    }
+    tag.setAttribute('content', content)
+}
+
+function updatePropertyMetaTag(property: string, content: string) {
+    let tag = document.head.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null
+    if (!tag) {
+        tag = document.createElement('meta')
+        tag.setAttribute('property', property)
+        document.head.appendChild(tag)
+    }
+    tag.setAttribute('content', content)
+}
+
+router.afterEach((to) => {
+    const title = typeof to.meta?.title === 'string' ? `${to.meta.title}` : DEFAULT_TITLE
+    const description = typeof to.meta?.description === 'string' ? `${to.meta.description}` : DEFAULT_DESCRIPTION
+
+    document.title = title.includes('Tool Hub') ? title : `${title} - Tool Hub`
+    updateMetaTag('description', description)
+    updatePropertyMetaTag('og:title', document.title)
+    updatePropertyMetaTag('og:description', description)
+
+    const canonicalHref = `https://tool.linger.host${to.fullPath === '/' ? '/' : to.fullPath}`
+    let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+    if (!canonical) {
+        canonical = document.createElement('link')
+        canonical.setAttribute('rel', 'canonical')
+        document.head.appendChild(canonical)
+    }
+    canonical.setAttribute('href', canonicalHref)
 })
 
 export default router 
