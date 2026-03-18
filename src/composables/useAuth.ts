@@ -31,7 +31,7 @@ export function useAuth() {
             userStore.setToken(data.token)
             await getUserInfo()
             showSuccess('注册成功')
-            router.push('/case-converter')
+            router.push('/tools/case-converter')
         } else {
             showSuccess('注册成功，请登录')
             router.push('/auth/login')

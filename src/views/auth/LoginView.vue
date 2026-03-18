@@ -158,7 +158,7 @@ async function handleLogin() {
     const response = await login(formData.value)
     if (response?.token) {
       const redirect = route.query.redirect as string
-      router.push(redirect || '/case-converter')
+      router.push(redirect || '/tools/case-converter')
     }
   } catch (err) {
     await refreshCaptcha()

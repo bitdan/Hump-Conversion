@@ -11,7 +11,7 @@ declare module 'vue-router' {
 export const routes: RouteRecordRaw[] = [
     {
         path: '/',
-        redirect: '/case-converter'
+        redirect: '/tools/case-converter'
     },
     {
         path: '/auth',

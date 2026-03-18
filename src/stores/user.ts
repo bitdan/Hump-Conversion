@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', () => {
     user: {
       userId: string
       username: string
+        email?: string
       avatar?: string
     }
     roles: string[]
