@@ -67,6 +67,17 @@ export interface UserInfo {
   permissions: string[]
 }
 
+export interface UpdateProfilePayload {
+    email?: string
+    avatar?: string
+}
+
+export interface ChangePasswordPayload {
+    oldPassword: string
+    newPassword: string
+    confirmPassword: string
+}
+
 function normalizeCaptchaData(data: RawCaptchaData): CaptchaData {
     return {
         captchaEnabled: data.captchaEnabled ?? data.captcha_enabled ?? true,
@@ -112,6 +123,17 @@ export function getUserInfo() {
         ...response,
         data: normalizeUserInfo(response.data)
     }))
+}
+
+export function updateProfile(data: UpdateProfilePayload) {
+    return request.put<ApiResponse<RawUserInfo>>('/api/v1/profile', data).then((response) => ({
+        ...response,
+        data: normalizeUserInfo(response.data)
+    }))
+}
+
+export function changePassword(data: ChangePasswordPayload) {
+    return request.put<ApiResponse<void>>('/api/v1/profile/password', data)
 }
 
 // 用户登出

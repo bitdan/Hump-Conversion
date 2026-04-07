@@ -75,6 +75,12 @@
           </template>
           <v-list density="compact">
             <v-list-item
+                v-if="userStore.token"
+                prepend-icon="mdi-account-cog-outline"
+                title="个人中心"
+                @click="router.push('/tools/profile-center')"
+            />
+            <v-list-item
                 v-if="!userStore.token"
                 prepend-icon="mdi-login"
                 title="登录"
@@ -139,7 +145,7 @@ const sections = computed<MenuSection[]>(() => {
       title: String(routeRecord.meta?.title || key),
       icon: String(routeRecord.meta?.icon || 'mdi-view-grid'),
       items: children
-          .filter(child => !!child.path && !!child.meta?.title)
+          .filter(child => !!child.path && !!child.meta?.title && !child.meta?.hiddenInNav)
           .map(child => ({
             path: child.path,
             title: String(child.meta?.title || child.name || child.path),

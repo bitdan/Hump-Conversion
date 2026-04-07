@@ -6,6 +6,7 @@ declare module 'vue-router' {
         description?: string;
         icon?: string;
         requiresAuth?: boolean;
+        hiddenInNav?: boolean;
     }
 }
 
@@ -216,6 +217,18 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-shield-key-outline',
                     description: '在线 2FA 管理台，支持 TOTP 扫码绑定、手动录入、导入导出与动态验证码查看。',
                     requiresAuth: true
+                }
+            },
+            {
+                path: '/tools/profile-center',
+                name: 'ProfileCenter',
+                component: () => import('@/views/tools/ProfileCenter.vue'),
+                meta: {
+                    title: '个人中心',
+                    icon: 'mdi-account-cog-outline',
+                    description: '查看和编辑当前账号的个人信息，支持修改密码。',
+                    requiresAuth: true,
+                    hiddenInNav: true
                 }
             },
             {

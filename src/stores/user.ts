@@ -5,6 +5,7 @@ export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
   const userId = ref<string | null>(localStorage.getItem('userId'))
   const username = ref<string | null>(localStorage.getItem('username'))
+    const email = ref<string | null>(localStorage.getItem('email'))
   const avatar = ref<string | null>(localStorage.getItem('avatar'))
   const roles = ref<string[]>([])
   const permissions = ref<string[]>([])
@@ -26,14 +27,22 @@ export const useUserStore = defineStore('user', () => {
   }) => {
     userId.value = userInfo.user.userId
     username.value = userInfo.user.username
+      email.value = userInfo.user.email || null
     avatar.value = userInfo.user.avatar || null
     roles.value = userInfo.roles
     permissions.value = userInfo.permissions
     
     localStorage.setItem('userId', userInfo.user.userId)
     localStorage.setItem('username', userInfo.user.username)
+      if (userInfo.user.email) {
+          localStorage.setItem('email', userInfo.user.email)
+      } else {
+          localStorage.removeItem('email')
+      }
     if (userInfo.user.avatar) {
       localStorage.setItem('avatar', userInfo.user.avatar)
+    } else {
+        localStorage.removeItem('avatar')
     }
   }
 
@@ -41,6 +50,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = null
     userId.value = null
     username.value = null
+      email.value = null
     avatar.value = null
     roles.value = []
     permissions.value = []
@@ -48,6 +58,7 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
     localStorage.removeItem('username')
+      localStorage.removeItem('email')
     localStorage.removeItem('avatar')
   }
 
@@ -55,6 +66,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     userId,
     username,
+      email,
     avatar,
     roles,
     permissions,
