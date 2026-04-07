@@ -65,6 +65,9 @@
             <li>
               <router-link to="/tools/qr-code-generator" class="hover:text-white">文字转二维码工具</router-link>
             </li>
+            <li>
+              <router-link to="/tools/two-factor-manager" class="hover:text-white">2FA 管理台</router-link>
+            </li>
           </ul>
         </section>
         <section class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/15">

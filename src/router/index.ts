@@ -208,6 +208,17 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/two-factor-manager',
+                name: 'TwoFactorManager',
+                component: () => import('@/views/tools/TwoFactorManager.vue'),
+                meta: {
+                    title: '2FA 管理台',
+                    icon: 'mdi-shield-key-outline',
+                    description: '在线 2FA 管理台，支持 TOTP 扫码绑定、手动录入、导入导出与动态验证码查看。',
+                    requiresAuth: true
+                }
+            },
+            {
                 path: '/tools/jetbrain-checker',
                 name: 'JetbrainChecker',
                 component: () => import('@/views/tools/JetbrainChecker.vue'),
@@ -407,6 +418,16 @@ export const routes: RouteRecordRaw[] = [
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes
+})
+
+router.beforeEach((to) => {
+    if (to.meta?.requiresAuth && !localStorage.getItem('token')) {
+        return {
+            path: '/auth/login',
+            query: {redirect: to.fullPath}
+        }
+    }
+    return true
 })
 
 const DEFAULT_TITLE = 'Tool Hub - 在线开发者工具箱与小游戏集合'
