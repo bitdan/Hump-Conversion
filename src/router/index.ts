@@ -226,6 +226,16 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-file-pdf-box',
                     description: '在线将 Markdown 简历转换为 PDF，适合快速导出简历。'
                 }
+            },
+            {
+                path: '/tools/huawei-health-viewer',
+                name: 'HuaweiHealthViewer',
+                component: () => import('@/views/tools/HuaweiHealthViewer.vue'),
+                meta: {
+                    title: '华为健康数据浏览',
+                    icon: 'mdi-heart-pulse',
+                    description: '读取华为健康导出目录中的全部 JSON 数据，按类型查看统计、结构与原始记录。'
+                }
             }
         ]
     },
