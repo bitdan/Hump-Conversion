@@ -139,6 +139,16 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/epub-reader',
+                name: 'EpubReader',
+                component: () => import('@/views/tools/EpubReader.vue'),
+                meta: {
+                    title: 'EPUB 阅读器',
+                    icon: 'mdi-book-open-page-variant-outline',
+                    description: '在线 EPUB 阅读器，支持本地文件解析、目录导航、阅读主题和字号调节。'
+                }
+            },
+            {
                 path: '/tools/json-editor',
                 name: 'JsonEditor',
                 component: () => import('@/views/tools/JsonEditor.vue'),
