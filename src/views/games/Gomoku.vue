@@ -42,23 +42,23 @@
               复制
             </v-btn>
           </div>
-          <div v-if="onlineGame?.game.value?.opponentName" class="text-sm">
-            对手: {{ onlineGame.game.value.opponentName }}
-            <span class="ml-2" :class="{ 'text-green-500': onlineGame.game.value.isReady }">
-              {{ onlineGame.game.value.isReady ? '(已准备)' : '(未准备)' }}
+          <div v-if="activeOnlineGame?.opponentName" class="text-sm">
+            对手: {{ activeOnlineGame.opponentName }}
+            <span class="ml-2" :class="{ 'text-green-500': activeOnlineGame.isReady }">
+              {{ activeOnlineGame.isReady ? '(已准备)' : '(未准备)' }}
             </span>
           </div>
           <div v-else class="text-sm text-gray-500">
             等待对手加入...
           </div>
           <div
-              v-if="onlineGame?.game.value?.gameState.status === 'ready' && onlineGame.game.value.host.userId === localStorage.getItem('userId')"
+              v-if="activeOnlineGame?.gameState.status === 'ready' && isRoomHost"
               class="mt-2">
             <v-btn color="success" size="small" @click="startGame">
               开始游戏
             </v-btn>
           </div>
-          <div v-if="onlineGame?.isConnected.value" class="text-xs text-green-500">
+          <div v-if="isOnlineConnected" class="text-xs text-green-500">
             连接状态: 已连接
           </div>
           <div v-else class="text-xs text-red-500">
@@ -73,14 +73,14 @@
 
     <!-- 游戏状态 -->
     <div class="mb-4 text-base sm:text-xl">
-      <template v-if="isOnlineMode && onlineGame?.game.value">
-        <template v-if="onlineGame.game.value.gameState.winner">
-          {{ onlineGame.game.value.gameState.winner === 'black' ? '黑棋' : '白棋' }}胜利！
+      <template v-if="isOnlineMode && activeOnlineGame">
+        <template v-if="activeOnlineGame.gameState.winner">
+          {{ activeOnlineGame.gameState.winner === 'black' ? '黑棋' : '白棋' }}胜利！
         </template>
         <template v-else>
-          {{ onlineGame.game.value.gameState.currentPlayer === 'black' ? '黑棋' : '白棋' }}回合
-          <span v-if="onlineGame.game.value.playerColor" class="ml-2">
-            (你是{{ onlineGame.game.value.playerColor === 'black' ? '黑棋' : '白棋' }})
+          {{ activeOnlineGame.gameState.currentPlayer === 'black' ? '黑棋' : '白棋' }}回合
+          <span v-if="activeOnlineGame.playerColor" class="ml-2">
+            (你是{{ activeOnlineGame.playerColor === 'black' ? '黑棋' : '白棋' }})
           </span>
         </template>
       </template>
@@ -97,7 +97,7 @@
     <!-- 棋盘容器 -->
     <div
       class="relative bg-amber-100 rounded-lg shadow-lg p-[15px] sm:p-[30px] touch-none"
-      :class="{ 'opacity-50': isOnlineMode && !onlineGame?.game.value?.isReady }"
+      :class="{ 'opacity-50': isOnlineMode && !activeOnlineGame?.isReady }"
       :style="{
         width: `${boardSize + (isMobile ? 30 : 60)}px`,
         height: `${boardSize + (isMobile ? 30 : 60)}px`
@@ -152,15 +152,15 @@
             @touchstart.prevent="makeMove(x-1, y-1)"
           >
             <div
-                v-if="isOnlineMode ? onlineGame?.game.value?.gameState.board[y-1][x-1] !== 0 : board[y-1][x-1]"
+                v-if="isOnlineMode ? getOnlineCellValue(x - 1, y - 1) !== 0 : board[y-1][x-1]"
               class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
               :style="{
                 width: `${isMobile ? '16px' : '24px'}`,
                 height: `${isMobile ? '16px' : '24px'}`
               }"
               :class="{
-                'bg-gray-900': isOnlineMode ? onlineGame?.game.value?.gameState.board[y-1][x-1] === 1 : board[y-1][x-1] === 'black',
-                'bg-white border-2 border-gray-900': isOnlineMode ? onlineGame?.game.value?.gameState.board[y-1][x-1] === 2 : board[y-1][x-1] === 'white'
+                'bg-gray-900': isOnlineMode ? getOnlineCellValue(x - 1, y - 1) === 1 : board[y-1][x-1] === 'black',
+                'bg-white border-2 border-gray-900': isOnlineMode ? getOnlineCellValue(x - 1, y - 1) === 2 : board[y-1][x-1] === 'white'
               }"
             ></div>
           </div>
@@ -169,13 +169,13 @@
 
       <!-- 最后落子标记 -->
       <div
-          v-if="isOnlineMode ? onlineGame?.game.value?.gameState.lastMove : lastMove"
+          v-if="displayLastMove"
         class="absolute bg-red-500 rounded-full"
         :style="{
           width: `${isMobile ? '6px' : '8px'}`,
           height: `${isMobile ? '6px' : '8px'}`,
-          left: `${((isOnlineMode && onlineGame?.game.value?.gameState.lastMove?.x !== undefined) ? onlineGame.game.value.gameState.lastMove.x : lastMove?.x || 0) * cellSize + (isMobile ? 15 : 30)}px`,
-          top: `${((isOnlineMode && onlineGame?.game.value?.gameState.lastMove?.y !== undefined) ? onlineGame.game.value.gameState.lastMove.y : lastMove?.y || 0) * cellSize + (isMobile ? 15 : 30)}px`,
+          left: `${(displayLastMove?.x || 0) * cellSize + (isMobile ? 15 : 30)}px`,
+          top: `${(displayLastMove?.y || 0) * cellSize + (isMobile ? 15 : 30)}px`,
           transform: 'translate(-50%, -50%)'
         }"
       ></div>
@@ -185,7 +185,7 @@
     <button
       @click="resetGame"
       class="mt-4 sm:mt-8 px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 focus:outline-none"
-      :disabled="isOnlineMode && (!onlineGame?.game.value?.isReady || !onlineGame?.game.value?.opponentName)"
+      :disabled="isOnlineMode && (!activeOnlineGame?.isReady || !activeOnlineGame?.opponentName)"
     >
       重新开始
     </button>
@@ -235,16 +235,29 @@ const isOnlineMode = ref(false)
 const roomId = ref<string | null>(null)
 const inputRoomId = ref('')
 const onlineGame = ref<ReturnType<typeof useGomokuGame> | null>(null)
+const activeOnlineGame = computed(() => onlineGame.value?.game.value ?? null)
+const isOnlineConnected = computed(() => onlineGame.value?.isConnected.value ?? false)
+const currentUserId = computed(() => localStorage.getItem('userId') || localStorage.getItem('user_id') || '')
+const isRoomHost = computed(() => activeOnlineGame.value?.host.userId === currentUserId.value)
+const displayLastMove = computed(() => (
+    isOnlineMode.value
+        ? activeOnlineGame.value?.gameState.lastMove ?? null
+        : lastMove.value
+))
+
+function getOnlineCellValue(x: number, y: number): number {
+  return activeOnlineGame.value?.gameState.board[y]?.[x] ?? 0
+}
 
 // 检查是否可以落子
 const canMove = (x: number, y: number) => {
   if (isOnlineMode.value) {
-    const gameData = onlineGame.value?.game
-    return gameData?.isReady &&
+    const gameData = activeOnlineGame.value
+    return Boolean(gameData?.isReady &&
         !gameData?.gameState.winner &&
-        gameData?.gameState.board[y][x] === 0 &&
+        getOnlineCellValue(x, y) === 0 &&
         gameData?.gameState.currentPlayer === gameData?.playerColor &&
-        gameData?.opponentName
+        gameData?.opponentName)
   } else {
     return !winner.value && !board.value[y][x]
   }

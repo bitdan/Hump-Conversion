@@ -1,6 +1,7 @@
 import {computed, ref} from 'vue'
 import {
     createEventStream,
+    getRoomInfo,
     leaveGomokuRoom,
     makeMove as apiMakeMove,
     restartGame as apiRestartGame,
@@ -37,6 +38,7 @@ export interface OnlineGame {
 export function useGomokuGame(roomId: string) {
     const game = ref<OnlineGame | null>(null)
     const eventSource = ref<EventSource | null>(null)
+    const roomSyncTimer = ref<number | null>(null)
     const isConnected = ref(false)
     const error = ref<string | null>(null)
 
@@ -78,6 +80,36 @@ export function useGomokuGame(roomId: string) {
             handleError,
             handleClose
         )
+    }
+
+    const stopRoomSync = () => {
+        if (roomSyncTimer.value !== null) {
+            window.clearInterval(roomSyncTimer.value)
+            roomSyncTimer.value = null
+        }
+    }
+
+    const syncRoomState = async () => {
+        try {
+            const response = await getRoomInfo(roomId)
+            if (response.code === 200 && response.data) {
+                updateGameState(response.data)
+                isConnected.value = true
+                error.value = null
+            }
+        } catch (syncError) {
+            if (eventSource.value?.readyState === EventSource.CLOSED) {
+                isConnected.value = false
+            }
+        }
+    }
+
+    const startRoomSync = () => {
+        stopRoomSync()
+        void syncRoomState()
+        roomSyncTimer.value = window.setInterval(() => {
+            void syncRoomState()
+        }, 2000)
     }
 
     // 处理SSE事件
@@ -159,6 +191,7 @@ export function useGomokuGame(roomId: string) {
     // 更新游戏状态
     const updateGameState = (roomData: any) => {
         if (!game.value) return
+        const currentUserId = localStorage.getItem('userId') || localStorage.getItem('user_id')
 
         game.value.host = {
             userId: roomData.host.user_id,
@@ -176,20 +209,22 @@ export function useGomokuGame(roomId: string) {
                 isReady: roomData.guest.is_ready,
                 isOnline: roomData.guest.is_online
             }
-            game.value.opponentName = roomData.guest.username
             game.value.isReady = true
         } else {
             game.value.guest = null
-            game.value.opponentName = null
             game.value.isReady = false
         }
 
         // 确定玩家颜色
-        const currentUserId = localStorage.getItem('userId') || localStorage.getItem('user_id') // 尝试不同的key
         if (currentUserId === game.value.host.userId) {
             game.value.playerColor = game.value.host.color
+            game.value.opponentName = game.value.guest?.username ?? null
         } else if (game.value.guest && currentUserId === game.value.guest.userId) {
             game.value.playerColor = game.value.guest.color
+            game.value.opponentName = game.value.host.username
+        } else {
+            game.value.playerColor = null
+            game.value.opponentName = game.value.guest?.username ?? null
         }
 
         // 更新游戏状态
@@ -199,15 +234,20 @@ export function useGomokuGame(roomId: string) {
             currentPlayer: roomData.game_state.current_player,
             winner: roomData.game_state.winner,
             lastMove: roomData.game_state.last_move,
-            movesCount: roomData.game_state.moves_count
+            movesCount: roomData.game_state.moves_count ?? roomData.game_state.moves?.length ?? 0
         }
     }
 
     // 处理错误
     const handleError = (errorEvent: Event) => {
         console.error('SSE连接错误:', errorEvent)
-        isConnected.value = false
-        error.value = '连接错误，请刷新页面重试'
+        if (eventSource.value?.readyState === EventSource.CLOSED) {
+            isConnected.value = false
+            error.value = '连接错误，请刷新页面重试'
+            return
+        }
+
+        error.value = '连接重试中'
     }
 
     // 处理连接关闭
@@ -267,6 +307,7 @@ export function useGomokuGame(roomId: string) {
     const leaveGame = async () => {
         try {
             await leaveGomokuRoom()
+            stopRoomSync()
             if (eventSource.value) {
                 eventSource.value.close()
                 eventSource.value = null
@@ -281,9 +322,11 @@ export function useGomokuGame(roomId: string) {
     // 初始化
     initGame()
     startConnection()
+    startRoomSync()
 
     // 清理函数
     const cleanup = () => {
+        stopRoomSync()
         if (eventSource.value) {
             eventSource.value.close()
             eventSource.value = null

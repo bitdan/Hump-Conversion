@@ -39,7 +39,8 @@ interface RoomInfo {
             y: number
             color: string
         } | null
-        moves_count: number
+        moves?: Array<unknown>
+        moves_count?: number
         created_at: number
         updated_at: number
     }
@@ -88,7 +89,7 @@ export function getRoomInfo(roomId: string) {
 // 创建SSE事件流
 export function createEventStream(roomId: string, onMessage: (event: GameEvent) => void, onError?: (error: Event) => void, onClose?: () => void): EventSource {
     const token = localStorage.getItem('token')
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    const apiBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''
     const shouldUseLegacyQueryToken = import.meta.env.VITE_SSE_TOKEN_IN_QUERY === 'true'
     const url = new URL(`${apiBaseUrl}/api/v1/game/events/${roomId}`, window.location.origin)
     if (shouldUseLegacyQueryToken && token) {
