@@ -332,9 +332,7 @@ const resetGame = () => {
 async function createRoom() {
   await withAuth(async () => {
     try {
-      console.log('开始创建房间')
       const res = await createGomokuRoom()
-      console.log('创建房间响应:', res)
       if (res.code === 200 && res.data) {
         roomId.value = res.data
         isOnlineMode.value = true
@@ -353,9 +351,7 @@ async function createRoom() {
 async function joinRoom(id: string) {
   await withAuth(async () => {
     try {
-      console.log('开始加入房间:', id)
       const res = await joinGomokuRoom(id)
-      console.log('加入房间响应:', res)
       if (res.code === 200) {
         roomId.value = id
         isOnlineMode.value = true
@@ -442,9 +438,7 @@ async function startGame() {
 async function leaveRoom() {
   if (roomId.value) {
     try {
-      console.log('开始离开房间:', roomId.value)
       const res = await leaveGomokuRoom()
-      console.log('离开房间响应:', res)
       if (res.code === 200) {
         if (onlineGame.value) {
           onlineGame.value.leaveGame()

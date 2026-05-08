@@ -2,7 +2,6 @@ export function useMessage() {
   const showSuccess = (message: string) => {
     // 这里可以使用你的UI框架的消息提示组件
     // 例如 Element Plus 的 ElMessage
-    console.log('Success:', message)
   }
 
   const showError = (message: string) => {

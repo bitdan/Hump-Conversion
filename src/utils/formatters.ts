@@ -1,5 +1,4 @@
 import yaml from 'js-yaml'
-import { parseStringPromise, Builder } from 'xml2js'
 
 export interface FormatOptions {
   indent?: number
@@ -8,6 +7,33 @@ export interface FormatOptions {
 
 export interface DetectResult {
   kind: 'json' | 'yaml' | 'xml' | 'csv' | 'text'
+}
+
+function formatXml(text: string, indent: number, newline: string): string {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(text, 'application/xml')
+    if (doc.querySelector('parsererror')) return text
+
+    const serialized = new XMLSerializer().serializeToString(doc)
+    const padUnit = ' '.repeat(indent)
+    let formatted = ''
+    let level = 0
+
+    serialized
+        .replace(/>\s*</g, '>\n<')
+        .split('\n')
+        .filter(Boolean)
+        .forEach((part) => {
+            if (part.startsWith('</')) {
+                level = Math.max(level - 1, 0)
+            }
+            formatted += `${padUnit.repeat(level)}${part}${newline}`
+            if (part.startsWith('<') && !part.startsWith('</') && !part.endsWith('/>') && !part.startsWith('<?')) {
+                level += 1
+            }
+        })
+
+    return formatted.trim()
 }
 
 function getNewline(text: string): string {
@@ -53,9 +79,7 @@ export async function formatContent(text: string, hint?: DetectResult, options?:
   }
   if (detected === 'xml') {
     try {
-      const obj = await parseStringPromise(text)
-      const builder = new Builder({ renderOpts: { pretty: true, indent: ' '.repeat(indent), newline } })
-      return builder.buildObject(obj)
+        return formatXml(text, indent, newline)
     } catch { return text }
   }
   if (detected === 'csv') {

@@ -82,8 +82,6 @@ export function useGomokuGame(roomId: string) {
 
     // 处理SSE事件
     const handleEvent = (event: any) => {
-        console.log('处理游戏事件:', event)
-
         switch (event.type) {
             case 'connected':
                 isConnected.value = true
@@ -214,7 +212,6 @@ export function useGomokuGame(roomId: string) {
 
     // 处理连接关闭
     const handleClose = () => {
-        console.log('SSE连接已关闭')
         isConnected.value = false
     }
 

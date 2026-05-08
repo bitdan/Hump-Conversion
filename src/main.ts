@@ -1,14 +1,12 @@
-import { createApp, type App as VueApp } from "vue";
-import { createPinia } from 'pinia';
-import { createVuetify, type ThemeDefinition } from "vuetify";
+import {type App as VueApp, createApp} from "vue";
+import {createPinia} from 'pinia';
+import {createVuetify, type ThemeDefinition} from "vuetify";
 import "vuetify/styles";
 import "./main.css";
 import App from "./App.vue";
 import router from './router/index'
 import './assets/tailwind.css'
 import '@mdi/font/css/materialdesignicons.css'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 import VueKonva from 'vue-konva'
 
 const lightTheme: ThemeDefinition = {
@@ -19,8 +17,6 @@ const lightTheme: ThemeDefinition = {
 }
 
 const vuetify = createVuetify({
-  components,
-  directives,
   theme: {
     defaultTheme: 'light',
     themes: {

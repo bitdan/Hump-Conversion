@@ -10,18 +10,21 @@ export function useWebSocket(url: string) {
   const connect = () => {
     const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
     const token = userStore.token
-    const wsUrl = `${baseUrl}${url}${url.includes('?') ? '&' : '?'}Authorization=Bearer ${token}`
-    console.log('WebSocket URL:', wsUrl)
+      const shouldUseLegacyQueryToken = import.meta.env.VITE_WS_TOKEN_IN_QUERY === 'true'
+      const wsUrl = shouldUseLegacyQueryToken && token
+          ? `${baseUrl}${url}${url.includes('?') ? '&' : '?'}Authorization=${encodeURIComponent(`Bearer ${token}`)}`
+          : `${baseUrl}${url}`
     ws.value = new WebSocket(wsUrl)
 
     ws.value.onopen = () => {
       isConnected.value = true
-      console.log('WebSocket connected')
+        if (!shouldUseLegacyQueryToken && token) {
+            ws.value?.send(JSON.stringify({type: 'auth', token}))
+        }
     }
 
     ws.value.onclose = () => {
       isConnected.value = false
-      console.log('WebSocket disconnected')
       setTimeout(connect, 3000)
     }
 
@@ -34,8 +37,7 @@ export function useWebSocket(url: string) {
         messageHandler.value(event)
       } else {
         try {
-          const data = JSON.parse(event.data)
-          console.log('WebSocket message:', data)
+            JSON.parse(event.data)
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error)
         }

@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import {nextTick, ref, watch} from 'vue'
 import {useMessage} from '../../composables/useMessage'
 import {sendAgentChat} from '@/api/agentChat'
@@ -99,13 +100,18 @@ watch(messages, async () => {
 })
 
 function formatDraft(draft: string): string {
-  return draft
+  const html = draft
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>')
       .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['br', 'pre', 'code', 'strong'],
+    ALLOWED_ATTR: ['class']
+  })
 }
 
 function scrollToBottom(): void {

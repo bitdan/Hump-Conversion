@@ -49,8 +49,8 @@
 
 ## 环境要求
 
-- Node.js >= 16.0.0
-- npm >= 7.0.0
+- Node.js >= 18.0.0
+- npm >= 8.0.0
 - Docker（用于生产环境部署）
 
 ## 开发环境设置
@@ -77,11 +77,15 @@ cp .env.example .env
 npm run dev
 ```
 
-5. 运行测试
+5. 运行项目校验
 ```bash
-npm run test        # 运行单元测试
-npm run test:e2e    # 运行端到端测试
+npm run build       # 生产构建
+npm run check       # 当前项目校验入口，现阶段等同于生产构建
+npm run test        # 当前等同于 npm run check
 ```
+
+> 当前仓库尚未接入 Vitest、Playwright 或 ESLint。`test`、`lint`、`typecheck` 暂时作为可执行的构建校验入口保留，避免
+> CI/文档命令缺失；后续引入专门测试和代码检查工具后再替换为真实检查命令。
 
 ## 生产环境部署
 
@@ -114,14 +118,13 @@ tool-hub/
 │   │   └── games/    # 游戏组件
 │   ├── components/   # 通用组件
 │   ├── router/       # 路由配置
-│   ├── store/        # Pinia 状态管理
+│   ├── stores/       # Pinia 状态管理
 │   ├── composables/  # 组合式函数
 │   ├── types/        # TypeScript 类型定义
 │   └── assets/       # 静态资源
 ├── docker/
 │   └── nginx/        # Nginx 配置
 ├── public/           # 公共资源
-├── tests/            # 测试文件
 └── ...配置文件
 ```
 
