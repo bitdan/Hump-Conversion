@@ -202,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onUnmounted, ref, watch} from 'vue'
+import {computed, onUnmounted, ref, shallowRef, watch} from 'vue'
 import {useAuthCheck} from '@/composables/useAuthCheck'
 import {useGomokuGame} from '@/composables/useGomokuGame'
 import {useMessage} from '@/composables/useMessage'
@@ -234,7 +234,7 @@ const lastMove = ref<{x: number, y: number} | null>(null)
 const isOnlineMode = ref(false)
 const roomId = ref<string | null>(null)
 const inputRoomId = ref('')
-const onlineGame = ref<ReturnType<typeof useGomokuGame> | null>(null)
+const onlineGame = shallowRef<ReturnType<typeof useGomokuGame> | null>(null)
 const activeOnlineGame = computed(() => onlineGame.value?.game.value ?? null)
 const isOnlineConnected = computed(() => onlineGame.value?.isConnected.value ?? false)
 const currentUserId = computed(() => localStorage.getItem('userId') || localStorage.getItem('user_id') || '')
