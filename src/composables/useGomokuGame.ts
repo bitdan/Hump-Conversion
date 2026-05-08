@@ -39,6 +39,8 @@ export function useGomokuGame(roomId: string) {
     const game = ref<OnlineGame | null>(null)
     const eventSource = ref<EventSource | null>(null)
     const roomSyncTimer = ref<number | null>(null)
+    const isRoomSyncing = ref(false)
+    const isStopped = ref(false)
     const isConnected = ref(false)
     const error = ref<string | null>(null)
 
@@ -83,6 +85,7 @@ export function useGomokuGame(roomId: string) {
     }
 
     const stopRoomSync = () => {
+        isStopped.value = true
         if (roomSyncTimer.value !== null) {
             window.clearInterval(roomSyncTimer.value)
             roomSyncTimer.value = null
@@ -90,6 +93,9 @@ export function useGomokuGame(roomId: string) {
     }
 
     const syncRoomState = async () => {
+        if (isStopped.value || isRoomSyncing.value) return
+
+        isRoomSyncing.value = true
         try {
             const response = await getRoomInfo(roomId)
             if (response.code === 200 && response.data) {
@@ -97,19 +103,29 @@ export function useGomokuGame(roomId: string) {
                 isConnected.value = true
                 error.value = null
             }
-        } catch (syncError) {
+        } catch (syncError: any) {
+            if (syncError?.response?.status === 404) {
+                stopRoomSync()
+                isConnected.value = false
+                error.value = '房间不存在或已关闭'
+                return
+            }
+
             if (eventSource.value?.readyState === EventSource.CLOSED) {
                 isConnected.value = false
             }
+        } finally {
+            isRoomSyncing.value = false
         }
     }
 
     const startRoomSync = () => {
         stopRoomSync()
+        isStopped.value = false
         void syncRoomState()
         roomSyncTimer.value = window.setInterval(() => {
             void syncRoomState()
-        }, 2000)
+        }, 30000)
     }
 
     // 处理SSE事件
@@ -121,10 +137,14 @@ export function useGomokuGame(roomId: string) {
                 break
 
             case 'room_state':
+                isConnected.value = true
+                error.value = null
                 updateGameState(event.data)
                 break
 
             case 'player_joined':
+                isConnected.value = true
+                error.value = null
                 if (game.value) {
                     game.value.guest = {
                         userId: event.data.player.user_id,
@@ -140,6 +160,8 @@ export function useGomokuGame(roomId: string) {
                 break
 
             case 'player_left':
+                isConnected.value = true
+                error.value = null
                 if (game.value && event.data.user_id === game.value.guest?.userId) {
                     game.value.guest = null
                     game.value.opponentName = null
@@ -149,6 +171,8 @@ export function useGomokuGame(roomId: string) {
                 break
 
             case 'game_started':
+                isConnected.value = true
+                error.value = null
                 if (game.value) {
                     game.value.gameState.status = 'playing'
                     game.value.gameState.currentPlayer = event.data.current_player
@@ -159,6 +183,8 @@ export function useGomokuGame(roomId: string) {
                 break
 
             case 'move_made':
+                isConnected.value = true
+                error.value = null
                 if (game.value) {
                     const move = event.data.move
                     game.value.gameState.board[move.y][move.x] = move.color === 'black' ? 1 : 2
@@ -169,6 +195,8 @@ export function useGomokuGame(roomId: string) {
                 break
 
             case 'game_ended':
+                isConnected.value = true
+                error.value = null
                 if (game.value) {
                     game.value.gameState.status = 'finished'
                     game.value.gameState.winner = event.data.winner
@@ -271,7 +299,9 @@ export function useGomokuGame(roomId: string) {
 
         try {
             await apiMakeMove(roomId, x, y)
-            await syncRoomState()
+            if (eventSource.value?.readyState !== EventSource.OPEN) {
+                await syncRoomState()
+            }
             return true
     } catch (error) {
             console.error('下棋失败:', error)
@@ -313,9 +343,9 @@ export function useGomokuGame(roomId: string) {
 
     // 离开游戏
     const leaveGame = async () => {
+        stopRoomSync()
         try {
             await leaveGomokuRoom()
-            stopRoomSync()
             if (eventSource.value) {
                 eventSource.value.close()
                 eventSource.value = null
