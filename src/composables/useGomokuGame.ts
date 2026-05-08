@@ -257,13 +257,21 @@ export function useGomokuGame(roomId: string) {
 
     // 下棋
     const makeMove = async (x: number, y: number) => {
-        if (!game.value || !game.value.isReady) {
+        if (
+            !game.value ||
+            !game.value.isReady ||
+            game.value.gameState.status !== 'playing' ||
+            game.value.gameState.winner ||
+            game.value.gameState.board[y]?.[x] !== 0 ||
+            game.value.gameState.currentPlayer !== game.value.playerColor
+        ) {
             console.error('游戏未准备好')
             return false
         }
 
         try {
             await apiMakeMove(roomId, x, y)
+            await syncRoomState()
             return true
     } catch (error) {
             console.error('下棋失败:', error)
