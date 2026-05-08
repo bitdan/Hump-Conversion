@@ -305,10 +305,12 @@ const checkWinner = (x: number, y: number, player: 'black' | 'white') => {
 }
 
 // 落子
-const makeMove = (x: number, y: number) => {
+const makeMove = async (x: number, y: number) => {
+  if (!canMove(x, y)) return
+
   if (isOnlineMode.value) {
     if (onlineGame.value) {
-      onlineGame.value.makeMove(x, y)
+      await onlineGame.value.makeMove(x, y)
     }
     return
   }
