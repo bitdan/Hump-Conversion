@@ -13,6 +13,8 @@
         </div>
       </v-container>
     </v-main>
+
+    <GlobalChatWidget/>
   </v-app>
 </template>
 
