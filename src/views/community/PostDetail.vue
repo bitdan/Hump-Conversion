@@ -2,7 +2,7 @@
   <div class="detail-page">
     <div class="detail-actions">
       <v-btn variant="text" prepend-icon="mdi-arrow-left" to="/community/posts">返回列表</v-btn>
-      <div v-if="post?.can_edit" class="owner-actions">
+      <div v-if="canEdit" class="owner-actions">
         <v-btn variant="tonal" prepend-icon="mdi-pencil" :to="`/community/posts/${post.id}/edit`">编辑</v-btn>
         <v-btn color="error" variant="tonal" prepend-icon="mdi-delete-outline" @click="removePost">删除</v-btn>
       </div>
@@ -21,21 +21,171 @@
         <span>{{ formatDate(post.created_at) }}</span>
         <span><v-icon size="16">mdi-eye-outline</v-icon>{{ post.view_count }}</span>
       </div>
-      <div class="content">{{ post.content }}</div>
+      <div class="markdown-body" v-html="renderMarkdown(post.content || '')"></div>
     </article>
+
+    <section v-if="post" class="comments">
+      <header class="comments-header">
+        <h2>回复</h2>
+        <span>{{ comments.length }} 条</span>
+      </header>
+
+      <v-alert v-if="commentError" type="error" variant="tonal" class="mb-3">
+        {{ commentError }}
+      </v-alert>
+
+      <div v-if="userStore.token" class="reply-box">
+        <v-textarea
+            v-model="replyContent"
+            variant="outlined"
+            rows="4"
+            auto-grow
+            counter="5000"
+            maxlength="5000"
+            :label="replyTarget ? `回复 ${replyTarget.author_name}` : '写下你的回复'"
+        />
+        <div class="reply-actions">
+          <v-btn v-if="replyTarget" variant="text" @click="cancelReply">取消回复</v-btn>
+          <v-btn color="primary" prepend-icon="mdi-reply" :loading="replying" @click="submitReply">回复</v-btn>
+        </div>
+      </div>
+      <v-alert v-else type="info" variant="tonal" class="mb-4">
+        登录后可以回复。
+      </v-alert>
+
+      <v-skeleton-loader v-if="commentsLoading" type="list-item-three-line@3"/>
+      <div v-else class="comment-list">
+        <template v-if="commentTree.length > 0">
+          <article v-for="comment in commentTree" :key="comment.id" class="comment-card">
+            <div class="comment-meta">
+              <strong>{{ comment.author_name }}</strong>
+              <span>{{ formatDate(comment.created_at) }}</span>
+              <button v-if="userStore.token" class="reply-link" type="button" @click="startReply(comment)">回复</button>
+            </div>
+            <div class="comment-content markdown-body" v-html="renderMarkdown(comment.content)"></div>
+            <div v-if="comment.children.length > 0" class="nested-comments">
+              <article v-for="child in comment.children" :key="child.id" class="comment-card nested">
+                <div class="comment-meta">
+                  <strong>{{ child.author_name }}</strong>
+                  <span v-if="child.reply_to_author_name">回复 {{ child.reply_to_author_name }}</span>
+                  <span>{{ formatDate(child.created_at) }}</span>
+                  <button v-if="userStore.token" class="reply-link" type="button" @click="startReply(child)">回复
+                  </button>
+                </div>
+                <div class="comment-content markdown-body" v-html="renderMarkdown(child.content)"></div>
+                <div v-if="child.children.length > 0" class="nested-comments">
+                  <NestedComment
+                      v-for="descendant in child.children"
+                      :key="descendant.id"
+                      :comment="descendant"
+                      :can-reply="Boolean(userStore.token)"
+                      @reply="startReply"
+                  />
+                </div>
+              </article>
+            </div>
+          </article>
+        </template>
+        <v-empty-state v-else icon="mdi-comment-outline" title="暂无回复" text="可以发布第一条回复。"/>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, defineComponent, h, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {deletePost, getPost, type PostItem} from '@/api/post'
+import {
+  createPostComment,
+  deletePost,
+  getPost,
+  listPostComments,
+  type PostCommentItem,
+  type PostItem
+} from '@/api/post'
+import {useUserStore} from '@/stores/user'
+import {renderMarkdown} from '@/utils/markdown'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const post = ref<PostItem | null>(null)
+const comments = ref<PostCommentItem[]>([])
 const loading = ref(false)
+const commentsLoading = ref(false)
 const error = ref('')
+const commentError = ref('')
+const replyContent = ref('')
+const replying = ref(false)
+const replyTarget = ref<CommentNode | null>(null)
+
+interface CommentNode extends PostCommentItem {
+  children: CommentNode[]
+}
+
+const canEdit = computed(() => Boolean(
+    post.value && (post.value.can_edit || userStore.userId === post.value.author_id)
+))
+
+const commentTree = computed<CommentNode[]>(() => {
+  const nodes = new Map<string, CommentNode>()
+  const roots: CommentNode[] = []
+  comments.value.forEach(comment => {
+    nodes.set(comment.id, {...comment, children: []})
+  })
+  nodes.forEach(node => {
+    const parent = node.parent_id ? nodes.get(node.parent_id) : null
+    if (parent) {
+      parent.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+  return roots
+})
+
+const NestedComment = defineComponent({
+  name: 'NestedComment',
+  props: {
+    comment: {
+      type: Object as () => CommentNode,
+      required: true
+    },
+    canReply: {
+      type: Boolean,
+      default: false
+    }
+  },
+  emits: ['reply'],
+  setup(props, {emit}) {
+    return () => h('article', {class: 'comment-card nested'}, [
+      h('div', {class: 'comment-meta'}, [
+        h('strong', props.comment.author_name),
+        props.comment.reply_to_author_name ? h('span', `回复 ${props.comment.reply_to_author_name}`) : null,
+        h('span', formatDate(props.comment.created_at)),
+        props.canReply ? h('button', {
+          class: 'reply-link',
+          type: 'button',
+          onClick: () => emit('reply', props.comment)
+        }, '回复') : null
+      ]),
+      h('div', {
+        class: 'comment-content markdown-body',
+        innerHTML: renderMarkdown(props.comment.content)
+      }),
+      props.comment.children.length > 0
+          ? h('div', {class: 'nested-comments'}, props.comment.children.map(child =>
+              h(NestedComment, {
+                key: child.id,
+                comment: child,
+                canReply: props.canReply,
+                onReply: (comment: CommentNode) => emit('reply', comment)
+              })
+          ))
+          : null
+    ])
+  }
+})
 
 async function loadPost() {
   loading.value = true
@@ -50,17 +200,70 @@ async function loadPost() {
   }
 }
 
+async function loadComments() {
+  commentsLoading.value = true
+  commentError.value = ''
+  try {
+    const response = await listPostComments(String(route.params.id))
+    comments.value = response.data
+  } catch (err: any) {
+    commentError.value = err?.response?.data?.detail || err?.message || '回复加载失败'
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
 async function removePost() {
   if (!post.value || !window.confirm('确定删除这篇帖子吗？')) return
   await deletePost(post.value.id)
   router.push('/community/posts')
 }
 
+async function submitReply() {
+  const content = replyContent.value.trim()
+  if (!content) {
+    commentError.value = '回复内容不能为空'
+    return
+  }
+  replying.value = true
+  commentError.value = ''
+  try {
+    const response = await createPostComment(String(route.params.id), {
+      content,
+      parent_id: replyTarget.value?.id || null
+    })
+    comments.value.push(response.data)
+    replyContent.value = ''
+    replyTarget.value = null
+    if (post.value) {
+      post.value.comment_count += 1
+    }
+  } catch (err: any) {
+    commentError.value = err?.response?.data?.detail || err?.message || '回复失败'
+  } finally {
+    replying.value = false
+  }
+}
+
+function startReply(comment: CommentNode) {
+  replyTarget.value = comment
+  replyContent.value = ''
+}
+
+function cancelReply() {
+  replyTarget.value = null
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString()
 }
 
-onMounted(loadPost)
+onMounted(async () => {
+  await loadPost()
+  if (post.value) {
+    await loadComments()
+  }
+})
 </script>
 
 <style scoped>
@@ -111,13 +314,145 @@ onMounted(loadPost)
   gap: 4px;
 }
 
-.content {
+.comments,
+.post-detail {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.comments {
+  padding: 20px;
+}
+
+.comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.comments-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+}
+
+.comments-header span,
+.comment-meta {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.reply-box {
+  margin-bottom: 16px;
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.comment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.comment-card {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.comment-card.nested {
+  background: #ffffff;
+}
+
+.nested-comments {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 2px solid #dbeafe;
+}
+
+.comment-meta {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.reply-link {
+  padding: 0;
+  background: transparent;
+  color: #2563eb;
+  line-height: 1;
+  font-size: 13px;
+}
+
+.comment-meta strong {
+  color: #334155;
+}
+
+.markdown-body {
   margin-top: 24px;
   color: #1f2937;
   font-size: 16px;
   line-height: 1.85;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.comment-content.markdown-body {
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.markdown-body :deep(p) {
+  margin: 0 0 12px;
+}
+
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3) {
+  margin: 20px 0 10px;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.markdown-body :deep(pre) {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  overflow-x: auto;
+}
+
+.markdown-body :deep(code) {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.markdown-body :deep(pre code) {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.markdown-body :deep(blockquote) {
+  margin: 12px 0;
+  padding-left: 12px;
+  border-left: 3px solid #93c5fd;
+  color: #475569;
+}
+
+.markdown-body :deep(a) {
+  color: #2563eb;
 }
 
 @media (max-width: 720px) {

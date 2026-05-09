@@ -32,6 +32,19 @@ export interface PostUpsertPayload {
     content: string
 }
 
+export interface PostCommentItem {
+    id: string
+    post_id: string
+    parent_id?: string | null
+    author_id: string
+    author_name: string
+    reply_to_author_name?: string | null
+    content: string
+    created_at: string
+    updated_at: string
+    can_edit: boolean
+}
+
 export function listPosts(params: { keyword?: string; page?: number; page_size?: number }) {
     return request.get<ApiResponse<PostListData>>('/api/v1/posts', {params} as any)
 }
@@ -50,4 +63,12 @@ export function updatePost(postId: string, payload: PostUpsertPayload) {
 
 export function deletePost(postId: string) {
     return request.delete<ApiResponse<void>>(`/api/v1/posts/${postId}`)
+}
+
+export function listPostComments(postId: string) {
+    return request.get<ApiResponse<PostCommentItem[]>>(`/api/v1/posts/${postId}/comments`)
+}
+
+export function createPostComment(postId: string, payload: { content: string; parent_id?: string | null }) {
+    return request.post<ApiResponse<PostCommentItem>>(`/api/v1/posts/${postId}/comments`, payload)
 }
