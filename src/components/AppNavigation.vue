@@ -132,11 +132,12 @@ const keyword = ref('')
 
 const openGroups = reactive<Record<string, boolean>>({
   tools: true,
+  community: false,
   games: false
 })
 
 const sections = computed<MenuSection[]>(() => {
-  const groupRoutes = router.options.routes.filter(item => item.path === '/tools' || item.path === '/games')
+  const groupRoutes = router.options.routes.filter(item => item.path === '/tools' || item.path === '/community' || item.path === '/games')
   return groupRoutes.map(routeRecord => {
     const key = routeRecord.path.replace('/', '')
     const children = routeRecord.children || []
@@ -195,6 +196,7 @@ watch(
     () => route.path,
     (path) => {
       if (path.startsWith('/tools')) openGroups.tools = true
+      if (path.startsWith('/community')) openGroups.community = true
       if (path.startsWith('/games')) openGroups.games = true
       if (isMobile.value) drawer.value = false
     },

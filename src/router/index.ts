@@ -274,6 +274,58 @@ export const routes: RouteRecordRaw[] = [
         ]
     },
     {
+        path: '/community',
+        name: 'Community',
+        meta: {
+            title: '社区',
+            icon: 'mdi-forum-outline'
+        },
+        children: [
+            {
+                path: '/community/posts',
+                name: 'PostList',
+                component: () => import('@/views/community/PostList.vue'),
+                meta: {
+                    title: '帖子',
+                    icon: 'mdi-post-outline',
+                    description: 'Tool Hub 社区帖子列表，发布和查看工具使用经验。'
+                }
+            },
+            {
+                path: '/community/posts/new',
+                name: 'PostCreate',
+                component: () => import('@/views/community/PostEditor.vue'),
+                meta: {
+                    title: '发帖',
+                    icon: 'mdi-pencil-plus',
+                    requiresAuth: true,
+                    hiddenInNav: true
+                }
+            },
+            {
+                path: '/community/posts/:id',
+                name: 'PostDetail',
+                component: () => import('@/views/community/PostDetail.vue'),
+                meta: {
+                    title: '帖子详情',
+                    icon: 'mdi-post-outline',
+                    hiddenInNav: true
+                }
+            },
+            {
+                path: '/community/posts/:id/edit',
+                name: 'PostEdit',
+                component: () => import('@/views/community/PostEditor.vue'),
+                meta: {
+                    title: '编辑帖子',
+                    icon: 'mdi-pencil',
+                    requiresAuth: true,
+                    hiddenInNav: true
+                }
+            }
+        ]
+    },
+    {
         path: '/games',
         name: 'Games',
         meta: {
