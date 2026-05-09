@@ -1,5 +1,5 @@
 <template>
-  <div class="global-chat">
+  <div ref="chatRootRef" class="global-chat">
     <transition name="chat-panel">
       <section v-if="chat.isOpen" class="chat-window" aria-label="全局聊天窗口">
         <header class="chat-header">
@@ -81,13 +81,14 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useChatStore} from '@/stores/chat'
 import {useUserStore} from '@/stores/user'
 
 const chat = useChatStore()
 const userStore = useUserStore()
 const draft = ref('')
+const chatRootRef = ref<HTMLElement | null>(null)
 const messageListRef = ref<HTMLElement | null>(null)
 
 const canSend = computed(() => Boolean(userStore.token && draft.value.trim() && draft.value.trim().length <= 500))
@@ -119,6 +120,14 @@ function submit() {
   }
 }
 
+function handleOutsidePointerDown(event: PointerEvent) {
+  if (!chat.isOpen) return
+  const root = chatRootRef.value
+  if (root && !root.contains(event.target as Node)) {
+    chat.setOpen(false)
+  }
+}
+
 watch(() => chat.messages.length, scrollToBottom)
 watch(() => chat.isOpen, (open) => {
   if (open) scrollToBottom()
@@ -133,9 +142,14 @@ watch(() => userStore.token, (token) => {
 })
 
 onMounted(() => {
+  document.addEventListener('pointerdown', handleOutsidePointerDown, true)
   if (userStore.token) {
     chat.connect()
   }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleOutsidePointerDown, true)
 })
 </script>
 
@@ -342,4 +356,3 @@ onMounted(() => {
   }
 }
 </style>
-
