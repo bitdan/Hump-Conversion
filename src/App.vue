@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import AppNavigation from '@/components/AppNavigation.vue'
+import GlobalChatWidget from '@/components/global/GlobalChatWidget.vue'
 
 const NavigationComponent = AppNavigation
 </script>
