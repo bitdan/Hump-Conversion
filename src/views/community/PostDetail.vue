@@ -16,6 +16,10 @@
 
     <article v-else-if="post" class="post-detail">
       <h1>{{ post.title }}</h1>
+      <div class="post-taxonomy">
+        <span class="post-category">{{ post.category }}</span>
+        <span v-for="tag in post.tags" :key="tag" class="post-tag">#{{ tag }}</span>
+      </div>
       <div class="meta">
         <span>{{ post.author_name }}</span>
         <span>{{ formatDate(post.created_at) }}</span>
@@ -306,6 +310,33 @@ onMounted(async () => {
   margin-top: 12px;
   color: #64748b;
   font-size: 13px;
+}
+
+.post-taxonomy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.post-category,
+.post-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.post-category {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.post-tag {
+  background: #f3f4f6;
+  color: #4b5563;
 }
 
 .meta span {

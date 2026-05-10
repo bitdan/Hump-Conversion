@@ -9,6 +9,8 @@ export interface ApiResponse<T> {
 export interface PostItem {
     id: string
     title: string
+    category: string
+    tags: string[]
     content?: string
     author_id: string
     author_name: string
@@ -29,6 +31,8 @@ export interface PostListData {
 
 export interface PostUpsertPayload {
     title: string
+    category: string
+    tags: string[]
     content: string
 }
 
@@ -45,7 +49,7 @@ export interface PostCommentItem {
     can_edit: boolean
 }
 
-export function listPosts(params: { keyword?: string; page?: number; page_size?: number }) {
+export function listPosts(params: { keyword?: string; category?: string; tag?: string; page?: number; page_size?: number }) {
     return request.get<ApiResponse<PostListData>>('/api/v1/posts', {params} as any)
 }
 
