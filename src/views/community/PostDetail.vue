@@ -39,7 +39,12 @@
       </v-alert>
 
       <div v-if="userStore.token" class="reply-box">
+        <div class="reply-toolbar">
+          <span>{{ replyTarget ? `回复 ${replyTarget.author_name}` : '写下你的回复' }}</span>
+          <EmojiStickerPicker @insert="appendReplyContent"/>
+        </div>
         <v-textarea
+            ref="replyInputRef"
             v-model="replyContent"
             variant="outlined"
             rows="4"
@@ -109,6 +114,8 @@ import {
 } from '@/api/post'
 import {useUserStore} from '@/stores/user'
 import {renderMarkdown} from '@/utils/markdown'
+import EmojiStickerPicker from '@/components/common/EmojiStickerPicker.vue'
+import {insertTextAtCursor} from '@/utils/textInsertion'
 
 const route = useRoute()
 const router = useRouter()
@@ -120,6 +127,7 @@ const commentsLoading = ref(false)
 const error = ref('')
 const commentError = ref('')
 const replyContent = ref('')
+const replyInputRef = ref<any>(null)
 const replying = ref(false)
 const replyTarget = ref<CommentNode | null>(null)
 
@@ -258,6 +266,10 @@ function cancelReply() {
   replyTarget.value = null
 }
 
+async function appendReplyContent(value: string) {
+  await insertTextAtCursor(replyContent, replyInputRef, value)
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString()
 }
@@ -379,6 +391,16 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+.reply-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .reply-actions {
   display: flex;
   justify-content: flex-end;
@@ -484,6 +506,14 @@ onMounted(async () => {
 
 .markdown-body :deep(a) {
   color: #2563eb;
+}
+
+.markdown-body :deep(.inline-sticker) {
+  width: 44px;
+  height: 44px;
+  vertical-align: middle;
+  margin: 0 4px;
+  border-radius: 10px;
 }
 
 @media (max-width: 720px) {

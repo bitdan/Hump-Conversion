@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import {replaceStickerTokens} from '@/utils/stickers'
 
 function escapeHtml(value: string) {
     return value
@@ -10,11 +11,14 @@ function escapeHtml(value: string) {
 }
 
 function renderInline(value: string) {
-    return escapeHtml(value)
+    const rendered = escapeHtml(value)
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
         .replace(/\[([^\]]+)]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    return replaceStickerTokens(rendered, (sticker) =>
+        `<img class="inline-sticker" src="${sticker.url}" alt="${sticker.name}" title="${sticker.name}" data-sticker="${sticker.id}">`
+    )
 }
 
 export function renderMarkdown(markdown: string) {
@@ -88,5 +92,18 @@ export function renderMarkdown(markdown: string) {
         html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`)
     }
 
-    return DOMPurify.sanitize(html.join('\n'))
+    return DOMPurify.sanitize(html.join('\n'), {
+        ADD_TAGS: ['img'],
+        ADD_ATTR: ['src', 'alt', 'title', 'class', 'data-sticker']
+    })
+}
+
+export function renderRichText(text: string) {
+    const withBreaks = renderInline(String(text || ''))
+        .replace(/\r\n/g, '\n')
+        .replace(/\n/g, '<br>')
+    return DOMPurify.sanitize(withBreaks, {
+        ADD_TAGS: ['img', 'br'],
+        ADD_ATTR: ['src', 'alt', 'title', 'class', 'data-sticker']
+    })
 }

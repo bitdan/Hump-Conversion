@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#fecaca"/>
+  <ellipse cx="64" cy="66" rx="24" ry="28" fill="#b91c1c"/>
+  <circle cx="54" cy="58" r="4" fill="#fff"/>
+  <circle cx="74" cy="58" r="4" fill="#fff"/>
+  <path d="M40 44L28 34M88 44l12-10M38 62H22m68 0h16M42 84L30 94m56-10 12 10" fill="none" stroke="#7f1d1d" stroke-width="6" stroke-linecap="round"/>
+  <path d="M58 42l6-10 6 10" fill="none" stroke="#7f1d1d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="64" y="114" text-anchor="middle" font-size="16" font-family="Arial, sans-serif" font-weight="700" fill="#991b1b">BUG ALERT</text>
+</svg>

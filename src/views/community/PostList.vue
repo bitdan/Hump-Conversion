@@ -205,6 +205,7 @@ import {computed, onMounted, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {listPosts, type PostItem} from '@/api/post'
 import {POST_CATEGORIES, POST_CATEGORY_COLORS} from '@/views/community/postMeta'
+import {replaceStickerTokens} from '@/utils/stickers'
 
 type TabValue = 'latest' | 'top' | 'hot'
 
@@ -299,7 +300,7 @@ function openPost(postId: string) {
 }
 
 function summarize(content?: string) {
-  const normalized = String(content || '')
+  const normalized = replaceStickerTokens(String(content || ''), (sticker) => `[${sticker.name}]`)
       .replace(/\s+/g, ' ')
       .trim()
   if (!normalized) return '这篇帖子还没有摘要，点进去查看完整内容。'

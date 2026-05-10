@@ -10,7 +10,13 @@ export default defineConfig(({command, mode}) => {
 
     return {
         plugins: [
-            vue(),
+            vue({
+                template: {
+                    compilerOptions: {
+                        isCustomElement: (tag) => tag === 'emoji-picker'
+                    }
+                }
+            }),
             vuetify({autoImport: true})
         ],
         resolve: {

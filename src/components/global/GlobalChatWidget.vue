@@ -35,7 +35,7 @@
                   <span class="username">{{ message.username || '系统' }}</span>
                   <span class="time">{{ formatTime(message.created_at) }}</span>
                 </div>
-                <p class="message-content">{{ message.content }}</p>
+                <div class="message-content" v-html="renderRichText(message.content)"></div>
               </div>
             </article>
           </template>
@@ -44,7 +44,9 @@
         <footer class="chat-footer">
           <div v-if="chat.error" class="error-text">{{ chat.error }}</div>
           <div class="input-row">
+            <EmojiStickerPicker :attach-target="chatRootRef" @insert="appendDraft"/>
             <v-text-field
+                ref="draftInputRef"
                 v-model="draft"
                 variant="outlined"
                 density="compact"
@@ -84,10 +86,14 @@
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useChatStore} from '@/stores/chat'
 import {useUserStore} from '@/stores/user'
+import {renderRichText} from '@/utils/markdown'
+import EmojiStickerPicker from '@/components/common/EmojiStickerPicker.vue'
+import {insertTextAtCursor} from '@/utils/textInsertion'
 
 const chat = useChatStore()
 const userStore = useUserStore()
 const draft = ref('')
+const draftInputRef = ref<any>(null)
 const chatRootRef = ref<HTMLElement | null>(null)
 const messageListRef = ref<HTMLElement | null>(null)
 
@@ -120,9 +126,17 @@ function submit() {
   }
 }
 
+async function appendDraft(value: string) {
+  await insertTextAtCursor(draft, draftInputRef, value)
+}
+
 function handleOutsidePointerDown(event: PointerEvent) {
   if (!chat.isOpen) return
   const root = chatRootRef.value
+  const target = event.target as HTMLElement | null
+  if (target?.closest('.v-overlay-container')) {
+    return
+  }
   if (root && !root.contains(event.target as Node)) {
     chat.setOpen(false)
   }
@@ -305,9 +319,20 @@ onBeforeUnmount(() => {
   color: #111827;
   line-height: 1.45;
   font-size: 14px;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
   border: 1px solid #e2e8f0;
+}
+
+.message-content :deep(br) {
+  content: '';
+}
+
+.message-content :deep(.inline-sticker) {
+  width: 32px;
+  height: 32px;
+  vertical-align: middle;
+  margin: 0 2px;
+  border-radius: 8px;
 }
 
 .message-row.mine .message-content {

@@ -42,16 +42,23 @@
         />
       </div>
       <div class="editor-grid">
-        <v-textarea
-            v-model="content"
-            label="正文 Markdown"
-            variant="outlined"
-            rows="14"
-            counter="20000"
-            maxlength="20000"
-            auto-grow
-            :rules="[rules.required]"
-        />
+        <div class="editor-input-column">
+          <div class="editor-input-toolbar">
+            <span>正文 Markdown</span>
+            <EmojiStickerPicker @insert="appendContent"/>
+          </div>
+          <v-textarea
+              ref="contentInputRef"
+              v-model="content"
+              label="正文 Markdown"
+              variant="outlined"
+              rows="14"
+              counter="20000"
+              maxlength="20000"
+              auto-grow
+              :rules="[rules.required]"
+          />
+        </div>
         <section class="preview-panel">
           <div class="preview-title">预览</div>
           <div v-if="content.trim()" class="markdown-body" v-html="renderMarkdown(content)"></div>
@@ -74,6 +81,8 @@ import {useRoute, useRouter} from 'vue-router'
 import {createPost, getPost, updatePost} from '@/api/post'
 import {renderMarkdown} from '@/utils/markdown'
 import {POST_CATEGORIES} from '@/views/community/postMeta'
+import EmojiStickerPicker from '@/components/common/EmojiStickerPicker.vue'
+import {insertTextAtCursor} from '@/utils/textInsertion'
 
 const route = useRoute()
 const router = useRouter()
@@ -81,6 +90,7 @@ const title = ref('')
 const category = ref(POST_CATEGORIES[0])
 const tags = ref<string[]>([])
 const content = ref('')
+const contentInputRef = ref<any>(null)
 const saving = ref(false)
 const error = ref('')
 const isEdit = computed(() => !!route.params.id)
@@ -148,6 +158,10 @@ function normalizeTags(values: string[]) {
     normalized.push(tag)
   }
   return normalized
+}
+
+async function appendContent(value: string) {
+  await insertTextAtCursor(content, contentInputRef, value)
 }
 
 onMounted(async () => {
@@ -251,6 +265,14 @@ onMounted(async () => {
   background: #e2e8f0;
 }
 
+.markdown-body :deep(.inline-sticker) {
+  width: 44px;
+  height: 44px;
+  vertical-align: middle;
+  margin: 0 4px;
+  border-radius: 10px;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -273,5 +295,19 @@ onMounted(async () => {
   .meta-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.editor-input-column {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-input-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
 }
 </style>
