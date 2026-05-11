@@ -233,15 +233,11 @@ async function handleLogout() {
 }
 
 .side-nav :deep(.v-navigation-drawer__content) {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nav-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
   padding-bottom: 8px;
 }
 
