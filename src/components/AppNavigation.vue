@@ -34,7 +34,7 @@
 
     <v-divider class="my-2"/>
 
-    <v-list density="compact" nav>
+    <v-list density="compact" nav class="nav-list">
       <v-list-group
           v-for="section in filteredSections"
           :key="section.key"
@@ -63,14 +63,14 @@
       </v-list-group>
     </v-list>
 
-    <template #append v-if="!isMobile">
+    <template #append>
       <v-divider/>
       <div class="user-footer">
         <v-menu location="top start">
           <template #activator="{ props }">
             <v-btn v-bind="props" variant="text" block class="justify-start">
-              <v-icon class="mr-2">mdi-account-circle</v-icon>
-              <span v-if="!rail">{{ userStore.token ? (userStore.username || '用户') : '未登录' }}</span>
+              <v-icon class="mr-2">{{ userStore.token ? 'mdi-account-circle' : 'mdi-login' }}</v-icon>
+              <span v-if="!rail || isMobile">{{ userStore.token ? (userStore.username || '用户') : '登录' }}</span>
             </v-btn>
           </template>
           <v-list density="compact">
@@ -78,13 +78,13 @@
                 v-if="userStore.token"
                 prepend-icon="mdi-account-cog-outline"
                 title="个人中心"
-                @click="router.push('/tools/profile-center')"
+                @click="navigateTo('/tools/profile-center')"
             />
             <v-list-item
                 v-if="!userStore.token"
                 prepend-icon="mdi-login"
                 title="登录"
-                @click="router.push('/auth/login')"
+                @click="navigateTo('/auth/login')"
             />
             <v-list-item
                 v-if="userStore.token"
@@ -211,9 +211,15 @@ function handleMenuClick() {
   if (isMobile.value) drawer.value = false
 }
 
+function navigateTo(path: string) {
+  router.push(path)
+  if (isMobile.value) drawer.value = false
+}
+
 async function handleLogout() {
   try {
     await logout()
+    if (isMobile.value) drawer.value = false
   } catch (error) {
     console.error('登出失败:', error)
   }
@@ -224,6 +230,19 @@ async function handleLogout() {
 .side-nav {
   border-right: 1px solid rgba(15, 23, 42, 0.08);
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.side-nav :deep(.v-navigation-drawer__content) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nav-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 .menu-item {
@@ -237,6 +256,7 @@ async function handleLogout() {
 }
 
 .user-footer {
-  padding: 8px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(248, 250, 252, 0.96);
 }
 </style>
