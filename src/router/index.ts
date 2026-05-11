@@ -469,6 +469,15 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/games/angry-birds',
+                name: 'AngryBirds',
+                component: () => import('@/views/games/AngryBirds.vue'),
+                meta: {
+                    title: '愤怒的小鸟',
+                    icon: 'mdi-bird'
+                }
+            },
+            {
                 path: '/games/bubble-shooter',
                 name: 'BubbleShooter',
                 component: () => import('@/views/games/BubbleShooter.vue'),
