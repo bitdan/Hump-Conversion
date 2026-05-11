@@ -78,6 +78,21 @@ export interface ChangePasswordPayload {
     confirmPassword: string
 }
 
+export interface LoginStatsDay {
+    date: string
+    logged: boolean
+}
+
+export interface LoginStats {
+    today: string
+    logged_today: boolean
+    current_year_active_days: number
+    current_month_active_days: number
+    recent_30_days_active_days: number
+    consecutive_days: number
+    recent_days: LoginStatsDay[]
+}
+
 function normalizeCaptchaData(data: RawCaptchaData): CaptchaData {
     return {
         captchaEnabled: data.captchaEnabled ?? data.captcha_enabled ?? true,
@@ -134,6 +149,10 @@ export function updateProfile(data: UpdateProfilePayload) {
 
 export function changePassword(data: ChangePasswordPayload) {
     return request.put<ApiResponse<void>>('/api/v1/profile/password', data)
+}
+
+export function getLoginStats() {
+    return request.get<ApiResponse<LoginStats>>('/api/v1/profile/login-stats')
 }
 
 // 用户登出

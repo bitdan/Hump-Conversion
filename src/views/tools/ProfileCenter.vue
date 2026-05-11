@@ -1,67 +1,94 @@
 <template>
   <div class="profile-page">
-    <section class="workspace-hero">
-      <div>
-        <p class="profile-kicker">Account Workspace</p>
-        <h1 class="profile-title">个人中心</h1>
-        <p class="profile-copy">围绕账号资料、安全与后续扩展能力构建的账户工作台。当前已支持资料维护与密码修改，后续可以继续扩展
-          2FA 状态、设备记录和操作审计。</p>
+    <section class="profile-header">
+      <div class="identity">
+        <div class="avatar-shell">
+          <img v-if="profileForm.avatar" :src="profileForm.avatar" alt="avatar" class="avatar-image"/>
+          <span v-else>{{ avatarFallback }}</span>
+        </div>
+        <div>
+          <p class="eyebrow">Account</p>
+          <h1>{{ userStore.username || '用户' }}</h1>
+          <p class="muted">{{ userStore.userId || '-' }}</p>
+        </div>
       </div>
-      <div class="hero-pills">
-        <span class="hero-pill">资料维护</span>
-        <span class="hero-pill">密码安全</span>
-        <span class="hero-pill">可扩展模块</span>
+      <div class="header-actions">
+        <v-btn prepend-icon="mdi-shield-key-outline" variant="tonal" to="/tools/two-factor-manager">
+          2FA 管理
+        </v-btn>
+        <v-btn prepend-icon="mdi-refresh" variant="text" :loading="loadingProfile" @click="loadProfile">
+          刷新
+        </v-btn>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span>连续登录</span>
+        <strong>{{ loginStats?.consecutive_days ?? 0 }}</strong>
+        <small>天</small>
+      </div>
+      <div class="stat-card">
+        <span>近 30 天</span>
+        <strong>{{ loginStats?.recent_30_days_active_days ?? 0 }}</strong>
+        <small>天活跃</small>
+      </div>
+      <div class="stat-card">
+        <span>本月登录</span>
+        <strong>{{ loginStats?.current_month_active_days ?? 0 }}</strong>
+        <small>天</small>
+      </div>
+      <div class="stat-card">
+        <span>今年登录</span>
+        <strong>{{ loginStats?.current_year_active_days ?? 0 }}</strong>
+        <small>天</small>
       </div>
     </section>
 
     <section class="workspace-grid">
-      <aside class="overview-shell">
-        <v-card rounded="xl" class="overview-card">
-          <div class="overview-top">
-            <div class="avatar-shell">
-              <img v-if="profileForm.avatar" :src="profileForm.avatar" alt="avatar" class="avatar-image"/>
-              <span v-else>{{ avatarFallback }}</span>
+      <aside class="side-stack">
+        <v-card rounded="lg" class="panel-card">
+          <v-card-title>账号概览</v-card-title>
+          <v-card-text>
+            <div class="overview-list">
+              <div class="overview-item">
+                <span>角色</span>
+                <strong>{{ userStore.roles.join(', ') || 'user' }}</strong>
+              </div>
+              <div class="overview-item">
+                <span>邮箱</span>
+                <strong>{{ profileForm.email || '未填写' }}</strong>
+              </div>
+              <div class="overview-item">
+                <span>头像</span>
+                <strong>{{ profileForm.avatar ? '已配置' : '未配置' }}</strong>
+              </div>
+              <div class="overview-item">
+                <span>今日登录</span>
+                <strong>{{ loginStats?.logged_today ? '已记录' : '未记录' }}</strong>
+              </div>
             </div>
-            <div>
-              <p class="badge-name">{{ userStore.username || '用户' }}</p>
-              <p class="badge-meta">{{ userStore.roles.join(', ') || 'user' }}</p>
-            </div>
-          </div>
-
-          <div class="overview-list">
-            <div class="overview-item">
-              <span>用户 ID</span>
-              <strong>{{ userStore.userId || '-' }}</strong>
-            </div>
-            <div class="overview-item">
-              <span>邮箱</span>
-              <strong>{{ profileForm.email || '未填写' }}</strong>
-            </div>
-            <div class="overview-item">
-              <span>头像</span>
-              <strong>{{ profileForm.avatar ? '已配置' : '未配置' }}</strong>
-            </div>
-            <div class="overview-item">
-              <span>安全模块</span>
-              <strong>密码 / 2FA</strong>
-            </div>
-          </div>
+          </v-card-text>
         </v-card>
 
-        <v-card rounded="xl" class="ext-card">
-          <v-card-title>后续扩展</v-card-title>
+        <v-card rounded="lg" class="panel-card">
+          <v-card-title>近 30 天登录</v-card-title>
           <v-card-text>
-            <div class="ext-list">
-              <div class="ext-item">2FA 状态总览与快捷入口</div>
-              <div class="ext-item">登录设备 / 最近活跃记录</div>
-              <div class="ext-item">敏感操作审计时间线</div>
+            <div class="login-calendar" :aria-busy="loadingStats">
+              <span
+                  v-for="day in loginStats?.recent_days || []"
+                  :key="day.date"
+                  class="login-day"
+                  :class="{ active: day.logged }"
+                  :title="`${day.date} ${day.logged ? '已登录' : '未登录'}`"
+              />
             </div>
           </v-card-text>
         </v-card>
       </aside>
 
       <div class="module-stack">
-        <v-card rounded="xl" class="panel-card">
+        <v-card rounded="lg" class="panel-card">
           <v-card-title>资料设置</v-card-title>
           <v-card-text>
             <div class="form-grid">
@@ -73,11 +100,13 @@
           </v-card-text>
           <v-card-actions class="px-6 pb-6">
             <v-spacer/>
-            <v-btn color="primary" :loading="savingProfile" @click="submitProfile">保存个人信息</v-btn>
+            <v-btn color="primary" prepend-icon="mdi-content-save" :loading="savingProfile" @click="submitProfile">
+              保存资料
+            </v-btn>
           </v-card-actions>
         </v-card>
 
-        <v-card rounded="xl" class="panel-card">
+        <v-card rounded="lg" class="panel-card">
           <v-card-title>密码设置</v-card-title>
           <v-card-text>
             <div class="form-grid password-grid">
@@ -86,32 +115,34 @@
                   label="原密码"
                   :type="showOldPassword ? 'text' : 'password'"
                   :append-inner-icon="showOldPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="showOldPassword = !showOldPassword"
                   variant="outlined"
+                  @click:append-inner="showOldPassword = !showOldPassword"
               />
               <v-text-field
                   v-model="passwordForm.newPassword"
                   label="新密码"
                   :type="showNewPassword ? 'text' : 'password'"
                   :append-inner-icon="showNewPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="showNewPassword = !showNewPassword"
                   variant="outlined"
+                  @click:append-inner="showNewPassword = !showNewPassword"
               />
               <v-text-field
                   v-model="passwordForm.confirmPassword"
                   label="确认新密码"
                   :type="showConfirmPassword ? 'text' : 'password'"
                   :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="showConfirmPassword = !showConfirmPassword"
                   variant="outlined"
+                  @click:append-inner="showConfirmPassword = !showConfirmPassword"
               />
             </div>
-            <p class="security-tip">
-              修改密码后当前登录态仍会保留，新密码立即生效。后续如果加入设备管理或异地登录策略，这里可以继续承接。</p>
+            <p class="security-tip">密码修改后立即生效。当前会保留登录态，登出后需使用新密码登录。</p>
           </v-card-text>
           <v-card-actions class="px-6 pb-6">
             <v-spacer/>
-            <v-btn color="primary" variant="tonal" :loading="savingPassword" @click="submitPassword">修改密码</v-btn>
+            <v-btn color="primary" variant="tonal" prepend-icon="mdi-lock-reset" :loading="savingPassword"
+                   @click="submitPassword">
+              修改密码
+            </v-btn>
           </v-card-actions>
         </v-card>
       </div>
@@ -121,7 +152,7 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
-import {changePassword, getUserInfo, updateProfile} from '@/api/auth'
+import {changePassword, getLoginStats, getUserInfo, type LoginStats, updateProfile} from '@/api/auth'
 import {useAuthCheck} from '@/composables/useAuthCheck'
 import {useMessage} from '@/composables/useMessage'
 import {useUserStore} from '@/stores/user'
@@ -130,12 +161,15 @@ const userStore = useUserStore()
 const {checkAuth} = useAuthCheck()
 const {showError, showSuccess, showWarning} = useMessage()
 
+const loadingProfile = ref(false)
+const loadingStats = ref(false)
 const savingProfile = ref(false)
 const savingPassword = ref(false)
 
 const showOldPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
+const loginStats = ref<LoginStats | null>(null)
 
 const profileForm = ref({
   email: '',
@@ -152,6 +186,7 @@ const avatarFallback = computed(() => (userStore.username || 'U').slice(0, 1).to
 
 async function loadProfile() {
   if (!checkAuth()) return
+  loadingProfile.value = true
   try {
     const {data} = await getUserInfo()
     userStore.setUserInfo(data)
@@ -159,8 +194,23 @@ async function loadProfile() {
       email: data.user.email || '',
       avatar: data.user.avatar || ''
     }
+    await loadLoginStats()
   } catch (error: any) {
     showError(error.response?.data?.detail || error.message || '加载个人信息失败')
+  } finally {
+    loadingProfile.value = false
+  }
+}
+
+async function loadLoginStats() {
+  loadingStats.value = true
+  try {
+    const {data} = await getLoginStats()
+    loginStats.value = data
+  } catch (error: any) {
+    showError(error.response?.data?.detail || error.message || '加载登录统计失败')
+  } finally {
+    loadingStats.value = false
   }
 }
 
@@ -210,67 +260,37 @@ onMounted(() => {
 .profile-page {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
 }
 
-.workspace-hero {
+.profile-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 30px;
-  border-radius: 30px;
-  background: radial-gradient(circle at 85% 15%, rgba(251, 191, 36, 0.24), transparent 18%),
-  radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.18), transparent 28%),
-  linear-gradient(135deg, #152238 0%, #0f766e 54%, #164e63 100%);
-  color: #f8fafc;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
-.profile-kicker {
-  margin-bottom: 8px;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.profile-title {
-  font-size: 2.3rem;
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-
-.profile-copy {
-  max-width: 760px;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.hero-pills {
+.identity,
+.header-actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.hero-pill {
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.92);
-  white-space: nowrap;
+  align-items: center;
+  gap: 14px;
 }
 
 .avatar-shell {
   width: 72px;
   height: 72px;
-  border-radius: 999px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.18);
-  font-size: 1.5rem;
+  background: #2563eb;
+  color: #fff;
+  font-size: 26px;
   font-weight: 700;
 }
 
@@ -280,63 +300,86 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.badge-name {
-  font-size: 1.15rem;
-  font-weight: 700;
+.eyebrow,
+.muted,
+.calendar-tip,
+.security-tip {
+  color: #64748b;
 }
 
-.badge-meta {
-  margin-top: 6px;
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.muted {
+  margin: 4px 0 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.stat-card span,
+.stat-card small {
+  display: block;
   color: #64748b;
+}
+
+.stat-card strong {
+  display: block;
+  margin: 8px 0 2px;
+  color: #0f172a;
+  font-size: 30px;
+  line-height: 1;
 }
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 330px minmax(0, 1fr);
   gap: 18px;
 }
 
-.overview-shell,
+.side-stack,
 .module-stack {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.panel-card,
-.overview-card,
-.ext-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+.panel-card {
+  border: 1px solid #dbe4ef;
+  box-shadow: none;
 }
 
-.overview-card {
-  padding: 22px;
+.overview-list {
+  display: grid;
+  gap: 10px;
 }
 
-.overview-top {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.overview-list,
-.ext-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.overview-item,
-.ext-item {
+.overview-item {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 8px;
   background: #f8fafc;
 }
 
@@ -344,9 +387,32 @@ onMounted(() => {
   color: #64748b;
 }
 
-.overview-item strong,
-.ext-item {
+.overview-item strong {
   color: #0f172a;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.login-calendar {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+}
+
+.login-day {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #e2e8f0;
+}
+
+.login-day.active {
+  background: #2563eb;
+}
+
+.calendar-tip,
+.security-tip {
+  margin-top: 12px;
+  line-height: 1.7;
 }
 
 .form-grid {
@@ -359,22 +425,28 @@ onMounted(() => {
   grid-template-columns: 1fr;
 }
 
-.security-tip {
-  margin-top: 12px;
-  color: #64748b;
-  line-height: 1.7;
-}
-
 @media (max-width: 960px) {
-  .workspace-hero,
+  .profile-header,
   .workspace-grid,
   .form-grid {
-    display: grid;
     grid-template-columns: 1fr;
   }
 
-  .hero-pills {
-    justify-content: flex-start;
+  .profile-header,
+  .identity,
+  .header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
