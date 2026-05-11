@@ -2,15 +2,13 @@
   <v-app>
     <component :is="NavigationComponent"/>
 
-    <v-main class="bg-gray-100">
-      <v-container>
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border border-gray-200">
-          <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component" />
-            </transition>
-          </router-view>
-        </div>
+    <v-main class="app-main">
+      <v-container fluid class="app-content">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component"/>
+          </transition>
+        </router-view>
       </v-container>
     </v-main>
 
@@ -36,10 +34,20 @@ const NavigationComponent = AppNavigation
   opacity: 0;
 }
 
-.v-container {
+.app-main {
+  background: #f8fafc;
+}
+
+.app-content {
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
+}
+
+@media (max-width: 960px) {
+  .app-content {
+    padding: 0.75rem;
+  }
 }
 
 </style>
