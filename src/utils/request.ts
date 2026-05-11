@@ -13,12 +13,21 @@ const service: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json;charset=utf-8' }
 })
 
+const publicApiPaths = new Set(['/login', '/register', '/captchaImage'])
+
+function normalizeApiPath(url?: string) {
+    if (!url) return ''
+    const path = url.split('?')[0]
+    return path.startsWith('/api/v1') ? path.slice('/api/v1'.length) || '/' : path
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const userStore = useUserStore()
-      // 登录和注册接口不需要token
-      if (userStore.token && !config.url?.includes('/login') && !config.url?.includes('/register') && !config.url?.includes('/captchaImage')) {
+      const apiPath = normalizeApiPath(config.url)
+      // 登录、注册、验证码接口不需要 token，其它接口正常携带认证头
+      if (userStore.token && !publicApiPaths.has(apiPath)) {
       config.headers = config.headers || {}
       config.headers['Authorization'] = 'Bearer ' + userStore.token
     }
