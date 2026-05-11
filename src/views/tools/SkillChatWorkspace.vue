@@ -2,18 +2,19 @@
   <div class="chat-shell">
     <header class="topbar">
       <div>
-        <p class="topbar-kicker">AI Skill Router</p>
-        <h1 class="topbar-title">Chat Agent Workspace</h1>
+        <h1 class="topbar-title">AI 对话工作台</h1>
+        <p class="topbar-subtitle">粘贴问题、代码或异常堆栈，系统会选择合适的处理流程。</p>
       </div>
       <div class="topbar-actions">
-        <v-btn size="small" variant="text" :disabled="messages.length === 0" @click="messages = []">
-          清空
-        </v-btn>
-        <v-btn size="small" variant="outlined" @click="fillExample('leetcode')">
+        <v-btn size="small" variant="tonal" prepend-icon="mdi-code-braces" @click="fillExample('leetcode')">
           LeetCode 示例
         </v-btn>
-        <v-btn size="small" variant="outlined" @click="fillExample('stacktrace')">
+        <v-btn size="small" variant="tonal" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
           堆栈示例
+        </v-btn>
+        <v-btn size="small" variant="text" prepend-icon="mdi-delete-outline" :disabled="messages.length === 0"
+               @click="messages = []">
+          清空
         </v-btn>
       </div>
     </header>
@@ -22,13 +23,18 @@
       <div class="chat-messages" ref="messageContainer">
         <div v-if="messages.length === 0" class="empty-state">
           <div class="empty-card">
-            <h2>直接开始对话</h2>
-            <p>输入题目、代码、异常堆栈或分析需求，后端会自动选择 skill。</p>
-            <div class="empty-pills">
-              <span>LeetCode 陪练</span>
-              <span>Java 堆栈诊断</span>
-              <span>SQL 生成</span>
-              <span>通用工作流</span>
+            <div class="empty-icon">
+              <v-icon icon="mdi-message-text-outline" size="28"/>
+            </div>
+            <h2>开始一段任务</h2>
+            <p>可以直接输入，也可以先载入一个示例。</p>
+            <div class="quick-actions">
+              <v-btn variant="outlined" prepend-icon="mdi-code-braces" @click="fillExample('leetcode')">
+                算法题
+              </v-btn>
+              <v-btn variant="outlined" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
+                异常堆栈
+              </v-btn>
             </div>
           </div>
         </div>
@@ -41,8 +47,7 @@
         >
           <div class="message-card">
             <div v-if="msg.role === 'assistant' && msg.route" class="message-meta">
-              <span class="route-pill">{{ msg.route }}</span>
-              <span class="route-title">{{ msg.title }}</span>
+              <span class="route-pill">{{ msg.title || msg.route }}</span>
             </div>
             <div class="message-bubble" v-html="msg.content"></div>
           </div>
@@ -57,14 +62,14 @@
             auto-grow
             rows="1"
             max-rows="8"
-            placeholder="输入问题，按 Ctrl+Enter 发送。可以直接粘贴代码块、题目描述或异常堆栈。"
+            placeholder="输入问题，或粘贴代码、题目描述、异常堆栈"
             variant="plain"
             class="composer-input"
             @keydown.ctrl.enter.prevent="submit"
         />
         <div class="composer-actions">
-          <span class="composer-hint">Ctrl+Enter 发送</span>
-          <v-btn color="success" rounded="pill" :loading="loading" @click="submit">
+          <span class="composer-hint">{{ userInput.length }}/{{ 20000 }}</span>
+          <v-btn color="primary" rounded="lg" prepend-icon="mdi-send" :loading="loading" @click="submit">
             发送
           </v-btn>
         </div>
@@ -228,11 +233,10 @@ async function submit(): Promise<void> {
 .chat-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  height: calc(100vh - 40px);
-  padding: 16px 20px 20px;
-  background: radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 22%),
-  radial-gradient(circle at top right, rgba(14, 116, 144, 0.12), transparent 22%),
-  linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  height: calc(100vh - 112px);
+  min-height: 640px;
+  padding: 0;
+  background: #f8fafc;
 }
 
 .topbar {
@@ -240,23 +244,23 @@ async function submit(): Promise<void> {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
-}
-
-.topbar-kicker {
-  margin: 0 0 4px;
-  color: #0f766e;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 11px;
+  padding: 16px 18px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .topbar-title {
   margin: 0;
   color: #0f172a;
-  font-size: 24px;
-  line-height: 1.1;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.topbar-subtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .topbar-actions {
@@ -267,12 +271,17 @@ async function submit(): Promise<void> {
 
 .chat-main {
   min-height: 0;
+  margin-top: 12px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
 }
 
 .chat-messages {
   height: 100%;
   overflow-y: auto;
-  padding: 8px 0 20px;
+  padding: 18px;
 }
 
 .empty-state {
@@ -282,20 +291,29 @@ async function submit(): Promise<void> {
 }
 
 .empty-card {
-  width: min(720px, 100%);
-  padding: 28px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(10px);
-  border-radius: 24px;
-  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
+  width: min(520px, 100%);
+  padding: 28px 24px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 8px;
   text-align: center;
 }
 
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
 .empty-card h2 {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   color: #0f172a;
-  font-size: 28px;
+  font-size: 20px;
 }
 
 .empty-card p {
@@ -305,27 +323,12 @@ async function submit(): Promise<void> {
   line-height: 1.7;
 }
 
-.empty-pills {
+.quick-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.empty-pills span,
-.route-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.empty-pills span {
-  background: #e2e8f0;
-  color: #334155;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .message-row {
@@ -342,58 +345,54 @@ async function submit(): Promise<void> {
 }
 
 .message-card {
-  max-width: min(920px, 82%);
+  max-width: min(920px, 84%);
 }
 
 .message-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
   margin-bottom: 8px;
 }
 
 .route-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: #dbeafe;
   color: #1d4ed8;
-}
-
-.route-title {
-  color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .message-bubble {
   padding: 14px 16px;
-  border-radius: 18px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
   font-size: 14px;
   line-height: 1.7;
   word-break: break-word;
 }
 
 .user .message-bubble {
-  background: linear-gradient(135deg, #0f766e 0%, #0891b2 100%);
+  background: #2563eb;
   color: white;
 }
 
 .assistant .message-bubble {
-  background: rgba(255, 255, 255, 0.94);
+  background: #f8fafc;
   border: 1px solid #e5e7eb;
   color: #0f172a;
 }
 
 .composer-shell {
-  padding-top: 8px;
+  padding-top: 12px;
 }
 
 .composer {
-  width: min(920px, 100%);
-  margin: 0 auto;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  border-radius: 28px;
-  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
+  width: 100%;
+  border: 1px solid #dbe4ef;
+  background: #ffffff;
+  border-radius: 8px;
   padding: 10px 14px 12px;
 }
 
@@ -427,8 +426,8 @@ async function submit(): Promise<void> {
 
 @media (max-width: 960px) {
   .chat-shell {
-    height: calc(100vh - 24px);
-    padding: 12px;
+    height: auto;
+    min-height: calc(100vh - 96px);
   }
 
   .topbar {
