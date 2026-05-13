@@ -104,10 +104,18 @@ function getInitial(username: string | null): string {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleTimeString('zh-CN', {
+  const date = new Date(timestamp * 1000)
+  const dateText = date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).replace(/\//g, '-')
+  const timeText = date.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit'
   })
+
+  return `${dateText} ${timeText}`
 }
 
 function scrollToBottom() {
