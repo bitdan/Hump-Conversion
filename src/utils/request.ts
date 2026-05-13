@@ -2,6 +2,8 @@ import type {AxiosInstance, AxiosResponse, InternalAxiosRequestConfig} from 'axi
 import axios from 'axios'
 import {useUserStore} from '@/stores/user'
 import {useMessage} from '@/composables/useMessage'
+import router from '@/router'
+import {isTokenExpired} from '@/utils/authToken'
 
 const { showError } = useMessage()
 
@@ -21,6 +23,19 @@ function normalizeApiPath(url?: string) {
     return path.startsWith('/api/v1') ? path.slice('/api/v1'.length) || '/' : path
 }
 
+function redirectToLogin() {
+    const userStore = useUserStore()
+    const redirect = router.currentRoute.value.fullPath
+
+    userStore.clearUserInfo()
+    if (router.currentRoute.value.path !== '/auth/login') {
+        router.replace({
+            path: '/auth/login',
+            query: redirect && redirect !== '/' ? {redirect} : undefined
+        }).catch(() => undefined)
+    }
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -28,6 +43,10 @@ service.interceptors.request.use(
       const apiPath = normalizeApiPath(config.url)
       // 登录、注册、验证码接口不需要 token，其它接口正常携带认证头
       if (userStore.token && !publicApiPaths.has(apiPath)) {
+          if (isTokenExpired(userStore.token)) {
+              redirectToLogin()
+              return Promise.reject(new axios.CanceledError('认证已过期，请重新登录'))
+          }
       config.headers = config.headers || {}
       config.headers['Authorization'] = 'Bearer ' + userStore.token
     }
@@ -45,9 +64,7 @@ service.interceptors.response.use(
     const res = response.data
     if (res.code && res.code !== 200) {
       if (res.code === 401) {
-        const userStore = useUserStore()
-        userStore.clearUserInfo()
-        window.location.href = '/auth/login'
+          redirectToLogin()
         return Promise.reject(new Error('认证失败，请重新登录'))
       }
       showError(res.msg || '请求失败')
@@ -58,11 +75,12 @@ service.interceptors.response.use(
   (error) => {
     console.error('请求错误', error)
     if (error.response?.status === 401) {
-      const userStore = useUserStore()
-      userStore.clearUserInfo()
-      window.location.href = '/auth/login'
+        redirectToLogin()
       return Promise.reject(new Error('认证失败，请重新登录'))
     }
+      if (axios.isCancel(error)) {
+          return Promise.reject(error)
+      }
     showError(error.message || '请求失败')
     return Promise.reject(error)
   }

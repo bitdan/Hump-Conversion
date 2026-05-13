@@ -1,12 +1,20 @@
 import { useRouter } from 'vue-router'
+import {useUserStore} from '@/stores/user'
+import {isTokenExpired} from '@/utils/authToken'
 
 export function useAuthCheck() {
   const router = useRouter()
 
   function checkAuth(): boolean {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/auth/login')
+      const userStore = useUserStore()
+      if (!userStore.token || isTokenExpired(userStore.token)) {
+          if (userStore.token) {
+              userStore.clearUserInfo()
+          }
+          router.push({
+              path: '/auth/login',
+              query: {redirect: router.currentRoute.value.fullPath}
+          })
       return false
     }
     return true

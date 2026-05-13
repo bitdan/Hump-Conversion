@@ -1,4 +1,6 @@
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
+import {useUserStore} from '@/stores/user'
+import {isTokenExpired} from '@/utils/authToken'
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -505,7 +507,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-    if (to.meta?.requiresAuth && !localStorage.getItem('token')) {
+    if (to.meta?.requiresAuth) {
+        const userStore = useUserStore()
+        if (userStore.token && !isTokenExpired(userStore.token)) return true
+
+        if (userStore.token) {
+            userStore.clearUserInfo()
+        }
         return {
             path: '/auth/login',
             query: {redirect: to.fullPath}
