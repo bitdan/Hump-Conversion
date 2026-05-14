@@ -119,17 +119,17 @@ export const routes: RouteRecordRaw[] = [
                     description: '在线驼峰转换工具，支持驼峰、下划线、中划线、大小写格式互转。'
                 }
             },
-
-            {
-                path: '/tools/base-converter',
-                name: 'BaseConverter',
-                component: () => import('@/views/tools/BaseConverter.vue'),
-                meta: {
-                    title: '进制转换',
-                    icon: 'mdi-compare',
-                    description: '在线进制转换工具，支持常见数字进制的快速换算。'
-                }
-            },
+            //
+            // {
+            //     path: '/tools/base-converter',
+            //     name: 'BaseConverter',
+            //     component: () => import('@/views/tools/BaseConverter.vue'),
+            //     meta: {
+            //         title: '进制转换',
+            //         icon: 'mdi-compare',
+            //         description: '在线进制转换工具，支持常见数字进制的快速换算。'
+            //     }
+            // },
             {
                 path: '/tools/file-diff',
                 name: 'FileDiff',
@@ -150,16 +150,16 @@ export const routes: RouteRecordRaw[] = [
                     description: '在线 EPUB 阅读器，支持本地文件解析、目录导航、阅读主题和字号调节。'
                 }
             },
-            {
-                path: '/tools/json-editor',
-                name: 'JsonEditor',
-                component: () => import('@/views/tools/JsonEditor.vue'),
-                meta: {
-                    title: 'JSON 编辑器',
-                    icon: 'mdi-code-json',
-                    description: '在线 JSON 编辑器，支持格式化、校验与结构化浏览。'
-                }
-            },
+            // {
+            //     path: '/tools/json-editor',
+            //     name: 'JsonEditor',
+            //     component: () => import('@/views/tools/JsonEditor.vue'),
+            //     meta: {
+            //         title: 'JSON 编辑器',
+            //         icon: 'mdi-code-json',
+            //         description: '在线 JSON 编辑器，支持格式化、校验与结构化浏览。'
+            //     }
+            // },
             {
                 path: '/tools/calculator',
                 name: 'Calculator',
@@ -190,26 +190,26 @@ export const routes: RouteRecordRaw[] = [
                     description: '在线数据加密解密工具，便于常见文本加解密处理。'
                 }
             },
-            {
-                path: '/tools/file-converter',
-                name: 'FileConverter',
-                component: () => import('@/views/tools/FileConverter.vue'),
-                meta: {
-                    title: '文件格式转换',
-                    icon: 'mdi-file-sync',
-                    description: '在线文件格式转换工具，简化常见文件处理流程。'
-                }
-            },
-            {
-                path: '/tools/json-to-entity',
-                name: 'JsonToEntity',
-                component: () => import('@/views/tools/JsonToEntity.vue'),
-                meta: {
-                    title: 'JSON转实体类',
-                    icon: 'mdi-code-json',
-                    description: '在线 JSON 转实体类工具，辅助快速生成代码模型。'
-                }
-            },
+            // {
+            //     path: '/tools/file-converter',
+            //     name: 'FileConverter',
+            //     component: () => import('@/views/tools/FileConverter.vue'),
+            //     meta: {
+            //         title: '文件格式转换',
+            //         icon: 'mdi-file-sync',
+            //         description: '在线文件格式转换工具，简化常见文件处理流程。'
+            //     }
+            // },
+            // {
+            //     path: '/tools/json-to-entity',
+            //     name: 'JsonToEntity',
+            //     component: () => import('@/views/tools/JsonToEntity.vue'),
+            //     meta: {
+            //         title: 'JSON转实体类',
+            //         icon: 'mdi-code-json',
+            //         description: '在线 JSON 转实体类工具，辅助快速生成代码模型。'
+            //     }
+            // },
             {
                 path: '/tools/qr-code-generator',
                 name: 'QrCodeGenerator',
@@ -261,16 +261,6 @@ export const routes: RouteRecordRaw[] = [
                     title: '简历转PDF',
                     icon: 'mdi-file-pdf-box',
                     description: '在线将 Markdown 简历转换为 PDF，适合快速导出简历。'
-                }
-            },
-            {
-                path: '/tools/huawei-health-viewer',
-                name: 'HuaweiHealthViewer',
-                component: () => import('@/views/tools/HuaweiHealthViewer.vue'),
-                meta: {
-                    title: '华为健康数据浏览',
-                    icon: 'mdi-heart-pulse',
-                    description: '读取华为健康导出目录中的全部 JSON 数据，按类型查看统计、结构与原始记录。'
                 }
             }
         ]
