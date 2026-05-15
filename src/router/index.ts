@@ -221,6 +221,16 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/code-shot-generator',
+                name: 'CodeShotGenerator',
+                component: () => import('@/views/tools/CodeShotGenerator.vue'),
+                meta: {
+                    title: '代码截图',
+                    icon: 'mdi-camera-outline',
+                    description: '在线代码截图生成器，支持主题、语言、背景和 PNG 导出。'
+                }
+            },
+            {
                 path: '/tools/two-factor-manager',
                 name: 'TwoFactorManager',
                 component: () => import('@/views/tools/TwoFactorManager.vue'),
