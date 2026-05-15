@@ -1,7 +1,7 @@
 <template>
   <div class="codeshot-page">
     <header class="hero">
-      <h1>linger-format</h1>
+      <h1>code-format</h1>
     </header>
 
     <main class="carbon-board">
@@ -34,15 +34,6 @@
               variant="outlined"
               hide-details
           />
-          <v-text-field
-              v-model="fileName"
-              class="toolbar-field"
-              density="compact"
-              variant="outlined"
-              hide-details
-              prepend-inner-icon="mdi-file-code-outline"
-              placeholder="example.ts"
-          />
         </nav>
 
         <div class="action-dock">
@@ -67,10 +58,6 @@
             </div>
           </v-menu>
           <v-btn icon="mdi-content-copy" variant="outlined" class="icon-btn" :loading="copying" @click="copyImage"/>
-          <v-btn class="export-btn" variant="outlined" append-icon="mdi-chevron-down" :loading="exporting"
-                 @click="downloadImage">
-            EXPORT
-          </v-btn>
         </div>
       </div>
 
@@ -86,8 +73,7 @@
               <div v-else class="tab-title">
                 <v-icon icon="mdi-code-tags" size="16"/>
               </div>
-              <span class="file-title">{{ fileName || 'snippet' }}</span>
-              <span class="language-badge">{{ languageLabel }}</span>
+              <span class="file-title">{{ languageLabel }}</span>
             </header>
 
             <div class="editor-frame" :style="editorFrameStyle">
@@ -168,12 +154,10 @@ const language = ref('typescript')
 const themeName = ref<ThemeName>('midnight')
 const backgroundName = ref<BackgroundName>('aurora')
 const windowStyle = ref<WindowStyle>('mac')
-const fileName = ref('example.ts')
 const fontSize = ref(16)
 const framePadding = ref(56)
 const showLineNumbers = ref(true)
 const showHeader = ref(true)
-const exporting = ref(false)
 const copying = ref(false)
 const errorMessage = ref('')
 const shotRef = ref<HTMLElement | null>(null)
@@ -535,7 +519,6 @@ function keywordList(mode: string) {
 function loadSample() {
   code.value = normalizeCode(sampleCode)
   language.value = 'typescript'
-  fileName.value = 'example.ts'
 }
 
 async function handleDrop(event: DragEvent) {
@@ -543,7 +526,6 @@ async function handleDrop(event: DragEvent) {
   if (!file) return
 
   code.value = normalizeCode(await file.text())
-  fileName.value = file.name
   language.value = detectLanguage(file.name)
 }
 
@@ -564,23 +546,6 @@ function detectLanguage(name: string) {
     zsh: 'shell'
   }
   return map[ext || ''] || 'text'
-}
-
-async function downloadImage() {
-  if (!shotRef.value) return
-  exporting.value = true
-  errorMessage.value = ''
-  try {
-    const canvas = await renderShotCanvas()
-    const link = document.createElement('a')
-    link.href = canvas.toDataURL('image/png')
-    link.download = `${(fileName.value || 'code-shot').replace(/[^\w.-]+/g, '-')}.png`
-    link.click()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '导出失败'
-  } finally {
-    exporting.value = false
-  }
 }
 
 async function copyImage() {
@@ -705,11 +670,6 @@ async function renderShotCanvas() {
   flex-basis: 54px;
 }
 
-.toolbar-field {
-  width: 128px;
-  flex: 0 0 128px;
-}
-
 .toolbar :deep(.v-field) {
   background: #111111;
   color: #ffffff;
@@ -765,15 +725,6 @@ async function renderShotCanvas() {
   border-color: #ffffff;
 }
 
-.export-btn {
-  height: 48px;
-  min-width: 104px;
-  border-radius: 4px;
-  color: #9b5cff;
-  letter-spacing: 1.5px;
-  font-weight: 700;
-}
-
 .settings-menu {
   width: 320px;
   display: flex;
@@ -820,7 +771,7 @@ async function renderShotCanvas() {
 .window-header {
   min-height: 46px;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) auto;
+  grid-template-columns: 92px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 0 18px;
@@ -829,7 +780,7 @@ async function renderShotCanvas() {
 }
 
 .window-header--minimal {
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr);
 }
 
 .mac-controls {
@@ -868,11 +819,6 @@ async function renderShotCanvas() {
   color: v-bind('activeTheme.foreground');
   font-size: 13px;
   font-weight: 700;
-}
-
-.language-badge {
-  color: v-bind('activeTheme.muted');
-  font-size: 12px;
 }
 
 .code-block {
@@ -961,8 +907,7 @@ async function renderShotCanvas() {
   }
 
   .toolbar-select,
-  .toolbar-select--short,
-  .toolbar-field {
+  .toolbar-select--short {
     flex: 1 1 220px;
     width: auto;
   }
