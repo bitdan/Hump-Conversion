@@ -36,6 +36,7 @@
     "jsrsasign": "^10.9.0",
     "konva": "^9.3.18",
     "pinia": "^2.3.0",
+    "qrcode": "^1.5.4",
     "save-svg-as-png": "^1.4.17",
     "sm-crypto": "^0.3.13",
     "vis-data": "^7.1.9",

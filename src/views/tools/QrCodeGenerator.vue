@@ -1,88 +1,516 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-          文字转二维码
-        </h1>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-1">
-          <div class="bg-gray-50 rounded-xl p-6 space-y-6">
-            <div class="space-y-4">
-              <label for="qr-text" class="block text-lg font-medium text-gray-700">输入内容</label>
-              <textarea
-                id="qr-text"
-                v-model="text"
-                rows="5"
-                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
-                placeholder="请输入要生成二维码的内容"
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-4 mt-6">
-            <button
-              @click="handleGenerate"
-              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-xl font-medium text-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              生成二维码
-            </button>
-            <button
-              v-if="qrValue"
-              @click="downloadQrCode"
-              class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl font-medium text-lg hover:from-green-600 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              下载二维码
-            </button>
-          </div>
+  <div class="qr-page">
+    <section class="qr-workspace">
+      <aside class="qr-controls">
+        <div class="control-group">
+          <label class="field-label" for="qr-text">内容</label>
+          <v-textarea
+              id="qr-text"
+              v-model="text"
+              variant="outlined"
+              density="comfortable"
+              rows="6"
+              auto-grow
+              max-rows="10"
+              hide-details
+              placeholder="输入链接、文本或任意需要转换的内容"
+          />
         </div>
-        <div class="lg:col-span-2">
-          <div class="bg-gray-50 rounded-xl p-8 h-full flex flex-col items-center justify-center shadow-lg">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">二维码预览</h2>
-            <div v-if="qrValue" class="flex flex-col items-center space-y-6">
-              <div class="relative flex flex-col items-center">
-                <VueQrcode
-                  ref="qrcodeRef"
-                  :value="qrValue"
-                  :size="240"
-                  level="M"
-                  class="shadow-lg rounded-lg bg-white p-4"
-                />
-              </div>
-              <p class="text-gray-500 break-all max-w-full text-center">{{ qrValue }}</p>
+
+        <div class="control-grid">
+          <div class="control-group">
+            <label class="field-label" for="foreground-color">前景色</label>
+            <div class="color-row">
+              <input id="foreground-color" v-model="foregroundColor" class="color-input" type="color">
+              <v-text-field v-model="foregroundColor" density="compact" variant="outlined" hide-details/>
             </div>
-            <div v-else class="h-[calc(100%-3rem)] flex items-center justify-center text-gray-500 text-lg">
-              请输入内容并点击生成二维码
+          </div>
+          <div class="control-group">
+            <label class="field-label" for="background-color">背景色</label>
+            <div class="color-row">
+              <input id="background-color" v-model="backgroundColor" class="color-input" type="color">
+              <v-text-field v-model="backgroundColor" density="compact" variant="outlined" hide-details/>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+
+        <div class="control-group">
+          <label class="field-label">圆点样式</label>
+          <v-btn-toggle v-model="dotStyle" mandatory density="comfortable" variant="outlined" divided>
+            <v-btn value="square" prepend-icon="mdi-square">方块</v-btn>
+            <v-btn value="rounded" prepend-icon="mdi-rounded-corner">圆角</v-btn>
+            <v-btn value="dot" prepend-icon="mdi-circle">圆点</v-btn>
+          </v-btn-toggle>
+        </div>
+
+        <div class="control-group">
+          <label class="field-label">Logo</label>
+          <v-file-input
+              accept="image/*"
+              clearable
+              density="comfortable"
+              variant="outlined"
+              prepend-icon="mdi-image-plus"
+              label="上传 Logo 图片"
+              hide-details
+              @update:model-value="handleLogoFile"
+              @click:clear="clearLogo"
+          />
+        </div>
+
+        <div class="control-grid">
+          <div class="control-group">
+            <label class="field-label">Logo 大小</label>
+            <v-slider
+                v-model="logoSizePercent"
+                :disabled="!logoImage"
+                :min="12"
+                :max="28"
+                :step="1"
+                density="compact"
+                thumb-label
+                hide-details
+            />
+          </div>
+          <div class="control-group">
+            <label class="field-label">导出尺寸</label>
+            <v-select
+                v-model="exportSize"
+                :items="exportSizes"
+                density="compact"
+                variant="outlined"
+                hide-details
+            />
+          </div>
+        </div>
+
+        <div v-if="errorMessage" class="error-text">{{ errorMessage }}</div>
+
+        <div class="action-row">
+          <v-btn color="primary" variant="flat" prepend-icon="mdi-qrcode" @click="handleGenerate">
+            生成
+          </v-btn>
+          <v-btn :disabled="!qrValue" color="success" variant="tonal" prepend-icon="mdi-download"
+                 @click="downloadQrCode">
+            下载 PNG
+          </v-btn>
+        </div>
+      </aside>
+
+      <main class="qr-preview">
+        <div class="preview-toolbar">
+          <div>
+            <h1>二维码美化器</h1>
+            <p>支持 Logo、颜色和模块样式，适合分享链接、活动入口和个人名片。</p>
+          </div>
+          <v-btn icon="mdi-refresh" variant="text" :disabled="!qrValue" @click="renderQrCode"/>
+        </div>
+
+        <div class="canvas-shell">
+          <canvas ref="canvasRef" class="qr-canvas" :width="exportSize" :height="exportSize"/>
+          <div v-if="!qrValue" class="canvas-empty">
+            <v-icon icon="mdi-qrcode" size="56"/>
+            <span>输入内容后生成二维码</span>
+          </div>
+        </div>
+
+        <p v-if="qrValue" class="qr-value">{{ qrValue }}</p>
+      </main>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-// @ts-ignore
-import VueQrcode from '@chenfengyuan/vue-qrcode'
+import {nextTick, onBeforeUnmount, ref, watch} from 'vue'
+// @ts-ignore qrcode is provided by @chenfengyuan/vue-qrcode's peer dependency.
+import QRCode from 'qrcode'
+
+type DotStyle = 'square' | 'rounded' | 'dot'
+
+interface QrModules {
+  size: number
+  data: Uint8Array
+}
+
+interface QrData {
+  modules: QrModules
+}
 
 const text = ref('')
 const qrValue = ref('')
-const qrcodeRef = ref<any>(null)
+const foregroundColor = ref('#111827')
+const backgroundColor = ref('#ffffff')
+const dotStyle = ref<DotStyle>('rounded')
+const logoImage = ref<HTMLImageElement | null>(null)
+const logoObjectUrl = ref<string | null>(null)
+const logoSizePercent = ref(20)
+const exportSize = ref(720)
+const errorMessage = ref('')
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+const exportSizes = [360, 512, 720, 1024]
 
 function handleGenerate() {
   qrValue.value = text.value.trim()
+  if (!qrValue.value) {
+    errorMessage.value = '请输入二维码内容'
+    clearCanvas()
+    return
+  }
+  renderQrCode()
+}
+
+function handleLogoFile(value: File | File[] | null) {
+  const file = Array.isArray(value) ? value[0] : value
+  if (!file) {
+    clearLogo()
+    return
+  }
+
+  clearLogo(false)
+  const image = new Image()
+  const objectUrl = URL.createObjectURL(file)
+  image.onload = () => {
+    logoImage.value = image
+    logoObjectUrl.value = objectUrl
+    renderQrCode()
+  }
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl)
+    errorMessage.value = 'Logo 图片读取失败'
+  }
+  image.src = objectUrl
+}
+
+function clearLogo(render = true) {
+  logoImage.value = null
+  if (logoObjectUrl.value) {
+    URL.revokeObjectURL(logoObjectUrl.value)
+    logoObjectUrl.value = null
+  }
+  if (render) renderQrCode()
+}
+
+function getModule(modules: QrModules, row: number, col: number) {
+  return modules.data[row * modules.size + col] === 1
+}
+
+function isFinderModule(size: number, row: number, col: number) {
+  const inTop = row < 7
+  const inBottom = row >= size - 7
+  const inLeft = col < 7
+  const inRight = col >= size - 7
+  return (inTop && inLeft) || (inTop && inRight) || (inBottom && inLeft)
+}
+
+function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  const safeRadius = Math.min(radius, width / 2, height / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + safeRadius, y)
+  ctx.lineTo(x + width - safeRadius, y)
+  ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius)
+  ctx.lineTo(x + width, y + height - safeRadius)
+  ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height)
+  ctx.lineTo(x + safeRadius, y + height)
+  ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius)
+  ctx.lineTo(x, y + safeRadius)
+  ctx.quadraticCurveTo(x, y, x + safeRadius, y)
+  ctx.closePath()
+}
+
+function drawModule(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  const inset = dotStyle.value === 'square' ? 0 : size * 0.08
+  const moduleSize = size - inset * 2
+  const moduleX = x + inset
+  const moduleY = y + inset
+
+  if (dotStyle.value === 'dot') {
+    ctx.beginPath()
+    ctx.arc(moduleX + moduleSize / 2, moduleY + moduleSize / 2, moduleSize / 2, 0, Math.PI * 2)
+    ctx.fill()
+    return
+  }
+
+  if (dotStyle.value === 'rounded') {
+    roundedRect(ctx, moduleX, moduleY, moduleSize, moduleSize, moduleSize * 0.35)
+    ctx.fill()
+    return
+  }
+
+  ctx.fillRect(moduleX, moduleY, moduleSize, moduleSize)
+}
+
+function drawFinder(ctx: CanvasRenderingContext2D, x: number, y: number, moduleSize: number) {
+  const outer = moduleSize * 7
+  const inner = moduleSize * 3
+  const middle = moduleSize * 5
+
+  ctx.fillStyle = foregroundColor.value
+  roundedRect(ctx, x, y, outer, outer, moduleSize * 1.4)
+  ctx.fill()
+
+  ctx.fillStyle = backgroundColor.value
+  roundedRect(ctx, x + moduleSize, y + moduleSize, middle, middle, moduleSize)
+  ctx.fill()
+
+  ctx.fillStyle = foregroundColor.value
+  roundedRect(ctx, x + moduleSize * 2, y + moduleSize * 2, inner, inner, moduleSize * 0.7)
+  ctx.fill()
+}
+
+function drawLogo(ctx: CanvasRenderingContext2D, canvasSize: number) {
+  if (!logoImage.value) return
+
+  const logoSize = canvasSize * (logoSizePercent.value / 100)
+  const x = (canvasSize - logoSize) / 2
+  const y = (canvasSize - logoSize) / 2
+  const padding = logoSize * 0.14
+  const backgroundSize = logoSize + padding * 2
+  const backgroundX = x - padding
+  const backgroundY = y - padding
+
+  ctx.fillStyle = '#ffffff'
+  roundedRect(ctx, backgroundX, backgroundY, backgroundSize, backgroundSize, logoSize * 0.18)
+  ctx.fill()
+
+  ctx.save()
+  roundedRect(ctx, x, y, logoSize, logoSize, logoSize * 0.14)
+  ctx.clip()
+  ctx.drawImage(logoImage.value, x, y, logoSize, logoSize)
+  ctx.restore()
+}
+
+function clearCanvas() {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+}
+
+async function renderQrCode() {
+  await nextTick()
+  const canvas = canvasRef.value
+  if (!canvas || !qrValue.value) return
+
+  try {
+    errorMessage.value = ''
+    const qrData = QRCode.create(qrValue.value, {
+      errorCorrectionLevel: logoImage.value ? 'H' : 'Q',
+      margin: 0
+    }) as QrData
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const canvasSize = exportSize.value
+    const margin = 4
+    const moduleCount = qrData.modules.size
+    const moduleSize = canvasSize / (moduleCount + margin * 2)
+    const offset = margin * moduleSize
+
+    ctx.clearRect(0, 0, canvasSize, canvasSize)
+    ctx.fillStyle = backgroundColor.value
+    ctx.fillRect(0, 0, canvasSize, canvasSize)
+    ctx.fillStyle = foregroundColor.value
+
+    for (let row = 0; row < moduleCount; row += 1) {
+      for (let col = 0; col < moduleCount; col += 1) {
+        if (!getModule(qrData.modules, row, col) || isFinderModule(moduleCount, row, col)) continue
+        drawModule(ctx, offset + col * moduleSize, offset + row * moduleSize, moduleSize)
+      }
+    }
+
+    drawFinder(ctx, offset, offset, moduleSize)
+    drawFinder(ctx, offset + (moduleCount - 7) * moduleSize, offset, moduleSize)
+    drawFinder(ctx, offset, offset + (moduleCount - 7) * moduleSize, moduleSize)
+    drawLogo(ctx, canvasSize)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '二维码生成失败'
+  }
 }
 
 function downloadQrCode() {
-  if (!qrcodeRef.value) return
-  // 获取canvas元素
-  const canvas = qrcodeRef.value.$el?.querySelector('canvas') || qrcodeRef.value.$el
-  if (!canvas || !(canvas instanceof HTMLCanvasElement)) return
+  const canvas = canvasRef.value
+  if (!canvas || !qrValue.value) return
+
   const dataUrl = canvas.toDataURL('image/png')
   const link = document.createElement('a')
   link.href = dataUrl
-  link.download = 'qrcode.png'
+  link.download = 'styled-qrcode.png'
   link.click()
 }
+
+watch([foregroundColor, backgroundColor, dotStyle, logoSizePercent, exportSize], () => {
+  if (qrValue.value) renderQrCode()
+})
+
+onBeforeUnmount(() => clearLogo(false))
 </script>
+
+<style scoped>
+.qr-page {
+  min-height: 100vh;
+  background: #f6f8fb;
+  padding: 24px;
+}
+
+.qr-workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.qr-controls,
+.qr-preview {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.qr-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+.qr-preview {
+  min-height: 640px;
+  padding: 24px;
+}
+
+.preview-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.preview-toolbar h1 {
+  margin: 0 0 6px;
+  color: #172033;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.preview-toolbar p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field-label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.color-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.color-input {
+  width: 48px;
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 3px;
+  background: #ffffff;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.canvas-shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 460px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+  linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+  linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+  linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+}
+
+.qr-canvas {
+  width: min(420px, 100%);
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+}
+
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: #94a3b8;
+  background: rgba(246, 248, 251, 0.82);
+  font-size: 15px;
+}
+
+.qr-value {
+  margin: 18px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .qr-page {
+    padding: 16px;
+  }
+
+  .qr-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-preview {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .control-grid,
+  .action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .canvas-shell {
+    min-height: 360px;
+  }
+}
+</style>
