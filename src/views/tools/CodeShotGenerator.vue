@@ -66,7 +66,7 @@
                         hide-details/>
             </div>
           </v-menu>
-          <v-btn icon="mdi-content-copy" variant="outlined" class="icon-btn" @click="loadSample"/>
+          <v-btn icon="mdi-content-copy" variant="outlined" class="icon-btn" :loading="copying" @click="copyImage"/>
           <v-btn class="export-btn" variant="outlined" append-icon="mdi-chevron-down" :loading="exporting"
                  @click="downloadImage">
             EXPORT
@@ -174,6 +174,7 @@ const framePadding = ref(56)
 const showLineNumbers = ref(true)
 const showHeader = ref(true)
 const exporting = ref(false)
+const copying = ref(false)
 const errorMessage = ref('')
 const shotRef = ref<HTMLElement | null>(null)
 
@@ -570,18 +571,7 @@ async function downloadImage() {
   exporting.value = true
   errorMessage.value = ''
   try {
-    await nextTick()
-    const canvas = await html2canvas(shotRef.value, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      width: shotRef.value.scrollWidth,
-      height: shotRef.value.scrollHeight,
-      windowWidth: shotRef.value.scrollWidth,
-      windowHeight: shotRef.value.scrollHeight,
-      scrollX: 0,
-      scrollY: 0
-    })
+    const canvas = await renderShotCanvas()
     const link = document.createElement('a')
     link.href = canvas.toDataURL('image/png')
     link.download = `${(fileName.value || 'code-shot').replace(/[^\w.-]+/g, '-')}.png`
@@ -591,6 +581,49 @@ async function downloadImage() {
   } finally {
     exporting.value = false
   }
+}
+
+async function copyImage() {
+  if (!shotRef.value) return
+  copying.value = true
+  errorMessage.value = ''
+  try {
+    const canvas = await renderShotCanvas()
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) {
+      throw new Error('复制失败：图片生成失败')
+    }
+    if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
+      throw new Error('当前浏览器不支持复制图片到剪贴板')
+    }
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob
+      })
+    ])
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '复制失败'
+  } finally {
+    copying.value = false
+  }
+}
+
+async function renderShotCanvas() {
+  if (!shotRef.value) {
+    throw new Error('截图区域不存在')
+  }
+  await nextTick()
+  return html2canvas(shotRef.value, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    width: shotRef.value.scrollWidth,
+    height: shotRef.value.scrollHeight,
+    windowWidth: shotRef.value.scrollWidth,
+    windowHeight: shotRef.value.scrollHeight,
+    scrollX: 0,
+    scrollY: 0
+  })
 }
 </script>
 
