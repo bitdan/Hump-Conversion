@@ -74,6 +74,7 @@
                 <v-icon icon="mdi-code-tags" size="16"/>
               </div>
               <span class="file-title">{{ languageLabel }}</span>
+              <span class="header-spacer"></span>
             </header>
 
             <div class="editor-frame" :style="editorFrameStyle">
@@ -661,8 +662,8 @@ async function renderShotCanvas() {
 }
 
 .toolbar-select--language {
-  width: 172px;
-  flex-basis: 172px;
+  width: 196px;
+  flex-basis: 196px;
 }
 
 .toolbar-select--short {
@@ -771,7 +772,7 @@ async function renderShotCanvas() {
 .window-header {
   min-height: 46px;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 92px minmax(0, 1fr) 92px;
   align-items: center;
   gap: 12px;
   padding: 0 18px;
@@ -780,7 +781,7 @@ async function renderShotCanvas() {
 }
 
 .window-header--minimal {
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
 }
 
 .mac-controls {
@@ -812,13 +813,23 @@ async function renderShotCanvas() {
 }
 
 .file-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 100%;
+  overflow: visible;
   white-space: nowrap;
   color: v-bind('activeTheme.foreground');
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.4;
+  padding: 1px 8px 0;
+}
+
+.header-spacer {
+  display: block;
 }
 
 .code-block {
