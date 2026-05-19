@@ -181,6 +181,16 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/cron-helper',
+                name: 'CronHelper',
+                component: () => import('@/views/tools/CronHelper.vue'),
+                meta: {
+                    title: 'Cron 表达式助手',
+                    icon: 'mdi-calendar-clock',
+                    description: '在线 Cron 表达式助手，支持生成 Cron、反解析字段含义和下次执行时间预览。'
+                }
+            },
+            {
                 path: '/tools/data-encryption',
                 name: 'DataEncryption',
                 component: () => import('@/views/tools/DataEncryption.vue'),
