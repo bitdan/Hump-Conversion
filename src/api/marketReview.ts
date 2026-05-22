@@ -107,6 +107,16 @@ export interface StockKlineSummary {
     ma60?: number | null
 }
 
+export interface IntradayTradingSignal {
+    signal_type: string
+    title: string
+    phase: string
+    signal_score: number
+    observed_at: string
+    reasons: string[]
+    risks: string[]
+}
+
 export interface StockKlineSnapshot {
     code: string
     name: string
@@ -115,12 +125,16 @@ export interface StockKlineSnapshot {
     bars: StockKlineBar[]
     summary?: StockKlineSummary | null
     technical_tags: string[]
+    intraday_signals: IntradayTradingSignal[]
 }
 
 export function getMarketReview(params: { date?: string }) {
     return request.get<ApiResponse<MarketReviewData>>('/api/v1/market-review', {params} as any)
 }
 
-export function getStockKline(code: string, params: { date?: string; limit?: number; refresh?: boolean; name?: string }) {
+export function getStockKline(
+    code: string,
+    params: { date?: string; limit?: number; refresh?: boolean; name?: string; period?: string }
+) {
     return request.get<ApiResponse<StockKlineSnapshot>>(`/api/v1/market-review/kline/${code}`, {params} as any)
 }

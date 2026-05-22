@@ -6,7 +6,7 @@
           <h2>{{ snapshot?.name || '个股K线' }}</h2>
           <span v-if="snapshot?.code">{{ snapshot.code }}</span>
         </div>
-        <p>{{ snapshot?.date || '--' }} · 日K · 均线 / 成交量 / MACD</p>
+        <p>{{ snapshot?.date || '--' }} · {{ periodLabel }} · 均线 / 成交量 / MACD</p>
       </div>
       <div v-if="summary" class="price-block" :class="priceTone">
         <strong>{{ summary.latest_price.toFixed(2) }}</strong>
@@ -35,6 +35,26 @@
         <v-chip v-for="tag in snapshot.technical_tags" :key="tag" size="small" color="primary" variant="tonal">
           {{ tag }}
         </v-chip>
+      </div>
+
+      <div v-if="snapshot.intraday_signals.length" class="signal-grid">
+        <article v-for="signal in snapshot.intraday_signals" :key="signal.signal_type" class="signal-card">
+          <div class="signal-head">
+            <div>
+              <h3>{{ signal.title }}</h3>
+              <p>{{ signal.phase }} · {{ formatObservedAt(signal.observed_at) }}</p>
+            </div>
+            <v-chip color="red" variant="tonal">{{ signal.signal_score.toFixed(1) }}</v-chip>
+          </div>
+          <div class="chip-row compact-row">
+            <v-chip v-for="reason in signal.reasons" :key="reason" size="x-small" color="green" variant="tonal">
+              {{ reason }}
+            </v-chip>
+            <v-chip v-for="risk in signal.risks" :key="risk" size="x-small" color="orange" variant="tonal">
+              {{ risk }}
+            </v-chip>
+          </div>
+        </article>
       </div>
 
       <div class="chart-panel">
@@ -194,6 +214,11 @@ const macdBottom = 516
 
 const bars = computed(() => props.snapshot?.bars || [])
 const summary = computed<StockKlineSummary | null>(() => props.snapshot?.summary || null)
+const periodLabel = computed(() => {
+  const period = props.snapshot?.period || 'day'
+  if (period === 'day') return '日K'
+  return `${period}分钟`
+})
 
 const priceTone = computed(() => {
   const change = summary.value?.change_percent || 0
@@ -354,7 +379,7 @@ const axisLabels = computed(() => {
   if (!bars.value.length) return []
   const points = [0, Math.floor((bars.value.length - 1) * 0.33), Math.floor((bars.value.length - 1) * 0.66), bars.value.length - 1]
   return [...new Set(points)].map((index) => ({
-    text: bars.value[index].trade_date.slice(5),
+    text: formatAxisLabel(bars.value[index].trade_date),
     x: left + barStep.value * index + barStep.value / 2
   }))
 })
@@ -384,6 +409,19 @@ function formatAmount(value: number) {
   if (value >= 100000000) return `${(value / 100000000).toFixed(2)}亿`
   if (value >= 10000) return `${(value / 10000).toFixed(2)}万`
   return value.toFixed(0)
+}
+
+function formatAxisLabel(value: string) {
+  if (value.length > 10) {
+    return value.slice(11, 16)
+  }
+  return value.slice(5)
+}
+
+function formatObservedAt(value: string) {
+  if (!value) return '--'
+  if (value.length > 10) return value.slice(11, 16)
+  return value
 }
 </script>
 
@@ -481,6 +519,42 @@ function formatAmount(value: number) {
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 14px;
+}
+
+.compact-row {
+  margin-bottom: 0;
+}
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.signal-card {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.signal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.signal-head h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.signal-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .chart-panel {

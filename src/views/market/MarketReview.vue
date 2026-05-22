@@ -219,7 +219,14 @@
         <div class="dialog-toolbar">
           <div>
             <h2>个股K线</h2>
-            <p>从复盘候选直接查看趋势、量能和 MACD。</p>
+            <p>从复盘候选直接查看趋势、量能、MACD 和分时弱转强/回封信号。</p>
+          </div>
+          <div class="dialog-actions">
+            <v-chip-group v-model="selectedPeriod" selected-class="pool-selected" mandatory class="period-switch">
+              <v-chip v-for="period in klinePeriods" :key="period.value" :value="period.value" variant="outlined">
+                {{ period.label }}
+              </v-chip>
+            </v-chip-group>
           </div>
           <div class="toolbar">
             <v-btn
@@ -240,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineComponent, h, onMounted, ref} from 'vue'
+import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
 import StockKlineCard from '@/components/market/StockKlineCard.vue'
 import {getMarketReview, getStockKline, type MarketReviewData, type StockKlineSnapshot} from '@/api/marketReview'
 
@@ -256,6 +263,15 @@ const klineError = ref('')
 const selectedKline = ref<StockKlineSnapshot | null>(null)
 const selectedCode = ref('')
 const selectedName = ref('')
+const selectedPeriod = ref('day')
+
+const klinePeriods = [
+  {label: '日K', value: 'day'},
+  {label: '5分', value: '5'},
+  {label: '15分', value: '15'},
+  {label: '30分', value: '30'},
+  {label: '60分', value: '60'}
+]
 
 const ScoreBar = defineComponent({
   name: 'ScoreBar',
@@ -386,9 +402,10 @@ async function loadKline(refresh = false) {
   try {
     const response = await getStockKline(selectedCode.value, {
       date: queryDate.value,
-      limit: 120,
+      limit: selectedPeriod.value === 'day' ? 120 : 64,
       refresh,
-      name: selectedName.value
+      name: selectedName.value,
+      period: selectedPeriod.value
     })
     selectedKline.value = response.data
   } catch (err: any) {
@@ -402,6 +419,7 @@ async function openKline(code: string, name: string) {
   selectedCode.value = code
   selectedName.value = name
   selectedKline.value = null
+  selectedPeriod.value = 'day'
   klineDialog.value = true
   await loadKline(false)
 }
@@ -409,6 +427,13 @@ async function openKline(code: string, name: string) {
 async function reloadKline() {
   await loadKline(true)
 }
+
+watch(selectedPeriod, async (next, prev) => {
+  if (!klineDialog.value || !selectedCode.value || next === prev) {
+    return
+  }
+  await loadKline(false)
+})
 
 onMounted(loadReview)
 </script>
@@ -630,6 +655,15 @@ onMounted(loadReview)
 .dialog-toolbar p {
   margin: 0;
   color: #64748b;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+}
+
+.period-switch {
+  flex-wrap: wrap;
 }
 
 @media (max-width: 900px) {
