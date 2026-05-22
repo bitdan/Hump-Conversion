@@ -286,6 +286,26 @@ export const routes: RouteRecordRaw[] = [
         ]
     },
     {
+        path: '/market',
+        name: 'Market',
+        meta: {
+            title: '市场',
+            icon: 'mdi-finance'
+        },
+        children: [
+            {
+                path: '/market/review',
+                name: 'MarketReview',
+                component: () => import('@/views/market/MarketReview.vue'),
+                meta: {
+                    title: '涨停池复盘',
+                    icon: 'mdi-chart-timeline-variant',
+                    description: '涨停池、板块强度、2进3候选和分歧转一致识别。'
+                }
+            }
+        ]
+    },
+    {
         path: '/community',
         name: 'Community',
         meta: {
