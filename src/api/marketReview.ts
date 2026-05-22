@@ -41,6 +41,8 @@ export interface SectorStrength {
 export interface CandidateStock {
     stock: LimitUpStock
     sector?: SectorStrength | null
+    pool_type: string
+    target_boards: number
     candidate_score: number
     level: string
     reasons: string[]
@@ -61,6 +63,7 @@ export interface MarketReviewData {
     date: string
     limit_up_pool: LimitUpStock[]
     sector_strength: SectorStrength[]
+    advancement_candidates: CandidateStock[]
     candidates_2_to_3: CandidateStock[]
     divergence_consensus: DivergenceConsensusSignal[]
 }
@@ -68,4 +71,3 @@ export interface MarketReviewData {
 export function getMarketReview(params: { date?: string }) {
     return request.get<ApiResponse<MarketReviewData>>('/api/v1/market-review', {params} as any)
 }
-

@@ -45,7 +45,7 @@
     <v-tabs v-model="tab" color="primary" density="comfortable" class="tabs">
       <v-tab value="pool" prepend-icon="mdi-format-list-bulleted">涨停池</v-tab>
       <v-tab value="sector" prepend-icon="mdi-chart-box-outline">板块强度</v-tab>
-      <v-tab value="candidate" prepend-icon="mdi-filter-star-outline">2进3候选</v-tab>
+      <v-tab value="candidate" prepend-icon="mdi-filter-star-outline">连板候选</v-tab>
       <v-tab value="signal" prepend-icon="mdi-swap-horizontal-bold">分歧转一致</v-tab>
     </v-tabs>
 
@@ -124,9 +124,21 @@
 
       <v-window-item value="candidate">
         <v-card class="table-card" variant="flat">
+          <div class="candidate-toolbar">
+            <v-chip-group v-model="selectedPoolType" selected-class="pool-selected" mandatory>
+              <v-chip
+                  v-for="pool in candidatePoolTypes"
+                  :key="pool.value"
+                  :value="pool.value"
+                  variant="outlined"
+              >
+                {{ pool.label }} · {{ pool.count }}
+              </v-chip>
+            </v-chip-group>
+          </div>
           <v-data-table
               :headers="candidateHeaders"
-              :items="review?.candidates_2_to_3 || []"
+              :items="filteredCandidates"
               :loading="loading"
               density="compact"
               item-value="stock.code"
@@ -241,9 +253,34 @@ const summaryCards = computed(() => {
   return [
     {label: '涨停数量', value: data?.limit_up_pool.length || 0, icon: 'mdi-arrow-up-bold-box-outline'},
     {label: '强势板块', value: data?.sector_strength.length || 0, icon: 'mdi-chart-box-outline'},
-    {label: '2进3候选', value: data?.candidates_2_to_3.length || 0, icon: 'mdi-filter-star-outline'},
+    {label: '连板候选', value: data?.advancement_candidates.length || 0, icon: 'mdi-filter-star-outline'},
     {label: '分歧转一致', value: data?.divergence_consensus.length || 0, icon: 'mdi-swap-horizontal-bold'}
   ]
+})
+
+const candidatePoolTypes = computed(() => {
+  const counts = new Map<string, number>()
+  for (const item of review.value?.advancement_candidates || []) {
+    counts.set(item.pool_type, (counts.get(item.pool_type) || 0) + 1)
+  }
+  return [...counts.entries()]
+      .sort(([left], [right]) => Number(left.split('_')[0]) - Number(right.split('_')[0]))
+      .map(([value, count]) => ({
+        value,
+        count,
+        label: value.replace('_to_', '进')
+      }))
+})
+
+const selectedPoolType = ref('2_to_3')
+
+const filteredCandidates = computed(() => {
+  const candidates = review.value?.advancement_candidates || []
+  const poolTypes = candidatePoolTypes.value
+  if (poolTypes.length > 0 && !poolTypes.some(item => item.value === selectedPoolType.value)) {
+    selectedPoolType.value = poolTypes[0].value
+  }
+  return candidates.filter(item => item.pool_type === selectedPoolType.value)
 })
 
 const poolHeaders = [
@@ -392,6 +429,16 @@ onMounted(loadReview)
 
 .tabs {
   margin-bottom: 12px;
+}
+
+.candidate-toolbar {
+  padding: 12px 12px 0;
+}
+
+.pool-selected {
+  border-color: #2563eb;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 
 .table-card,
