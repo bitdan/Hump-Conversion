@@ -62,10 +62,10 @@
               height="560"
           >
             <template #item.name="{ item }">
-              <div class="stock-name">
+              <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
                 <strong>{{ item.name }}</strong>
                 <span>{{ item.code }}</span>
-              </div>
+              </button>
             </template>
             <template #item.consecutive_boards="{ item }">
               <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
@@ -146,10 +146,10 @@
               height="560"
           >
             <template #item.stock.name="{ item }">
-              <div class="stock-name">
+              <button class="stock-name stock-button" type="button" @click="openKline(item.stock.code, item.stock.name)">
                 <strong>{{ item.stock.name }}</strong>
                 <span>{{ item.stock.code }}</span>
-              </div>
+              </button>
             </template>
             <template #item.level="{ item }">
               <v-chip size="small" :color="levelColor(item.level)" variant="tonal">{{ item.level }}</v-chip>
@@ -187,10 +187,10 @@
               height="560"
           >
             <template #item.name="{ item }">
-              <div class="stock-name">
+              <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
                 <strong>{{ item.name }}</strong>
                 <span>{{ item.code }}</span>
-              </div>
+              </button>
             </template>
             <template #item.signal_score="{ item }">
               <score-bar :value="item.signal_score"/>
@@ -213,12 +213,36 @@
         </v-card>
       </v-window-item>
     </v-window>
+
+    <v-dialog v-model="klineDialog" max-width="1280" scrollable>
+      <v-card class="dialog-card">
+        <div class="dialog-toolbar">
+          <div>
+            <h2>个股K线</h2>
+            <p>从复盘候选直接查看趋势、量能和 MACD。</p>
+          </div>
+          <div class="toolbar">
+            <v-btn
+                variant="text"
+                prepend-icon="mdi-refresh"
+                :loading="klineLoading"
+                @click="reloadKline"
+            >
+              重抓
+            </v-btn>
+            <v-btn icon="mdi-close" variant="text" @click="klineDialog = false"/>
+          </div>
+        </div>
+        <stock-kline-card :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref} from 'vue'
-import {getMarketReview, type MarketReviewData} from '@/api/marketReview'
+import StockKlineCard from '@/components/market/StockKlineCard.vue'
+import {getMarketReview, getStockKline, type MarketReviewData, type StockKlineSnapshot} from '@/api/marketReview'
 
 const today = new Date().toISOString().slice(0, 10)
 const queryDate = ref(today)
@@ -226,6 +250,12 @@ const tab = ref('pool')
 const loading = ref(false)
 const error = ref('')
 const review = ref<MarketReviewData | null>(null)
+const klineDialog = ref(false)
+const klineLoading = ref(false)
+const klineError = ref('')
+const selectedKline = ref<StockKlineSnapshot | null>(null)
+const selectedCode = ref('')
+const selectedName = ref('')
 
 const ScoreBar = defineComponent({
   name: 'ScoreBar',
@@ -347,6 +377,39 @@ async function loadReview() {
   }
 }
 
+async function loadKline(refresh = false) {
+  if (!selectedCode.value) {
+    return
+  }
+  klineLoading.value = true
+  klineError.value = ''
+  try {
+    const response = await getStockKline(selectedCode.value, {
+      date: queryDate.value,
+      limit: 120,
+      refresh,
+      name: selectedName.value
+    })
+    selectedKline.value = response.data
+  } catch (err: any) {
+    klineError.value = err?.response?.data?.detail || err?.message || '个股K线加载失败'
+  } finally {
+    klineLoading.value = false
+  }
+}
+
+async function openKline(code: string, name: string) {
+  selectedCode.value = code
+  selectedName.value = name
+  selectedKline.value = null
+  klineDialog.value = true
+  await loadKline(false)
+}
+
+async function reloadKline() {
+  await loadKline(true)
+}
+
 onMounted(loadReview)
 </script>
 
@@ -454,6 +517,23 @@ onMounted(loadReview)
   gap: 2px;
 }
 
+.stock-button {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.stock-button strong {
+  color: #0f172a;
+}
+
+.stock-button:hover strong {
+  color: #2563eb;
+}
+
 .stock-name span {
   color: #64748b;
   font-size: 12px;
@@ -529,13 +609,37 @@ onMounted(loadReview)
   font-size: 13px;
 }
 
+.dialog-card {
+  padding: 16px;
+  border-radius: 20px;
+}
+
+.dialog-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.dialog-toolbar h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.dialog-toolbar p {
+  margin: 0;
+  color: #64748b;
+}
+
 @media (max-width: 900px) {
   .market-review {
     padding: 16px;
   }
 
   .page-header,
-  .toolbar {
+  .toolbar,
+  .dialog-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
