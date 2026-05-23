@@ -91,7 +91,7 @@
             @pointerdown="handlePointerDown"
             @pointermove="handlePointerMove"
             @pointerup="handlePointerUp"
-            @pointerleave="handlePointerUp"
+            @pointerleave="handlePointerLeave"
         >
           <g>
             <line
@@ -204,7 +204,35 @@
             </text>
             <line x1="56" x2="928" y1="294" y2="294" class="axis-line"/>
           </g>
+
+          <g v-if="hoveredPoint">
+            <line
+                :x1="hoveredPoint.x"
+                :x2="hoveredPoint.x"
+                y1="18"
+                y2="524"
+                class="crosshair-line"
+            />
+            <circle :cx="hoveredPoint.x" :cy="hoveredPoint.closeY" r="4" class="crosshair-dot"/>
+          </g>
         </svg>
+
+        <div v-if="hoveredTooltip" class="chart-tooltip" :style="tooltipStyle">
+          <div class="tooltip-head">
+            <strong>{{ hoveredTooltip.date }}</strong>
+            <span :class="hoveredTooltip.tone">{{ hoveredTooltip.change }}</span>
+          </div>
+          <div class="tooltip-grid">
+            <span>开</span><strong>{{ hoveredTooltip.open }}</strong>
+            <span>高</span><strong>{{ hoveredTooltip.high }}</strong>
+            <span>低</span><strong>{{ hoveredTooltip.low }}</strong>
+            <span>收</span><strong>{{ hoveredTooltip.close }}</strong>
+            <span>量</span><strong>{{ hoveredTooltip.volume }}</strong>
+            <span>额</span><strong>{{ hoveredTooltip.amount }}</strong>
+            <span>换</span><strong>{{ hoveredTooltip.turnover }}</strong>
+            <span>MACD</span><strong>{{ hoveredTooltip.macd }}</strong>
+          </div>
+        </div>
       </div>
 
       <div class="legend-row">
@@ -256,6 +284,7 @@ const windowEnd = ref(0)
 const dragging = ref(false)
 const dragStartX = ref(0)
 const dragStartEnd = ref(0)
+const hoverIndex = ref<number | null>(null)
 const fullCount = computed(() => rawBars.value.length)
 const normalizedVisibleCount = computed(() => {
   if (!fullCount.value) return minVisibleBars
@@ -442,6 +471,47 @@ const priceGridLines = computed(() => buildGrid(priceRange.value.min, priceRange
 const volumeGridLines = computed(() => buildGrid(0, volumeMax.value, volumeTop, volumeBottom, false))
 const macdGridLines = computed(() => buildGrid(macdRange.value.min, macdRange.value.max, macdTop, macdBottom, false))
 const macdZeroY = computed(() => macdY(0))
+const hoveredBar = computed(() => {
+  if (hoverIndex.value == null) return null
+  return bars.value[hoverIndex.value] || null
+})
+const hoveredPoint = computed(() => {
+  const item = hoveredBar.value
+  if (hoverIndex.value == null || !item) return null
+  const x = left + barStep.value * hoverIndex.value + barStep.value / 2
+  return {
+    x,
+    closeY: priceY(item.close_price)
+  }
+})
+const hoveredTooltip = computed(() => {
+  const item = hoveredBar.value
+  if (!item) return null
+  const change = item.change_percent
+  return {
+    date: formatAxisLabel(item.trade_date),
+    open: item.open_price.toFixed(2),
+    high: item.high_price.toFixed(2),
+    low: item.low_price.toFixed(2),
+    close: item.close_price.toFixed(2),
+    volume: formatVolume(item.volume),
+    amount: formatAmount(item.amount),
+    turnover: item.turnover_rate != null ? `${item.turnover_rate.toFixed(2)}%` : '--',
+    macd: item.macd != null ? item.macd.toFixed(3) : '--',
+    change: change == null ? '--' : `${change > 0 ? '+' : ''}${change.toFixed(2)}%`,
+    tone: change == null || change === 0 ? 'flat' : change > 0 ? 'up' : 'down'
+  }
+})
+const tooltipStyle = computed(() => {
+  const point = hoveredPoint.value
+  if (!point) return {}
+  const x = Math.max(140, Math.min(point.x, 820))
+  const y = Math.max(96, Math.min(point.closeY, 430))
+  return {
+    left: `${(x / 960) * 100}%`,
+    top: `${(y / 560) * 100}%`
+  }
+})
 const visibleRangeLabel = computed(() => {
   if (!bars.value.length) return '无数据'
   const first = formatAxisLabel(bars.value[0].trade_date)
@@ -542,11 +612,27 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 function handlePointerMove(event: PointerEvent) {
+  updateHoverIndex(event)
   if (!dragging.value || !canPan.value) return
   const deltaX = event.clientX - dragStartX.value
   const step = chartWidth / Math.max(normalizedVisibleCount.value, 1)
   const deltaBars = Math.round(deltaX / step)
   clampWindowEnd(dragStartEnd.value - deltaBars)
+}
+
+function updateHoverIndex(event: PointerEvent) {
+  if (!bars.value.length) {
+    hoverIndex.value = null
+    return
+  }
+  const rect = (event.currentTarget as SVGElement).getBoundingClientRect()
+  const svgX = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * 960
+  if (svgX < left || svgX > right) {
+    hoverIndex.value = null
+    return
+  }
+  const index = Math.max(0, Math.min(Math.floor((svgX - left) / barStep.value), bars.value.length - 1))
+  hoverIndex.value = index
 }
 
 function handlePointerUp(event: PointerEvent) {
@@ -557,6 +643,11 @@ function handlePointerUp(event: PointerEvent) {
   } catch {
     // Pointer may already be released when leaving the SVG.
   }
+}
+
+function handlePointerLeave(event: PointerEvent) {
+  hoverIndex.value = null
+  handlePointerUp(event)
 }
 </script>
 
@@ -704,6 +795,7 @@ function handlePointerUp(event: PointerEvent) {
 }
 
 .chart-panel {
+  position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
@@ -769,6 +861,75 @@ function handlePointerUp(event: PointerEvent) {
 .axis-line {
   stroke: #dbe4f0;
   stroke-width: 1;
+}
+
+.crosshair-line {
+  stroke: #334155;
+  stroke-dasharray: 4 5;
+  stroke-width: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.crosshair-dot {
+  fill: #ffffff;
+  stroke: #2563eb;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 2;
+  width: 210px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  font-size: 12px;
+  pointer-events: none;
+  transform: translate(-50%, -108%);
+}
+
+.tooltip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tooltip-head strong,
+.tooltip-grid strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip-head .up {
+  color: #dc2626;
+}
+
+.tooltip-head .down {
+  color: #16a34a;
+}
+
+.tooltip-head .flat {
+  color: #475569;
+}
+
+.tooltip-grid {
+  display: grid;
+  grid-template-columns: 28px 1fr 32px 1fr;
+  gap: 5px 8px;
+}
+
+.tooltip-grid span {
+  color: #64748b;
+}
+
+.tooltip-grid strong {
+  text-align: right;
 }
 
 .wick-line {

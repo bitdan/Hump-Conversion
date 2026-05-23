@@ -52,9 +52,37 @@
     <v-window v-model="tab">
       <v-window-item value="pool">
         <v-card class="table-card" variant="flat">
+          <div class="table-toolbar">
+            <v-chip-group v-model="poolBoardFilter" selected-class="pool-selected" mandatory>
+              <v-chip
+                  v-for="filter in poolBoardFilters"
+                  :key="filter.value"
+                  :value="filter.value"
+                  variant="outlined"
+                  size="small"
+              >
+                {{ filter.label }}
+              </v-chip>
+            </v-chip-group>
+            <v-chip-group v-model="poolQualityFilter" selected-class="pool-selected" mandatory>
+              <v-chip value="all" variant="outlined" size="small">全部质量</v-chip>
+              <v-chip value="quality" variant="outlined" size="small">高质量</v-chip>
+              <v-chip value="risk" variant="outlined" size="small">高风险</v-chip>
+            </v-chip-group>
+            <v-chip
+                v-if="selectedSector"
+                color="primary"
+                variant="tonal"
+                size="small"
+                closable
+                @click:close="selectedSector = ''"
+            >
+              板块：{{ selectedSector }}
+            </v-chip>
+          </div>
           <v-data-table
               :headers="poolHeaders"
-              :items="review?.limit_up_pool || []"
+              :items="filteredLimitUpPool"
               :loading="loading"
               density="compact"
               item-value="code"
@@ -96,7 +124,12 @@
       <v-window-item value="sector">
         <div class="sector-grid">
           <v-card v-for="sector in review?.sector_strength || []" :key="sector.industry" class="sector-card"
-                  variant="flat">
+                  :class="{active: selectedSector === sector.industry}"
+                  variant="flat"
+                  role="button"
+                  tabindex="0"
+                  @click="toggleSector(sector.industry)"
+                  @keydown.enter.prevent="toggleSector(sector.industry)">
             <div class="sector-head">
               <div>
                 <h3>{{ sector.industry }}</h3>
@@ -135,6 +168,16 @@
                 {{ pool.label }} · {{ pool.count }}
               </v-chip>
             </v-chip-group>
+            <v-chip
+                v-if="selectedSector"
+                color="primary"
+                variant="tonal"
+                size="small"
+                closable
+                @click:close="selectedSector = ''"
+            >
+              板块：{{ selectedSector }}
+            </v-chip>
           </div>
           <v-data-table
               :headers="candidateHeaders"
@@ -179,7 +222,7 @@
         <v-card class="table-card" variant="flat">
           <v-data-table
               :headers="signalHeaders"
-              :items="review?.divergence_consensus || []"
+              :items="filteredSignals"
               :loading="loading"
               density="compact"
               item-value="code"
@@ -276,6 +319,9 @@ const selectedKline = ref<StockKlineSnapshot | null>(null)
 const selectedCode = ref('')
 const selectedName = ref('')
 const selectedPeriod = ref('day')
+const selectedSector = ref('')
+const poolBoardFilter = ref('all')
+const poolQualityFilter = ref('all')
 
 const klinePeriods = [
   {label: '日K', value: 'day'},
@@ -283,6 +329,13 @@ const klinePeriods = [
   {label: '15分', value: '15'},
   {label: '30分', value: '30'},
   {label: '60分', value: '60'}
+]
+
+const poolBoardFilters = [
+  {label: '全部梯队', value: 'all'},
+  {label: '首板', value: '1'},
+  {label: '2板', value: '2'},
+  {label: '3板+', value: '3plus'}
 ]
 
 const ScoreBar = defineComponent({
@@ -332,13 +385,50 @@ const candidatePoolTypes = computed(() => {
 
 const selectedPoolType = ref('2_to_3')
 
+const filteredLimitUpPool = computed(() => {
+  return (review.value?.limit_up_pool || []).filter((item) => {
+    if (selectedSector.value && item.industry !== selectedSector.value) {
+      return false
+    }
+    if (poolBoardFilter.value === '1' && item.consecutive_boards !== 1) {
+      return false
+    }
+    if (poolBoardFilter.value === '2' && item.consecutive_boards !== 2) {
+      return false
+    }
+    if (poolBoardFilter.value === '3plus' && item.consecutive_boards < 3) {
+      return false
+    }
+    if (poolQualityFilter.value === 'quality') {
+      return item.board_quality_score >= 75 && (item.open_count || 0) <= 1
+    }
+    if (poolQualityFilter.value === 'risk') {
+      return item.board_quality_score < 60 || (item.open_count || 0) >= 3 || item.tags.length > 0
+    }
+    return true
+  })
+})
+
 const filteredCandidates = computed(() => {
   const candidates = review.value?.advancement_candidates || []
   const poolTypes = candidatePoolTypes.value
   if (poolTypes.length > 0 && !poolTypes.some(item => item.value === selectedPoolType.value)) {
     selectedPoolType.value = poolTypes[0].value
   }
-  return candidates.filter(item => item.pool_type === selectedPoolType.value)
+  return candidates.filter(item => {
+    if (item.pool_type !== selectedPoolType.value) {
+      return false
+    }
+    return !selectedSector.value || item.stock.industry === selectedSector.value
+  })
+})
+
+const filteredSignals = computed(() => {
+  const signals = review.value?.divergence_consensus || []
+  if (!selectedSector.value) {
+    return signals
+  }
+  return signals.filter(item => item.industry === selectedSector.value)
 })
 
 const poolHeaders = [
@@ -390,6 +480,10 @@ function formatMoney(value?: number | null) {
   if (value >= 100000000) return `${(value / 100000000).toFixed(2)}亿`
   if (value >= 10000) return `${(value / 10000).toFixed(2)}万`
   return value.toFixed(0)
+}
+
+function toggleSector(industry: string) {
+  selectedSector.value = selectedSector.value === industry ? '' : industry
 }
 
 async function loadReview() {
@@ -532,6 +626,18 @@ onMounted(loadReview)
 }
 
 .candidate-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   padding: 12px 12px 0;
 }
 
@@ -616,6 +722,18 @@ onMounted(loadReview)
 
 .sector-card {
   padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sector-card:hover,
+.sector-card.active {
+  border-color: #2563eb;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+}
+
+.sector-card.active {
+  transform: translateY(-1px);
 }
 
 .sector-head {
