@@ -221,13 +221,6 @@
             <h2>个股K线</h2>
             <p>从复盘候选直接查看趋势、量能、MACD 和分时弱转强/回封信号。</p>
           </div>
-          <div class="dialog-actions">
-            <v-chip-group v-model="selectedPeriod" selected-class="pool-selected" mandatory class="period-switch">
-              <v-chip v-for="period in klinePeriods" :key="period.value" :value="period.value" variant="outlined">
-                {{ period.label }}
-              </v-chip>
-            </v-chip-group>
-          </div>
           <div class="toolbar">
             <v-btn
                 variant="text"
@@ -241,6 +234,17 @@
           </div>
         </div>
         <stock-kline-card :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
+        <v-tabs
+            v-model="selectedPeriod"
+            class="kline-period-tabs"
+            align-tabs="center"
+            density="comfortable"
+            mandatory
+        >
+          <v-tab v-for="period in klinePeriods" :key="period.value" :value="period.value">
+            {{ period.label }}
+          </v-tab>
+        </v-tabs>
       </v-card>
     </v-dialog>
   </div>
@@ -657,13 +661,12 @@ onMounted(loadReview)
   color: #64748b;
 }
 
-.dialog-actions {
-  display: flex;
-  align-items: center;
-}
-
-.period-switch {
-  flex-wrap: wrap;
+.kline-period-tabs {
+  margin-top: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {

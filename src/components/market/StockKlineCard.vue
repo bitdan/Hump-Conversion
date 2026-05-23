@@ -194,19 +194,24 @@
           <g>
             <text
                 v-for="label in axisLabels"
-                :key="label.text"
+                :key="label.key"
                 :x="label.x"
-                y="546"
+                y="540"
                 text-anchor="middle"
                 class="axis-text"
             >
               {{ label.text }}
+            </text>
+            <text x="492" y="556" text-anchor="middle" class="axis-title">
+              日期 / 时间
             </text>
           </g>
         </svg>
       </div>
 
       <div class="legend-row">
+        <span class="legend-chip candle-up">阳K</span>
+        <span class="legend-chip candle-down">阴K</span>
         <span class="legend-chip ma5">MA5</span>
         <span class="legend-chip ma10">MA10</span>
         <span class="legend-chip ma20">MA20</span>
@@ -428,6 +433,7 @@ const axisLabels = computed(() => {
   if (!bars.value.length) return []
   const points = [0, Math.floor((bars.value.length - 1) * 0.33), Math.floor((bars.value.length - 1) * 0.66), bars.value.length - 1]
   return [...new Set(points)].map((index) => ({
+    key: `${index}-${bars.value[index].trade_date}`,
     text: formatAxisLabel(bars.value[index].trade_date),
     x: left + barStep.value * index + barStep.value / 2
   }))
@@ -473,9 +479,9 @@ function formatAmount(value: number) {
 
 function formatAxisLabel(value: string) {
   if (value.length > 10) {
-    return value.slice(11, 16)
+    return `${value.slice(5, 10)} ${value.slice(11, 16)}`
   }
-  return value.slice(5)
+  return value.slice(5).replace('-', '/')
 }
 
 function formatObservedAt(value: string) {
@@ -749,6 +755,12 @@ function handlePointerUp(event: PointerEvent) {
   font-size: 12px;
 }
 
+.axis-title {
+  fill: #94a3b8;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
 .wick-line {
   stroke-width: 1.4;
 }
@@ -805,6 +817,14 @@ function handlePointerUp(event: PointerEvent) {
 
 .legend-chip.ma5 {
   color: #f59e0b;
+}
+
+.legend-chip.candle-up {
+  color: #dc2626;
+}
+
+.legend-chip.candle-down {
+  color: #16a34a;
 }
 
 .legend-chip.ma10 {
