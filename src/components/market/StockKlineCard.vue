@@ -85,7 +85,7 @@
       <div class="chart-panel">
         <svg
             class="chart-svg"
-            viewBox="0 0 960 560"
+            viewBox="0 0 960 600"
             preserveAspectRatio="none"
             @wheel.prevent="handleWheel"
             @pointerdown="handlePointerDown"
@@ -196,15 +196,13 @@
                 v-for="label in axisLabels"
                 :key="label.key"
                 :x="label.x"
-                y="540"
+                y="318"
                 text-anchor="middle"
                 class="axis-text"
             >
               {{ label.text }}
             </text>
-            <text x="492" y="556" text-anchor="middle" class="axis-title">
-              日期 / 时间
-            </text>
+            <line x1="56" x2="928" y1="304" y2="304" class="axis-line"/>
           </g>
         </svg>
       </div>
@@ -246,10 +244,10 @@ const left = 56
 const right = 928
 const priceTop = 24
 const priceBottom = 296
-const volumeTop = 322
-const volumeBottom = 392
-const macdTop = 424
-const macdBottom = 516
+const volumeTop = 338
+const volumeBottom = 414
+const macdTop = 448
+const macdBottom = 540
 const minVisibleBars = 16
 
 const rawBars = computed(() => props.snapshot?.bars || [])
@@ -704,7 +702,7 @@ function handlePointerUp(event: PointerEvent) {
 
 .chart-svg {
   width: 100%;
-  height: 560px;
+  height: 600px;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -752,13 +750,13 @@ function handlePointerUp(event: PointerEvent) {
 
 .axis-text {
   fill: #64748b;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.axis-title {
-  fill: #94a3b8;
-  font-size: 12px;
-  letter-spacing: 0.08em;
+.axis-line {
+  stroke: #dbe4f0;
+  stroke-width: 1;
 }
 
 .wick-line {
@@ -877,7 +875,7 @@ function handlePointerUp(event: PointerEvent) {
   }
 
   .chart-svg {
-    height: 500px;
+    height: 540px;
   }
 }
 </style>
