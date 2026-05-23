@@ -134,7 +134,9 @@ watch(selectedJob, (job) => {
   if (!job) return
   for (const param of job.params) {
     if (param.key === 'adjust') form[param.key] = 'qfq'
-    if (param.key === 'sleep') form[param.key] = 0.05
+    if (param.key === 'refresh_universe') form[param.key] = 'false'
+    if (param.key === 'sleep') form[param.key] = 0.3
+    if (param.key === 'offset') form[param.key] = 0
   }
 })
 
