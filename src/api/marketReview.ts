@@ -88,6 +88,8 @@ export interface StockKlineBar {
     dif?: number | null
     dea?: number | null
     macd?: number | null
+    is_reseal_bar?: boolean
+    is_breakout_bar?: boolean
 }
 
 export interface StockKlineSummary {

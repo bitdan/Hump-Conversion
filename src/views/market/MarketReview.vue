@@ -42,11 +42,19 @@
       </v-card>
     </div>
 
+    <v-card class="brief-card" variant="flat">
+      <div v-for="item in reviewBrief" :key="item.label" class="brief-item">
+        <span>{{ item.label }}</span>
+        <strong>{{ item.value }}</strong>
+      </div>
+    </v-card>
+
     <v-tabs v-model="tab" color="primary" density="comfortable" class="tabs">
       <v-tab value="pool" prepend-icon="mdi-format-list-bulleted">涨停池</v-tab>
       <v-tab value="sector" prepend-icon="mdi-chart-box-outline">板块强度</v-tab>
       <v-tab value="candidate" prepend-icon="mdi-filter-star-outline">连板候选</v-tab>
       <v-tab value="signal" prepend-icon="mdi-swap-horizontal-bold">分歧转一致</v-tab>
+      <v-tab value="watch" prepend-icon="mdi-star-outline">观察池</v-tab>
     </v-tabs>
 
     <v-window v-model="tab">
@@ -116,6 +124,15 @@
                   {{ tag }}
                 </v-chip>
               </div>
+            </template>
+            <template #item.action="{ item }">
+              <v-btn
+                  size="small"
+                  variant="text"
+                  :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
+                  :color="isWatched(item.code) ? 'amber' : undefined"
+                  @click="toggleWatchFromPool(item)"
+              />
             </template>
           </v-data-table>
         </v-card>
@@ -214,6 +231,15 @@
                 </v-chip>
               </div>
             </template>
+            <template #item.action="{ item }">
+              <v-btn
+                  size="small"
+                  variant="text"
+                  :icon="isWatched(item.stock.code) ? 'mdi-star' : 'mdi-star-outline'"
+                  :color="isWatched(item.stock.code) ? 'amber' : undefined"
+                  @click="toggleWatchFromCandidate(item)"
+              />
+            </template>
           </v-data-table>
         </v-card>
       </v-window-item>
@@ -251,6 +277,49 @@
                   {{ risk }}
                 </v-chip>
               </div>
+            </template>
+            <template #item.action="{ item }">
+              <v-btn
+                  size="small"
+                  variant="text"
+                  :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
+                  :color="isWatched(item.code) ? 'amber' : undefined"
+                  @click="toggleWatchFromSignal(item)"
+              />
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-window-item>
+
+      <v-window-item value="watch">
+        <v-card class="table-card" variant="flat">
+          <div class="table-toolbar">
+            <span class="watch-count">观察 {{ watchedItems.length }} 只</span>
+          </div>
+          <v-data-table
+              :headers="watchHeaders"
+              :items="watchRows"
+              density="compact"
+              item-value="code"
+              fixed-header
+              height="560"
+          >
+            <template #item.name="{ item }">
+              <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.code }}</span>
+              </button>
+            </template>
+            <template #item.result="{ item }">
+              <v-chip size="small" :color="watchResultColor(item.result)" variant="tonal">
+                {{ item.result }}
+              </v-chip>
+            </template>
+            <template #item.change_percent="{ item }">
+              <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
+            </template>
+            <template #item.action="{ item }">
+              <v-btn size="small" variant="text" icon="mdi-delete-outline" @click="removeWatch(item.code)"/>
             </template>
           </v-data-table>
         </v-card>
@@ -304,9 +373,18 @@
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
 import StockKlineCard from '@/components/market/StockKlineCard.vue'
-import {getMarketReview, getStockKline, type MarketReviewData, type StockKlineSnapshot} from '@/api/marketReview'
+import {
+  getMarketReview,
+  getStockKline,
+  type CandidateStock,
+  type DivergenceConsensusSignal,
+  type LimitUpStock,
+  type MarketReviewData,
+  type StockKlineSnapshot
+} from '@/api/marketReview'
 
 const today = new Date().toISOString().slice(0, 10)
+const WATCH_STORAGE_KEY = 'market-review-watchlist'
 const queryDate = ref(today)
 const tab = ref('pool')
 const loading = ref(false)
@@ -322,6 +400,17 @@ const selectedPeriod = ref('day')
 const selectedSector = ref('')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
+const watchedItems = ref<WatchItem[]>([])
+
+interface WatchItem {
+  code: string
+  name: string
+  industry: string
+  watchDate: string
+  source: string
+  targetBoards?: number
+  score?: number
+}
 
 const klinePeriods = [
   {label: '日K', value: 'day'},
@@ -366,6 +455,24 @@ const summaryCards = computed(() => {
     {label: '强势板块', value: data?.sector_strength.length || 0, icon: 'mdi-chart-box-outline'},
     {label: '连板候选', value: data?.advancement_candidates.length || 0, icon: 'mdi-filter-star-outline'},
     {label: '分歧转一致', value: data?.divergence_consensus.length || 0, icon: 'mdi-swap-horizontal-bold'}
+  ]
+})
+
+const reviewBrief = computed(() => {
+  const data = review.value
+  const pool = data?.limit_up_pool || []
+  const sectors = data?.sector_strength || []
+  const maxBoard = pool.length ? Math.max(...pool.map(item => item.consecutive_boards)) : 0
+  const leaderSectors = sectors.slice(0, 3).map(item => item.industry).join(' / ') || '-'
+  const openCount = pool.reduce((sum, item) => sum + (item.open_count || 0), 0)
+  const advancedCount = pool.filter(item => item.consecutive_boards >= 2).length
+  const riskCount = pool.filter(item => (item.open_count || 0) >= 3 || item.tags.length > 0).length
+  return [
+    {label: '最高板', value: maxBoard ? `${maxBoard}板` : '-'},
+    {label: '主线板块', value: leaderSectors},
+    {label: '连板占比', value: pool.length ? `${((advancedCount / pool.length) * 100).toFixed(1)}%` : '-'},
+    {label: '炸板次数', value: openCount},
+    {label: '风险标的', value: riskCount}
   ]
 })
 
@@ -431,6 +538,20 @@ const filteredSignals = computed(() => {
   return signals.filter(item => item.industry === selectedSector.value)
 })
 
+const watchRows = computed(() => {
+  const poolMap = new Map((review.value?.limit_up_pool || []).map(item => [item.code, item]))
+  return watchedItems.value.map((item) => {
+    const current = poolMap.get(item.code)
+    const result = buildWatchResult(item, current)
+    return {
+      ...item,
+      result,
+      current_boards: current?.consecutive_boards || null,
+      change_percent: current?.change_percent ?? null
+    }
+  })
+})
+
 const poolHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
@@ -441,7 +562,8 @@ const poolHeaders = [
   {title: '炸板', key: 'open_count', width: 74},
   {title: '换手%', key: 'turnover_rate', width: 86},
   {title: '封单', key: 'seal_amount', width: 112},
-  {title: '风险', key: 'tags', minWidth: 170}
+  {title: '风险', key: 'tags', minWidth: 170},
+  {title: '观察', key: 'action', width: 76, sortable: false}
 ]
 
 const candidateHeaders = [
@@ -451,7 +573,8 @@ const candidateHeaders = [
   {title: '候选分', key: 'candidate_score', minWidth: 140},
   {title: '板块分', key: 'sector.strength_score', width: 90},
   {title: '入池理由', key: 'reasons', minWidth: 240},
-  {title: '风险', key: 'risks', minWidth: 180}
+  {title: '风险', key: 'risks', minWidth: 180},
+  {title: '观察', key: 'action', width: 76, sortable: false}
 ]
 
 const signalHeaders = [
@@ -460,7 +583,19 @@ const signalHeaders = [
   {title: '阶段', key: 'phase', width: 120},
   {title: '信号分', key: 'signal_score', minWidth: 140},
   {title: '识别依据', key: 'reasons', minWidth: 260},
-  {title: '风险', key: 'risks', minWidth: 180}
+  {title: '风险', key: 'risks', minWidth: 180},
+  {title: '观察', key: 'action', width: 76, sortable: false}
+]
+
+const watchHeaders = [
+  {title: '股票', key: 'name', minWidth: 130},
+  {title: '行业', key: 'industry', minWidth: 110},
+  {title: '加入日期', key: 'watchDate', width: 112},
+  {title: '来源', key: 'source', width: 120},
+  {title: '目标', key: 'targetBoards', width: 80},
+  {title: '当前结果', key: 'result', width: 110},
+  {title: '涨跌幅', key: 'change_percent', width: 90},
+  {title: '操作', key: 'action', width: 76, sortable: false}
 ]
 
 function levelColor(level: string) {
@@ -482,8 +617,101 @@ function formatMoney(value?: number | null) {
   return value.toFixed(0)
 }
 
+function formatPercent(value?: number | null) {
+  if (value == null) return '-'
+  return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+function changeClass(value?: number | null) {
+  if (value == null || value === 0) return 'flat-text'
+  return value > 0 ? 'up-text' : 'down-text'
+}
+
 function toggleSector(industry: string) {
   selectedSector.value = selectedSector.value === industry ? '' : industry
+}
+
+function isWatched(code: string) {
+  return watchedItems.value.some(item => item.code === code)
+}
+
+function toggleWatchFromPool(stock: LimitUpStock) {
+  toggleWatch({
+    code: stock.code,
+    name: stock.name,
+    industry: stock.industry,
+    watchDate: queryDate.value,
+    source: `${stock.consecutive_boards}板涨停池`,
+    targetBoards: stock.consecutive_boards + 1,
+    score: stock.board_quality_score
+  })
+}
+
+function toggleWatchFromCandidate(candidate: CandidateStock) {
+  toggleWatch({
+    code: candidate.stock.code,
+    name: candidate.stock.name,
+    industry: candidate.stock.industry,
+    watchDate: queryDate.value,
+    source: candidate.pool_type.replace('_to_', '进'),
+    targetBoards: candidate.target_boards,
+    score: candidate.candidate_score
+  })
+}
+
+function toggleWatchFromSignal(signal: DivergenceConsensusSignal) {
+  toggleWatch({
+    code: signal.code,
+    name: signal.name,
+    industry: signal.industry,
+    watchDate: queryDate.value,
+    source: signal.phase,
+    score: signal.signal_score
+  })
+}
+
+function toggleWatch(item: WatchItem) {
+  if (isWatched(item.code)) {
+    removeWatch(item.code)
+    return
+  }
+  watchedItems.value = [item, ...watchedItems.value]
+  saveWatchlist()
+}
+
+function removeWatch(code: string) {
+  watchedItems.value = watchedItems.value.filter(item => item.code !== code)
+  saveWatchlist()
+}
+
+function buildWatchResult(item: WatchItem, current?: LimitUpStock) {
+  if (!current) {
+    return queryDate.value <= item.watchDate ? '待跟踪' : '未涨停'
+  }
+  if (item.targetBoards && current.consecutive_boards >= item.targetBoards) {
+    return '晋级'
+  }
+  return `${current.consecutive_boards}板`
+}
+
+function watchResultColor(result: string) {
+  if (result === '晋级') return 'red'
+  if (result.includes('板')) return 'orange'
+  if (result === '未涨停') return 'grey'
+  return 'primary'
+}
+
+function loadWatchlist() {
+  try {
+    const raw = localStorage.getItem(WATCH_STORAGE_KEY)
+    watchedItems.value = raw ? JSON.parse(raw) : []
+  } catch {
+    watchedItems.value = []
+  }
+}
+
+function saveWatchlist() {
+  localStorage.setItem(WATCH_STORAGE_KEY, JSON.stringify(watchedItems.value))
 }
 
 async function loadReview() {
@@ -541,7 +769,10 @@ watch(selectedPeriod, async (next, prev) => {
   await loadKline(false)
 })
 
-onMounted(loadReview)
+onMounted(() => {
+  loadWatchlist()
+  loadReview()
+})
 </script>
 
 <style scoped>
@@ -625,6 +856,39 @@ onMounted(loadReview)
   margin-bottom: 12px;
 }
 
+.brief-card {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.brief-item {
+  min-width: 0;
+  padding: 10px 12px;
+  background: #ffffff;
+}
+
+.brief-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.brief-item strong {
+  display: block;
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .candidate-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -639,6 +903,12 @@ onMounted(loadReview)
   align-items: center;
   gap: 8px;
   padding: 12px 12px 0;
+}
+
+.watch-count {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .pool-selected {
@@ -712,6 +982,20 @@ onMounted(loadReview)
   height: 100%;
   border-radius: inherit;
   background: #2563eb;
+}
+
+.up-text {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.down-text {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.flat-text {
+  color: #475569;
 }
 
 .sector-grid {
@@ -827,6 +1111,10 @@ onMounted(loadReview)
   }
 
   .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brief-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

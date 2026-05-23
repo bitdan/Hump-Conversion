@@ -205,6 +205,16 @@
             <line x1="56" x2="928" y1="294" y2="294" class="axis-line"/>
           </g>
 
+          <g>
+            <g v-for="marker in signalMarkers" :key="marker.key">
+              <line :x1="marker.x" :x2="marker.x" y1="22" y2="516" :class="['signal-marker-line', marker.tone]"/>
+              <rect :x="marker.x - 24" :y="marker.y - 22" width="48" height="18" rx="5" :class="['signal-marker-bg', marker.tone]"/>
+              <text :x="marker.x" :y="marker.y - 9" text-anchor="middle" class="signal-marker-text">
+                {{ marker.label }}
+              </text>
+            </g>
+          </g>
+
           <g v-if="hoveredPoint">
             <line
                 :x1="hoveredPoint.x"
@@ -465,6 +475,31 @@ const axisLabels = computed(() => {
     text: formatAxisLabel(bars.value[index].trade_date),
     x: left + barStep.value * index + barStep.value / 2
   }))
+})
+
+const signalMarkers = computed(() => {
+  const markers: Array<{ key: string; x: number; y: number; label: string; tone: string }> = []
+  bars.value.forEach((item, index) => {
+    const x = left + barStep.value * index + barStep.value / 2
+    if (item.is_reseal_bar) {
+      markers.push({key: `reseal-${item.trade_date}`, x, y: Math.max(priceY(item.high_price) - 8, 42), label: '回封', tone: 'reseal'})
+    } else if (item.is_breakout_bar) {
+      markers.push({key: `breakout-${item.trade_date}`, x, y: Math.max(priceY(item.high_price) - 8, 42), label: '触板', tone: 'breakout'})
+    }
+  })
+  for (const signal of props.snapshot?.intraday_signals || []) {
+    const index = bars.value.findIndex(item => item.trade_date === signal.observed_at)
+    if (index < 0) continue
+    const item = bars.value[index]
+    markers.push({
+      key: `${signal.signal_type}-${signal.observed_at}`,
+      x: left + barStep.value * index + barStep.value / 2,
+      y: Math.max(priceY(item.high_price) - 32, 42),
+      label: signal.title.slice(0, 3),
+      tone: signal.signal_type === 'weak_to_strong' ? 'strong' : 'signal'
+    })
+  }
+  return markers
 })
 
 const priceGridLines = computed(() => buildGrid(priceRange.value.min, priceRange.value.max, priceTop, priceBottom))
@@ -861,6 +896,52 @@ function handlePointerLeave(event: PointerEvent) {
 .axis-line {
   stroke: #dbe4f0;
   stroke-width: 1;
+}
+
+.signal-marker-line {
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.signal-marker-line.reseal,
+.signal-marker-line.signal {
+  stroke: #dc2626;
+}
+
+.signal-marker-line.breakout {
+  stroke: #f59e0b;
+}
+
+.signal-marker-line.strong {
+  stroke: #2563eb;
+}
+
+.signal-marker-bg {
+  fill: #ffffff;
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+
+.signal-marker-bg.reseal,
+.signal-marker-bg.signal {
+  stroke: #dc2626;
+}
+
+.signal-marker-bg.breakout {
+  stroke: #f59e0b;
+}
+
+.signal-marker-bg.strong {
+  stroke: #2563eb;
+}
+
+.signal-marker-text {
+  fill: #0f172a;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
 }
 
 .crosshair-line {
