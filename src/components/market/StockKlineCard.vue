@@ -500,11 +500,9 @@ function clampWindowEnd(nextEnd: number, count = normalizedVisibleCount.value) {
 
 function setVisibleCount(nextCount: number) {
   if (!fullCount.value) return
-  const oldCount = normalizedVisibleCount.value
   const next = Math.max(minVisibleBars, Math.min(nextCount, fullCount.value))
-  const center = windowStart.value + oldCount / 2
   visibleCount.value = next
-  clampWindowEnd(Math.round(center + next / 2), next)
+  clampWindowEnd(fullCount.value, next)
 }
 
 function zoomIn() {
