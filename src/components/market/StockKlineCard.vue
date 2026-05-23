@@ -85,7 +85,7 @@
       <div class="chart-panel">
         <svg
             class="chart-svg"
-            viewBox="0 0 960 600"
+            viewBox="0 0 960 560"
             preserveAspectRatio="none"
             @wheel.prevent="handleWheel"
             @pointerdown="handlePointerDown"
@@ -196,13 +196,13 @@
                 v-for="label in axisLabels"
                 :key="label.key"
                 :x="label.x"
-                y="318"
+                y="308"
                 text-anchor="middle"
                 class="axis-text"
             >
               {{ label.text }}
             </text>
-            <line x1="56" x2="928" y1="304" y2="304" class="axis-line"/>
+            <line x1="56" x2="928" y1="294" y2="294" class="axis-line"/>
           </g>
         </svg>
       </div>
@@ -243,11 +243,11 @@ const chartWidth = 872
 const left = 56
 const right = 928
 const priceTop = 24
-const priceBottom = 296
-const volumeTop = 338
-const volumeBottom = 414
-const macdTop = 448
-const macdBottom = 540
+const priceBottom = 286
+const volumeTop = 326
+const volumeBottom = 390
+const macdTop = 420
+const macdBottom = 516
 const minVisibleBars = 16
 
 const rawBars = computed(() => props.snapshot?.bars || [])
@@ -324,7 +324,8 @@ const macdRange = computed(() => {
   }
   const values = bars.value.flatMap((item) => [item.macd || 0, item.dif || 0, item.dea || 0])
   const absolute = Math.max(...values.map((value) => Math.abs(value)), 0.1)
-  return {min: -absolute, max: absolute}
+  const padding = Math.max(absolute * 0.28, 0.02)
+  return {min: -absolute - padding, max: absolute + padding}
 })
 
 const barStep = computed(() => chartWidth / Math.max(bars.value.length, 1))
@@ -626,35 +627,46 @@ function handlePointerUp(event: PointerEvent) {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
+  grid-template-columns: repeat(6, minmax(82px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .metric-card {
-  padding: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 9px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.86);
 }
 
 .metric-card span {
-  display: block;
-  margin-bottom: 6px;
+  flex: 0 0 auto;
   color: #64748b;
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .metric-card strong {
-  font-size: 17px;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .compact-row {
@@ -665,7 +677,7 @@ function handlePointerUp(event: PointerEvent) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .signal-card {
@@ -698,11 +710,13 @@ function handlePointerUp(event: PointerEvent) {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .chart-svg {
   width: 100%;
-  height: 600px;
+  height: clamp(380px, 54vh, 560px);
+  min-height: 360px;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -790,15 +804,15 @@ function handlePointerUp(event: PointerEvent) {
 .legend-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .legend-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 5px;
+  padding: 4px 8px;
   border-radius: 999px;
   font-size: 12px;
   background: #f8fafc;
@@ -871,11 +885,31 @@ function handlePointerUp(event: PointerEvent) {
   }
 
   .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .chart-svg {
-    height: 540px;
+    height: clamp(360px, 56vh, 500px);
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 600px) {
+  .kline-card {
+    padding: 12px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-card {
+    padding: 6px 8px;
+  }
+
+  .chart-svg {
+    height: clamp(340px, 58vh, 460px);
+    min-height: 320px;
   }
 }
 </style>

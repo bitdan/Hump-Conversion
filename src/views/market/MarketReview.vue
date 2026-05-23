@@ -238,10 +238,18 @@
             v-model="selectedPeriod"
             class="kline-period-tabs"
             align-tabs="center"
+            color="primary"
             density="comfortable"
             mandatory
+            selected-class="kline-period-tab-selected"
+            slider-color="primary"
         >
-          <v-tab v-for="period in klinePeriods" :key="period.value" :value="period.value">
+          <v-tab
+              v-for="period in klinePeriods"
+              :key="period.value"
+              :value="period.value"
+              class="kline-period-tab"
+          >
             {{ period.label }}
           </v-tab>
         </v-tabs>
@@ -667,6 +675,21 @@ onMounted(loadReview)
   border-radius: 14px;
   background: #f8fafc;
   overflow: hidden;
+}
+
+.kline-period-tab {
+  min-width: 112px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.kline-period-tabs :deep(.kline-period-tab-selected) {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.kline-period-tabs :deep(.v-tab__slider) {
+  height: 3px;
 }
 
 @media (max-width: 900px) {
