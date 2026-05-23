@@ -57,8 +57,42 @@
         </article>
       </div>
 
+      <div class="zoom-toolbar">
+        <div class="zoom-actions">
+          <v-btn size="small" variant="tonal" prepend-icon="mdi-magnify-minus-outline" @click="zoomOut">
+            缩小
+          </v-btn>
+          <v-btn size="small" variant="tonal" prepend-icon="mdi-magnify-plus-outline" @click="zoomIn">
+            放大
+          </v-btn>
+          <v-btn size="small" variant="text" @click="resetZoom">
+            全部
+          </v-btn>
+        </div>
+        <span>{{ visibleRangeLabel }}</span>
+      </div>
+
+      <input
+          v-if="canPan"
+          class="range-slider"
+          type="range"
+          min="0"
+          :max="maxWindowStart"
+          :value="windowStart"
+          @input="handleRangeInput"
+      />
+
       <div class="chart-panel">
-        <svg class="chart-svg" viewBox="0 0 960 560" preserveAspectRatio="none">
+        <svg
+            class="chart-svg"
+            viewBox="0 0 960 560"
+            preserveAspectRatio="none"
+            @wheel.prevent="handleWheel"
+            @pointerdown="handlePointerDown"
+            @pointermove="handlePointerMove"
+            @pointerup="handlePointerUp"
+            @pointerleave="handlePointerUp"
+        >
           <g>
             <line
                 v-for="line in priceGridLines"
@@ -193,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, ref, watch} from 'vue'
 import type {StockKlineBar, StockKlineSnapshot, StockKlineSummary} from '@/api/marketReview'
 
 const props = defineProps<{
@@ -211,8 +245,23 @@ const volumeTop = 322
 const volumeBottom = 392
 const macdTop = 424
 const macdBottom = 516
+const minVisibleBars = 16
 
-const bars = computed(() => props.snapshot?.bars || [])
+const rawBars = computed(() => props.snapshot?.bars || [])
+const visibleCount = ref(80)
+const windowEnd = ref(0)
+const dragging = ref(false)
+const dragStartX = ref(0)
+const dragStartEnd = ref(0)
+const fullCount = computed(() => rawBars.value.length)
+const normalizedVisibleCount = computed(() => {
+  if (!fullCount.value) return minVisibleBars
+  return Math.max(minVisibleBars, Math.min(visibleCount.value, fullCount.value))
+})
+const windowStart = computed(() => Math.max(0, windowEnd.value - normalizedVisibleCount.value))
+const maxWindowStart = computed(() => Math.max(fullCount.value - normalizedVisibleCount.value, 0))
+const canPan = computed(() => fullCount.value > normalizedVisibleCount.value)
+const bars = computed(() => rawBars.value.slice(windowStart.value, windowEnd.value))
 const summary = computed<StockKlineSummary | null>(() => props.snapshot?.summary || null)
 const periodLabel = computed(() => {
   const period = props.snapshot?.period || 'day'
@@ -388,6 +437,17 @@ const priceGridLines = computed(() => buildGrid(priceRange.value.min, priceRange
 const volumeGridLines = computed(() => buildGrid(0, volumeMax.value, volumeTop, volumeBottom, false))
 const macdGridLines = computed(() => buildGrid(macdRange.value.min, macdRange.value.max, macdTop, macdBottom, false))
 const macdZeroY = computed(() => macdY(0))
+const visibleRangeLabel = computed(() => {
+  if (!bars.value.length) return '无数据'
+  const first = formatAxisLabel(bars.value[0].trade_date)
+  const last = formatAxisLabel(bars.value[bars.value.length - 1].trade_date)
+  return `${first} - ${last} · ${bars.value.length}/${fullCount.value}根`
+})
+
+watch(rawBars, (next) => {
+  visibleCount.value = Math.min(Math.max(80, minVisibleBars), Math.max(next.length, minVisibleBars))
+  windowEnd.value = next.length
+}, {immediate: true})
 
 function buildGrid(min: number, max: number, top: number, bottom: number, withValue = true) {
   return Array.from({length: 4}, (_, index) => {
@@ -422,6 +482,78 @@ function formatObservedAt(value: string) {
   if (!value) return '--'
   if (value.length > 10) return value.slice(11, 16)
   return value
+}
+
+function clampWindowEnd(nextEnd: number, count = normalizedVisibleCount.value) {
+  if (!fullCount.value) {
+    windowEnd.value = 0
+    return
+  }
+  const minEnd = Math.min(count, fullCount.value)
+  windowEnd.value = Math.max(minEnd, Math.min(nextEnd, fullCount.value))
+}
+
+function setVisibleCount(nextCount: number) {
+  if (!fullCount.value) return
+  const oldCount = normalizedVisibleCount.value
+  const next = Math.max(minVisibleBars, Math.min(nextCount, fullCount.value))
+  const center = windowStart.value + oldCount / 2
+  visibleCount.value = next
+  clampWindowEnd(Math.round(center + next / 2), next)
+}
+
+function zoomIn() {
+  setVisibleCount(Math.round(normalizedVisibleCount.value * 0.75))
+}
+
+function zoomOut() {
+  setVisibleCount(Math.round(normalizedVisibleCount.value * 1.35))
+}
+
+function resetZoom() {
+  visibleCount.value = Math.max(fullCount.value, minVisibleBars)
+  windowEnd.value = fullCount.value
+}
+
+function handleWheel(event: WheelEvent) {
+  if (!fullCount.value) return
+  if (event.deltaY < 0) {
+    zoomIn()
+  } else {
+    zoomOut()
+  }
+}
+
+function handleRangeInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  const start = Number(target.value || 0)
+  clampWindowEnd(start + normalizedVisibleCount.value)
+}
+
+function handlePointerDown(event: PointerEvent) {
+  if (!canPan.value) return
+  dragging.value = true
+  dragStartX.value = event.clientX
+  dragStartEnd.value = windowEnd.value
+  ;(event.currentTarget as SVGElement).setPointerCapture(event.pointerId)
+}
+
+function handlePointerMove(event: PointerEvent) {
+  if (!dragging.value || !canPan.value) return
+  const deltaX = event.clientX - dragStartX.value
+  const step = chartWidth / Math.max(normalizedVisibleCount.value, 1)
+  const deltaBars = Math.round(deltaX / step)
+  clampWindowEnd(dragStartEnd.value - deltaBars)
+}
+
+function handlePointerUp(event: PointerEvent) {
+  if (!dragging.value) return
+  dragging.value = false
+  try {
+    ;(event.currentTarget as SVGElement).releasePointerCapture(event.pointerId)
+  } catch {
+    // Pointer may already be released when leaving the SVG.
+  }
 }
 </script>
 
@@ -567,6 +699,35 @@ function formatObservedAt(value: string) {
 .chart-svg {
   width: 100%;
   height: 560px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.chart-svg:active {
+  cursor: grabbing;
+}
+
+.zoom-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.zoom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.range-slider {
+  width: 100%;
+  margin: 0 0 10px;
+  accent-color: #2563eb;
 }
 
 .grid-line {
