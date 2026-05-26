@@ -35,6 +35,7 @@
     "jsqr": "^1.4.0",
     "jsrsasign": "^10.9.0",
     "konva": "^9.3.18",
+    "lightweight-charts": "^5.2.0",
     "pinia": "^2.3.0",
     "qrcode": "^1.5.4",
     "save-svg-as-png": "^1.4.17",

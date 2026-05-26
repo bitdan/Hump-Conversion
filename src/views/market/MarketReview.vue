@@ -334,24 +334,6 @@
             <p>从复盘候选直接查看趋势、量能、MACD 和分时弱转强/回封信号。</p>
           </div>
           <div class="toolbar">
-            <v-btn-toggle
-                v-if="selectedPeriod === 'day'"
-                v-model="selectedDayRange"
-                class="day-range-toggle"
-                density="compact"
-                mandatory
-                variant="outlined"
-            >
-              <v-btn
-                  v-for="mode in dayRangeModes"
-                  :key="mode.value"
-                  :value="mode.value"
-                  size="small"
-                  :prepend-icon="mode.icon"
-              >
-                {{ mode.label }}
-              </v-btn>
-            </v-btn-toggle>
             <v-btn
                 variant="text"
                 prepend-icon="mdi-refresh"
@@ -363,7 +345,7 @@
             <v-btn icon="mdi-close" variant="text" @click="klineDialog = false"/>
           </div>
         </div>
-        <stock-kline-card :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
+        <StockKlineCard :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
         <v-tabs
             v-model="selectedPeriod"
             class="kline-period-tabs"
@@ -413,8 +395,7 @@ const klineError = ref('')
 const selectedKline = ref<StockKlineSnapshot | null>(null)
 const selectedCode = ref('')
 const selectedName = ref('')
-const selectedPeriod = ref('day')
-const selectedDayRange = ref<'recent' | 'single'>('recent')
+const selectedPeriod = ref('1')
 const selectedSector = ref('')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
@@ -431,16 +412,16 @@ interface WatchItem {
 }
 
 const klinePeriods = [
+  {label: '分时', value: '1'},
+  {label: '五日K', value: 'five_day'},
   {label: '日K', value: 'day'},
-  {label: '5分', value: '5'},
-  {label: '15分', value: '15'},
+  {label: '周K', value: 'week'},
+  {label: '年K', value: 'year'},
+  {label: '120分', value: '120'},
+  {label: '60分', value: '60'},
   {label: '30分', value: '30'},
-  {label: '60分', value: '60'}
-]
-
-const dayRangeModes = [
-  {label: '近期', value: 'recent', icon: 'mdi-chart-timeline-variant'},
-  {label: '单日', value: 'single', icon: 'mdi-calendar-today'}
+  {label: '15分', value: '15'},
+  {label: '5分', value: '5'}
 ]
 
 const poolBoardFilters = [
@@ -776,8 +757,7 @@ async function openKline(code: string, name: string) {
   selectedCode.value = code
   selectedName.value = name
   selectedKline.value = null
-  selectedPeriod.value = 'day'
-  selectedDayRange.value = 'recent'
+  selectedPeriod.value = '1'
   klineDialog.value = true
   await loadKline(false)
 }
@@ -793,18 +773,17 @@ watch(selectedPeriod, async (next, prev) => {
   await loadKline(false)
 })
 
-watch(selectedDayRange, async (next, prev) => {
-  if (!klineDialog.value || !selectedCode.value || selectedPeriod.value !== 'day' || next === prev) {
-    return
-  }
-  await loadKline(false)
-})
-
 const klineLimit = computed(() => {
-  if (selectedPeriod.value !== 'day') {
-    return 64
+  if (selectedPeriod.value === 'five_day') {
+    return 5
   }
-  return selectedDayRange.value === 'single' ? 1 : 120
+  if (selectedPeriod.value === 'day' || selectedPeriod.value === 'week') {
+    return 120
+  }
+  if (selectedPeriod.value === 'year') {
+    return 20
+  }
+  return 64
 })
 
 onMounted(() => {

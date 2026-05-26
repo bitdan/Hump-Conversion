@@ -57,206 +57,23 @@
         </article>
       </div>
 
-      <div class="zoom-toolbar">
-        <div class="zoom-actions">
-          <v-btn size="small" variant="tonal" prepend-icon="mdi-magnify-minus-outline" @click="zoomOut">
-            缩小
-          </v-btn>
-          <v-btn size="small" variant="tonal" prepend-icon="mdi-magnify-plus-outline" @click="zoomIn">
-            放大
-          </v-btn>
-          <v-btn size="small" variant="text" @click="resetZoom">
-            全部
-          </v-btn>
-        </div>
-        <span>{{ visibleRangeLabel }}</span>
-      </div>
-
-      <input
-          v-if="canPan"
-          class="range-slider"
-          type="range"
-          min="0"
-          :max="maxWindowStart"
-          :value="windowStart"
-          @input="handleRangeInput"
-      />
-
-      <div class="chart-panel">
-        <svg
-            class="chart-svg"
-            viewBox="0 0 960 560"
-            preserveAspectRatio="none"
-            @wheel.prevent="handleWheel"
-            @pointerdown="handlePointerDown"
-            @pointermove="handlePointerMove"
-            @pointerup="handlePointerUp"
-            @pointerleave="handlePointerLeave"
-        >
-          <g>
-            <line
-                v-for="line in priceGridLines"
-                :key="`price-${line.value}`"
-                x1="56"
-                x2="928"
-                :y1="line.y"
-                :y2="line.y"
-                class="grid-line"
-            />
-            <text
-                v-for="line in priceGridLines"
-                :key="`price-text-${line.value}`"
-                x="10"
-                :y="line.y + 4"
-                class="axis-text"
-            >
-              {{ line.value.toFixed(2) }}
-            </text>
-          </g>
-
-          <g>
-            <line
-                v-for="line in volumeGridLines"
-                :key="`volume-${line.value}`"
-                x1="56"
-                x2="928"
-                :y1="line.y"
-                :y2="line.y"
-                class="grid-line muted-line"
-            />
-          </g>
-
-          <g>
-            <line
-                v-for="line in macdGridLines"
-                :key="`macd-${line.value}`"
-                x1="56"
-                x2="928"
-                :y1="line.y"
-                :y2="line.y"
-                class="grid-line muted-line"
-            />
-            <line x1="56" x2="928" :y1="macdZeroY" :y2="macdZeroY" class="zero-line"/>
-          </g>
-
-          <g>
-            <line
-                v-for="candle in candles"
-                :key="`wick-${candle.date}`"
-                :x1="candle.x"
-                :x2="candle.x"
-                :y1="candle.highY"
-                :y2="candle.lowY"
-                :class="['wick-line', candle.tone]"
-            />
-            <rect
-                v-for="candle in candles"
-                :key="`body-${candle.date}`"
-                :x="candle.x - candle.bodyWidth / 2"
-                :y="candle.bodyY"
-                :width="candle.bodyWidth"
-                :height="candle.bodyHeight"
-                :class="['candle-body', candle.tone]"
-                rx="1.6"
-            />
-          </g>
-
-          <polyline v-for="line in maLines" :key="line.label" :points="line.points" :stroke="line.color" class="ma-line"/>
-
-          <g>
-            <rect
-                v-for="item in volumeBars"
-                :key="`volume-${item.date}`"
-                :x="item.x - item.width / 2"
-                :y="item.y"
-                :width="item.width"
-                :height="item.height"
-                :class="['volume-bar', item.tone]"
-                rx="1"
-            />
-          </g>
-
-          <g>
-            <rect
-                v-for="item in macdBars"
-                :key="`macd-bar-${item.date}`"
-                :x="item.x - item.width / 2"
-                :y="item.y"
-                :width="item.width"
-                :height="item.height"
-                :class="['macd-bar', item.tone]"
-                rx="1"
-            />
-            <polyline :points="difLine" stroke="#f59e0b" class="indicator-line"/>
-            <polyline :points="deaLine" stroke="#2563eb" class="indicator-line"/>
-          </g>
-
-          <g>
-            <text
-                v-for="label in axisLabels"
-                :key="label.key"
-                :x="label.x"
-                y="308"
-                text-anchor="middle"
-                class="axis-text"
-            >
-              {{ label.text }}
-            </text>
-            <line x1="56" x2="928" y1="294" y2="294" class="axis-line"/>
-          </g>
-
-          <g>
-            <g v-for="marker in signalMarkers" :key="marker.key">
-              <line :x1="marker.x" :x2="marker.x" y1="22" y2="516" :class="['signal-marker-line', marker.tone]"/>
-              <rect :x="marker.x - 24" :y="marker.y - 22" width="48" height="18" rx="5" :class="['signal-marker-bg', marker.tone]"/>
-              <text :x="marker.x" :y="marker.y - 9" text-anchor="middle" class="signal-marker-text">
-                {{ marker.label }}
-              </text>
-            </g>
-          </g>
-
-          <g v-if="hoveredPoint">
-            <line
-                :x1="hoveredPoint.x"
-                :x2="hoveredPoint.x"
-                y1="18"
-                y2="524"
-                class="crosshair-line"
-            />
-            <circle :cx="hoveredPoint.x" :cy="hoveredPoint.closeY" r="4" class="crosshair-dot"/>
-          </g>
-        </svg>
-
-        <div v-if="hoveredTooltip" class="chart-tooltip" :style="tooltipStyle">
-          <div class="tooltip-head">
-            <strong>{{ hoveredTooltip.date }}</strong>
-            <span :class="hoveredTooltip.tone">{{ hoveredTooltip.change }}</span>
-          </div>
-          <div class="tooltip-grid">
-            <span>开</span><strong>{{ hoveredTooltip.open }}</strong>
-            <span>高</span><strong>{{ hoveredTooltip.high }}</strong>
-            <span>低</span><strong>{{ hoveredTooltip.low }}</strong>
-            <span>收</span><strong>{{ hoveredTooltip.close }}</strong>
-            <span>量</span><strong>{{ hoveredTooltip.volume }}</strong>
-            <span>额</span><strong>{{ hoveredTooltip.amount }}</strong>
-            <span>换</span><strong>{{ hoveredTooltip.turnover }}</strong>
-            <span>MACD</span><strong>{{ hoveredTooltip.macd }}</strong>
-          </div>
-        </div>
+      <div class="chart-shell">
+        <div ref="chartContainer" class="trading-chart"></div>
       </div>
 
       <div class="legend-row">
-        <span class="legend-chip candle-up">阳K</span>
-        <span class="legend-chip candle-down">阴K</span>
-        <span class="legend-chip ma5">MA5</span>
-        <span class="legend-chip ma10">MA10</span>
-        <span class="legend-chip ma20">MA20</span>
-        <span class="legend-chip ma30">MA30</span>
-        <span class="legend-chip ma60">MA60</span>
+        <span v-if="isTimelineChart" class="legend-chip price-line">价格</span>
+        <span v-if="isTimelineChart" class="legend-chip average-line">均价</span>
+        <span v-if="!isTimelineChart" class="legend-chip candle-up">阳K</span>
+        <span v-if="!isTimelineChart" class="legend-chip candle-down">阴K</span>
+        <span v-if="!isTimelineChart" class="legend-chip ma5">MA5</span>
+        <span v-if="!isTimelineChart" class="legend-chip ma10">MA10</span>
+        <span v-if="!isTimelineChart" class="legend-chip ma20">MA20</span>
+        <span v-if="!isTimelineChart" class="legend-chip ma60">MA60</span>
         <span class="legend-chip volume">VOL</span>
-        <span class="legend-chip dif">DIF</span>
-        <span class="legend-chip dea">DEA</span>
-        <span class="legend-chip macd">MACD</span>
+        <span v-if="!isTimelineChart" class="legend-chip dif">DIF</span>
+        <span v-if="!isTimelineChart" class="legend-chip dea">DEA</span>
+        <span v-if="!isTimelineChart" class="legend-chip macd">MACD</span>
       </div>
     </template>
 
@@ -268,7 +85,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {CandlestickSeries, ColorType, createChart, HistogramSeries, LineSeries} from 'lightweight-charts'
 import type {StockKlineBar, StockKlineSnapshot, StockKlineSummary} from '@/api/marketReview'
 
 const props = defineProps<{
@@ -289,6 +107,9 @@ const macdBottom = 516
 const minVisibleBars = 16
 
 const rawBars = computed(() => props.snapshot?.bars || [])
+const chartContainer = ref<HTMLElement | null>(null)
+let chart: any = null
+let resizeObserver: ResizeObserver | null = null
 const visibleCount = ref(80)
 const windowEnd = ref(0)
 const dragging = ref(false)
@@ -305,11 +126,193 @@ const maxWindowStart = computed(() => Math.max(fullCount.value - normalizedVisib
 const canPan = computed(() => fullCount.value > normalizedVisibleCount.value)
 const bars = computed(() => rawBars.value.slice(windowStart.value, windowEnd.value))
 const summary = computed<StockKlineSummary | null>(() => props.snapshot?.summary || null)
+const isTimelineChart = computed(() => ['1', 'five_day'].includes(props.snapshot?.period || ''))
 const periodLabel = computed(() => {
   const period = props.snapshot?.period || 'day'
+  const labels: Record<string, string> = {
+    '1': '分时',
+    five_day: '五日K',
+    day: '日K',
+    week: '周K',
+    year: '年K',
+    '120': '120分钟',
+    '60': '60分钟',
+    '30': '30分钟',
+    '15': '15分钟',
+    '5': '5分钟'
+  }
+  if (labels[period]) return labels[period]
   if (period === 'day') return '日K'
   return `${period}分钟`
 })
+
+watch(() => props.snapshot, async () => {
+  await renderTradingChart()
+}, {deep: true})
+
+onMounted(async () => {
+  await renderTradingChart()
+  if (chartContainer.value) {
+    resizeObserver = new ResizeObserver(() => {
+      if (!chart || !chartContainer.value) return
+      chart.applyOptions({width: chartContainer.value.clientWidth})
+    })
+    resizeObserver.observe(chartContainer.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  destroyChart()
+})
+
+async function renderTradingChart() {
+  await nextTick()
+  if (!chartContainer.value || !props.snapshot?.bars.length) {
+    destroyChart()
+    return
+  }
+  destroyChart()
+  const container = chartContainer.value
+  chart = createChart(container, {
+    width: container.clientWidth,
+    height: 540,
+    autoSize: true,
+    layout: {
+      background: {type: ColorType.Solid, color: '#ffffff'},
+      textColor: '#475569',
+      fontSize: 12
+    },
+    grid: {
+      vertLines: {color: '#edf2f7'},
+      horzLines: {color: '#edf2f7'}
+    },
+    rightPriceScale: {
+      borderColor: '#cbd5e1',
+      scaleMargins: {top: 0.08, bottom: 0.28}
+    },
+    timeScale: {
+      borderColor: '#cbd5e1',
+      timeVisible: isTimelineChart.value || props.snapshot.period !== 'day',
+      secondsVisible: false
+    },
+    crosshair: {
+      mode: 1,
+      vertLine: {color: '#64748b', labelBackgroundColor: '#334155'},
+      horzLine: {color: '#64748b', labelBackgroundColor: '#334155'}
+    }
+  })
+  if (isTimelineChart.value) {
+    renderTimelineSeries()
+  } else {
+    renderCandlestickSeries()
+  }
+  chart.timeScale().fitContent()
+}
+
+function destroyChart() {
+  if (!chart) return
+  chart.remove()
+  chart = null
+}
+
+function renderTimelineSeries() {
+  const bars = rawBars.value
+  const priceLine = chart.addSeries(LineSeries, {
+    color: '#2563eb',
+    lineWidth: 2,
+    priceLineVisible: false,
+    lastValueVisible: true
+  })
+  priceLine.setData(bars.map(item => ({
+    time: chartTime(item),
+    value: item.close_price
+  })))
+
+  const averageLine = chart.addSeries(LineSeries, {
+    color: '#f59e0b',
+    lineWidth: 1,
+    priceLineVisible: false,
+    lastValueVisible: false
+  })
+  let amount = 0
+  let volume = 0
+  averageLine.setData(bars.map(item => {
+    amount += item.amount || item.close_price * (item.volume || 0)
+    volume += item.volume || 0
+    return {
+      time: chartTime(item),
+      value: volume > 0 ? amount / volume : item.close_price
+    }
+  }))
+
+  addVolumeSeries(bars)
+}
+
+function renderCandlestickSeries() {
+  const bars = rawBars.value
+  const candles = chart.addSeries(CandlestickSeries, {
+    upColor: '#dc2626',
+    downColor: '#16a34a',
+    borderUpColor: '#dc2626',
+    borderDownColor: '#16a34a',
+    wickUpColor: '#dc2626',
+    wickDownColor: '#16a34a',
+    priceLineVisible: false
+  })
+  candles.setData(bars.map(item => ({
+    time: chartTime(item),
+    open: item.open_price,
+    high: item.high_price,
+    low: item.low_price,
+    close: item.close_price
+  })))
+
+  addMaLine('ma5', '#f59e0b')
+  addMaLine('ma10', '#7c3aed')
+  addMaLine('ma20', '#2563eb')
+  addMaLine('ma60', '#111827')
+  addVolumeSeries(bars)
+}
+
+function addMaLine(key: 'ma5' | 'ma10' | 'ma20' | 'ma60', color: string) {
+  const data = rawBars.value
+      .filter(item => item[key] != null)
+      .map(item => ({time: chartTime(item), value: item[key] as number}))
+  if (!data.length) return
+  const series = chart.addSeries(LineSeries, {
+    color,
+    lineWidth: 1,
+    priceLineVisible: false,
+    lastValueVisible: false
+  })
+  series.setData(data)
+}
+
+function addVolumeSeries(bars: StockKlineBar[]) {
+  const volumeSeries = chart.addSeries(HistogramSeries, {
+    priceFormat: {type: 'volume'},
+    priceScaleId: '',
+    priceLineVisible: false,
+    lastValueVisible: false
+  })
+  volumeSeries.priceScale().applyOptions({
+    scaleMargins: {top: 0.78, bottom: 0}
+  })
+  volumeSeries.setData(bars.map(item => ({
+    time: chartTime(item),
+    value: item.volume || 0,
+    color: item.close_price >= item.open_price ? 'rgba(220, 38, 38, 0.42)' : 'rgba(22, 163, 74, 0.42)'
+  })))
+}
+
+function chartTime(item: StockKlineBar) {
+  if (item.trade_date.length > 10) {
+    return Math.floor(new Date(item.trade_date.replace(' ', 'T')).getTime() / 1000) as any
+  }
+  return item.trade_date as any
+}
 
 const priceTone = computed(() => {
   const change = summary.value?.change_percent || 0
@@ -829,7 +832,7 @@ function handlePointerLeave(event: PointerEvent) {
   font-size: 12px;
 }
 
-.chart-panel {
+.chart-shell {
   position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -838,39 +841,10 @@ function handlePointerLeave(event: PointerEvent) {
   margin-bottom: 8px;
 }
 
-.chart-svg {
+.trading-chart {
   width: 100%;
-  height: clamp(380px, 54vh, 560px);
+  height: clamp(420px, 58vh, 560px);
   min-height: 360px;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-
-.chart-svg:active {
-  cursor: grabbing;
-}
-
-.zoom-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 2px 0 10px;
-  color: #64748b;
-  font-size: 13px;
-}
-
-.zoom-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.range-slider {
-  width: 100%;
-  margin: 0 0 10px;
-  accent-color: #2563eb;
 }
 
 .grid-line {
@@ -1071,6 +1045,14 @@ function handlePointerLeave(event: PointerEvent) {
   color: #f59e0b;
 }
 
+.legend-chip.price-line {
+  color: #2563eb;
+}
+
+.legend-chip.average-line {
+  color: #f59e0b;
+}
+
 .legend-chip.candle-up {
   color: #dc2626;
 }
@@ -1147,7 +1129,7 @@ function handlePointerLeave(event: PointerEvent) {
     padding: 6px 8px;
   }
 
-  .chart-svg {
+  .trading-chart {
     height: clamp(340px, 58vh, 460px);
     min-height: 320px;
   }
