@@ -59,6 +59,9 @@
 
       <div class="chart-shell">
         <div ref="chartContainer" class="trading-chart"></div>
+        <div class="chart-date-footer">
+          <span>{{ visibleRangeLabel }}</span>
+        </div>
       </div>
 
       <div class="legend-row">
@@ -177,7 +180,7 @@ async function renderTradingChart() {
   const container = chartContainer.value
   chart = createChart(container, {
     width: container.clientWidth,
-    height: 540,
+    height: container.clientHeight || 560,
     autoSize: true,
     layout: {
       background: {type: ColorType.Solid, color: '#ffffff'},
@@ -193,9 +196,14 @@ async function renderTradingChart() {
       scaleMargins: {top: 0.08, bottom: 0.28}
     },
     timeScale: {
+      visible: true,
       borderColor: '#cbd5e1',
       timeVisible: isTimelineChart.value || props.snapshot.period !== 'day',
-      secondsVisible: false
+      secondsVisible: false,
+      rightOffset: 4,
+      barSpacing: isTimelineChart.value ? 6 : 8,
+      minBarSpacing: 3,
+      tickMarkFormatter: formatChartTick
     },
     crosshair: {
       mode: 1,
@@ -292,19 +300,23 @@ function addMaLine(key: 'ma5' | 'ma10' | 'ma20' | 'ma60', color: string) {
 
 function addVolumeSeries(bars: StockKlineBar[]) {
   const volumeSeries = chart.addSeries(HistogramSeries, {
+    color: 'rgba(100, 116, 139, 0.45)',
     priceFormat: {type: 'volume'},
-    priceScaleId: '',
     priceLineVisible: false,
     lastValueVisible: false
-  })
+  }, 1)
   volumeSeries.priceScale().applyOptions({
-    scaleMargins: {top: 0.78, bottom: 0}
+    scaleMargins: {top: 0.08, bottom: 0.12}
   })
   volumeSeries.setData(bars.map(item => ({
     time: chartTime(item),
     value: item.volume || 0,
-    color: item.close_price >= item.open_price ? 'rgba(220, 38, 38, 0.42)' : 'rgba(22, 163, 74, 0.42)'
+    color: item.close_price >= item.open_price ? 'rgba(220, 38, 38, 0.55)' : 'rgba(22, 163, 74, 0.55)'
   })))
+  const panes = chart.panes?.()
+  if (panes?.[1]?.setHeight) {
+    panes[1].setHeight(120)
+  }
 }
 
 function chartTime(item: StockKlineBar) {
@@ -312,6 +324,24 @@ function chartTime(item: StockKlineBar) {
     return Math.floor(new Date(item.trade_date.replace(' ', 'T')).getTime() / 1000) as any
   }
   return item.trade_date as any
+}
+
+function formatChartTick(time: any) {
+  if (typeof time === 'number') {
+    const date = new Date(time * 1000)
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    return isTimelineChart.value || props.snapshot?.period !== 'day' ? `${month}/${day} ${hour}:${minute}` : `${month}/${day}`
+  }
+  if (typeof time === 'string') {
+    return formatAxisLabel(time)
+  }
+  if (time && typeof time === 'object' && 'month' in time && 'day' in time) {
+    return `${String(time.month).padStart(2, '0')}/${String(time.day).padStart(2, '0')}`
+  }
+  return ''
 }
 
 const priceTone = computed(() => {
@@ -834,17 +864,33 @@ function handlePointerLeave(event: PointerEvent) {
 
 .chart-shell {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 18px;
+  padding: 8px;
 }
 
 .trading-chart {
   width: 100%;
-  height: clamp(420px, 58vh, 560px);
-  min-height: 360px;
+  height: clamp(500px, 60vh, 620px);
+  min-height: 460px;
+}
+
+.chart-date-footer {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 28px;
+  padding: 7px 8px 0;
+  border-top: 1px solid #edf2f7;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
 }
 
 .grid-line {
@@ -1130,8 +1176,8 @@ function handlePointerLeave(event: PointerEvent) {
   }
 
   .trading-chart {
-    height: clamp(340px, 58vh, 460px);
-    min-height: 320px;
+    height: clamp(420px, 60vh, 520px);
+    min-height: 380px;
   }
 }
 </style>
