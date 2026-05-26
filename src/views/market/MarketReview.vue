@@ -333,7 +333,7 @@
             <h2>个股K线</h2>
             <p>从复盘候选直接查看趋势、量能、MACD 和分时弱转强/回封信号。</p>
           </div>
-          <div class="toolbar">
+          <div class="dialog-actions">
             <v-btn
                 variant="text"
                 prepend-icon="mdi-refresh"
@@ -345,11 +345,10 @@
             <v-btn icon="mdi-close" variant="text" @click="klineDialog = false"/>
           </div>
         </div>
-        <StockKlineCard :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
         <v-tabs
             v-model="selectedPeriod"
             class="kline-period-tabs"
-            align-tabs="center"
+            align-tabs="start"
             color="primary"
             density="comfortable"
             mandatory
@@ -365,6 +364,7 @@
             {{ period.label }}
           </v-tab>
         </v-tabs>
+        <StockKlineCard :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
       </v-card>
     </v-dialog>
   </div>
@@ -1091,10 +1091,17 @@ onMounted(() => {
   color: #64748b;
 }
 
+.dialog-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .kline-period-tabs {
-  margin-top: 12px;
+  margin-bottom: 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #f8fafc;
   overflow: hidden;
 }
@@ -1120,8 +1127,13 @@ onMounted(() => {
   }
 
   .page-header,
-  .toolbar,
   .dialog-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar,
+  .dialog-actions {
     flex-direction: column;
     align-items: stretch;
   }
