@@ -3,7 +3,6 @@
     <div class="page-header">
       <div>
         <h1>涨停池复盘</h1>
-        <p>涨停梯队、板块强度、2进3候选和分歧转一致识别</p>
       </div>
       <div class="toolbar">
         <v-text-field
