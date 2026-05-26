@@ -168,6 +168,71 @@
                 {{ tag }}
               </v-chip>
             </div>
+            <div v-if="selectedSector === sector.industry" class="sector-stock-panel" @click.stop>
+              <div class="sector-stock-head">
+                <div>
+                  <h4>{{ sector.industry }}个股</h4>
+                  <p>按梯队和质量分查看板块内涨停标的。</p>
+                </div>
+                <v-btn
+                    size="small"
+                    variant="text"
+                    prepend-icon="mdi-close"
+                    @click="selectedSector = ''"
+                >
+                  收起
+                </v-btn>
+              </div>
+              <v-data-table
+                  :headers="sectorStockHeaders"
+                  :items="selectedSectorStocks"
+                  density="compact"
+                  item-value="code"
+                  fixed-header
+                  height="360"
+              >
+                <template #item.name="{ item }">
+                  <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.code }}</span>
+                  </button>
+                </template>
+                <template #item.consecutive_boards="{ item }">
+                  <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
+                </template>
+                <template #item.board_quality_score="{ item }">
+                  <score-bar :value="item.board_quality_score"/>
+                </template>
+                <template #item.first_limit_time="{ item }">
+                  {{ formatTime(item.first_limit_time) }}
+                </template>
+                <template #item.last_limit_time="{ item }">
+                  {{ formatTime(item.last_limit_time) }}
+                </template>
+                <template #item.seal_amount="{ item }">
+                  {{ formatMoney(item.seal_amount) }}
+                </template>
+                <template #item.change_percent="{ item }">
+                  <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
+                </template>
+                <template #item.tags="{ item }">
+                  <div class="chip-row">
+                    <v-chip v-for="tag in item.tags" :key="tag" size="x-small" color="orange" variant="tonal">
+                      {{ tag }}
+                    </v-chip>
+                  </div>
+                </template>
+                <template #item.action="{ item }">
+                  <v-btn
+                      size="small"
+                      variant="text"
+                      :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
+                      :color="isWatched(item.code) ? 'amber' : undefined"
+                      @click="toggleWatchFromPool(item)"
+                  />
+                </template>
+              </v-data-table>
+            </div>
           </v-card>
         </div>
       </v-window-item>
@@ -526,6 +591,18 @@ const filteredLimitUpPool = computed(() => {
   })
 })
 
+const selectedSectorStocks = computed(() => {
+  if (!selectedSector.value) return []
+  return (review.value?.limit_up_pool || [])
+      .filter(item => item.industry === selectedSector.value)
+      .sort((left, right) => {
+        if (right.consecutive_boards !== left.consecutive_boards) {
+          return right.consecutive_boards - left.consecutive_boards
+        }
+        return right.board_quality_score - left.board_quality_score
+      })
+})
+
 const filteredCandidates = computed(() => {
   const candidates = review.value?.advancement_candidates || []
   return candidates.filter(item => {
@@ -562,6 +639,20 @@ const poolHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
   {title: '梯队', key: 'consecutive_boards', width: 86},
+  {title: '质量分', key: 'board_quality_score', minWidth: 140},
+  {title: '首次封板', key: 'first_limit_time', width: 96},
+  {title: '最后封板', key: 'last_limit_time', width: 96},
+  {title: '炸板', key: 'open_count', width: 74},
+  {title: '换手%', key: 'turnover_rate', width: 86},
+  {title: '封单', key: 'seal_amount', width: 112},
+  {title: '风险', key: 'tags', minWidth: 170},
+  {title: '观察', key: 'action', width: 76, sortable: false}
+]
+
+const sectorStockHeaders = [
+  {title: '股票', key: 'name', minWidth: 130},
+  {title: '梯队', key: 'consecutive_boards', width: 86},
+  {title: '涨跌幅', key: 'change_percent', width: 90},
   {title: '质量分', key: 'board_quality_score', minWidth: 140},
   {title: '首次封板', key: 'first_limit_time', width: 96},
   {title: '最后封板', key: 'last_limit_time', width: 96},
@@ -1037,6 +1128,7 @@ onMounted(() => {
 }
 
 .sector-card.active {
+  grid-column: 1 / -1;
   transform: translateY(-1px);
 }
 
@@ -1066,6 +1158,31 @@ onMounted(() => {
   margin: 12px 0;
   color: #475569;
   font-size: 13px;
+}
+
+.sector-stock-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sector-stock-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sector-stock-head h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.sector-stock-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .dialog-card {
