@@ -372,6 +372,7 @@
 
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
+import StockKlineCard from '@/components/market/StockKlineCard.vue'
 import {
   type CandidateStock,
   type DivergenceConsensusSignal,
