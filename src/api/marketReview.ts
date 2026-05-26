@@ -61,6 +61,8 @@ export interface DivergenceConsensusSignal {
 
 export interface MarketReviewData {
     date: string
+    snapshot_status?: string
+    is_final?: boolean
     limit_up_pool: LimitUpStock[]
     sector_strength: SectorStrength[]
     advancement_candidates: CandidateStock[]

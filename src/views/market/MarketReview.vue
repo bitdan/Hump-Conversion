@@ -334,6 +334,24 @@
             <p>从复盘候选直接查看趋势、量能、MACD 和分时弱转强/回封信号。</p>
           </div>
           <div class="toolbar">
+            <v-btn-toggle
+                v-if="selectedPeriod === 'day'"
+                v-model="selectedDayRange"
+                class="day-range-toggle"
+                density="compact"
+                mandatory
+                variant="outlined"
+            >
+              <v-btn
+                  v-for="mode in dayRangeModes"
+                  :key="mode.value"
+                  :value="mode.value"
+                  size="small"
+                  :prepend-icon="mode.icon"
+              >
+                {{ mode.label }}
+              </v-btn>
+            </v-btn-toggle>
             <v-btn
                 variant="text"
                 prepend-icon="mdi-refresh"
@@ -372,12 +390,11 @@
 
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
-import StockKlineCard from '@/components/market/StockKlineCard.vue'
 import {
-  getMarketReview,
-  getStockKline,
   type CandidateStock,
   type DivergenceConsensusSignal,
+  getMarketReview,
+  getStockKline,
   type LimitUpStock,
   type MarketReviewData,
   type StockKlineSnapshot
@@ -397,6 +414,7 @@ const selectedKline = ref<StockKlineSnapshot | null>(null)
 const selectedCode = ref('')
 const selectedName = ref('')
 const selectedPeriod = ref('day')
+const selectedDayRange = ref<'recent' | 'single'>('recent')
 const selectedSector = ref('')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
@@ -418,6 +436,11 @@ const klinePeriods = [
   {label: '15分', value: '15'},
   {label: '30分', value: '30'},
   {label: '60分', value: '60'}
+]
+
+const dayRangeModes = [
+  {label: '近期', value: 'recent', icon: 'mdi-chart-timeline-variant'},
+  {label: '单日', value: 'single', icon: 'mdi-calendar-today'}
 ]
 
 const poolBoardFilters = [
@@ -736,7 +759,7 @@ async function loadKline(refresh = false) {
   try {
     const response = await getStockKline(selectedCode.value, {
       date: queryDate.value,
-      limit: selectedPeriod.value === 'day' ? 120 : 64,
+      limit: klineLimit.value,
       refresh,
       name: selectedName.value,
       period: selectedPeriod.value
@@ -754,6 +777,7 @@ async function openKline(code: string, name: string) {
   selectedName.value = name
   selectedKline.value = null
   selectedPeriod.value = 'day'
+  selectedDayRange.value = 'recent'
   klineDialog.value = true
   await loadKline(false)
 }
@@ -767,6 +791,20 @@ watch(selectedPeriod, async (next, prev) => {
     return
   }
   await loadKline(false)
+})
+
+watch(selectedDayRange, async (next, prev) => {
+  if (!klineDialog.value || !selectedCode.value || selectedPeriod.value !== 'day' || next === prev) {
+    return
+  }
+  await loadKline(false)
+})
+
+const klineLimit = computed(() => {
+  if (selectedPeriod.value !== 'day') {
+    return 64
+  }
+  return selectedDayRange.value === 'single' ? 1 : 120
 })
 
 onMounted(() => {
