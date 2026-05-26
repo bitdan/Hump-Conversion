@@ -395,7 +395,7 @@ const klineError = ref('')
 const selectedKline = ref<StockKlineSnapshot | null>(null)
 const selectedCode = ref('')
 const selectedName = ref('')
-const selectedPeriod = ref('1')
+const selectedPeriod = ref('day')
 const selectedSector = ref('')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
@@ -725,7 +725,7 @@ async function loadReview() {
     const response = await getMarketReview({date: queryDate.value})
     review.value = response.data
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || err?.message || '市场复盘数据加载失败'
+    error.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '市场复盘数据加载失败')
   } finally {
     loading.value = false
   }
@@ -747,7 +747,7 @@ async function loadKline(refresh = false) {
     })
     selectedKline.value = response.data
   } catch (err: any) {
-    klineError.value = err?.response?.data?.detail || err?.message || '个股K线加载失败'
+    klineError.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '个股K线加载失败')
   } finally {
     klineLoading.value = false
   }
@@ -757,7 +757,7 @@ async function openKline(code: string, name: string) {
   selectedCode.value = code
   selectedName.value = name
   selectedKline.value = null
-  selectedPeriod.value = '1'
+  selectedPeriod.value = 'day'
   klineDialog.value = true
   await loadKline(false)
 }
@@ -785,6 +785,10 @@ const klineLimit = computed(() => {
   }
   return 64
 })
+
+function sanitizeMarketError(message: string) {
+  return String(message || '').replace(/AKShare|akshare/g, '行情服务')
+}
 
 onMounted(() => {
   loadWatchlist()
