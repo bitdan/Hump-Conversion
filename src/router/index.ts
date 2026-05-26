@@ -302,16 +302,6 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-chart-timeline-variant',
                     description: '涨停池、板块强度、2进3候选和分歧转一致识别。'
                 }
-            },
-            {
-                path: '/market/jobs',
-                name: 'JobManager',
-                component: () => import('@/views/market/JobManager.vue'),
-                meta: {
-                    title: '任务管理',
-                    icon: 'mdi-timer-cog-outline',
-                    description: '手动执行后台同步任务并查看运行记录。'
-                }
             }
         ]
     },

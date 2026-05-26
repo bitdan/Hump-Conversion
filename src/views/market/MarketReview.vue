@@ -409,7 +409,6 @@ interface WatchItem {
   watchDate: string
   source: string
   targetBoards?: number
-  score?: number
 }
 
 const klinePeriods = [
@@ -497,6 +496,12 @@ const candidatePoolTypes = computed(() => {
 
 const selectedPoolType = ref('2_to_3')
 
+watch(candidatePoolTypes, (poolTypes) => {
+  if (poolTypes.length > 0 && !poolTypes.some(item => item.value === selectedPoolType.value)) {
+    selectedPoolType.value = poolTypes[0].value
+  }
+})
+
 const filteredLimitUpPool = computed(() => {
   return (review.value?.limit_up_pool || []).filter((item) => {
     if (selectedSector.value && item.industry !== selectedSector.value) {
@@ -523,10 +528,6 @@ const filteredLimitUpPool = computed(() => {
 
 const filteredCandidates = computed(() => {
   const candidates = review.value?.advancement_candidates || []
-  const poolTypes = candidatePoolTypes.value
-  if (poolTypes.length > 0 && !poolTypes.some(item => item.value === selectedPoolType.value)) {
-    selectedPoolType.value = poolTypes[0].value
-  }
   return candidates.filter(item => {
     if (item.pool_type !== selectedPoolType.value) {
       return false
@@ -647,8 +648,7 @@ function toggleWatchFromPool(stock: LimitUpStock) {
     industry: stock.industry,
     watchDate: queryDate.value,
     source: `${stock.consecutive_boards}板涨停池`,
-    targetBoards: stock.consecutive_boards + 1,
-    score: stock.board_quality_score
+    targetBoards: stock.consecutive_boards + 1
   })
 }
 
@@ -659,8 +659,7 @@ function toggleWatchFromCandidate(candidate: CandidateStock) {
     industry: candidate.stock.industry,
     watchDate: queryDate.value,
     source: candidate.pool_type.replace('_to_', '进'),
-    targetBoards: candidate.target_boards,
-    score: candidate.candidate_score
+    targetBoards: candidate.target_boards
   })
 }
 
@@ -670,8 +669,7 @@ function toggleWatchFromSignal(signal: DivergenceConsensusSignal) {
     name: signal.name,
     industry: signal.industry,
     watchDate: queryDate.value,
-    source: signal.phase,
-    score: signal.signal_score
+    source: signal.phase
   })
 }
 
