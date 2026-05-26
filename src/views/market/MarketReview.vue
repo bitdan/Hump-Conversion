@@ -345,6 +345,7 @@
             <v-btn icon="mdi-close" variant="text" @click="klineDialog = false"/>
           </div>
         </div>
+        <StockKlineCard :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
         <v-tabs
             v-model="selectedPeriod"
             class="kline-period-tabs"
@@ -364,7 +365,6 @@
             {{ period.label }}
           </v-tab>
         </v-tabs>
-        <StockKlineCard :snapshot="selectedKline" :loading="klineLoading" :error="klineError"/>
       </v-card>
     </v-dialog>
   </div>
@@ -372,7 +372,7 @@
 
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
-import StockKlineCard from '@/components/market/StockKlineCard.vue'
+import StockKlineCard from '@/views/market/StockKlineCard.vue'
 import {
   type CandidateStock,
   type DivergenceConsensusSignal,
@@ -1099,7 +1099,7 @@ onMounted(() => {
 }
 
 .kline-period-tabs {
-  margin-bottom: 12px;
+  margin-top: 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #f8fafc;
