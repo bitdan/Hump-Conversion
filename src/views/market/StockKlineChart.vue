@@ -94,7 +94,13 @@ async function renderChart() {
       vertLines: {color: '#edf2f7'},
       horzLines: {color: '#edf2f7'}
     },
+    leftPriceScale: {
+      visible: true,
+      borderColor: '#cbd5e1',
+      scaleMargins: {top: 0.08, bottom: 0.28}
+    },
     rightPriceScale: {
+      visible: true,
       borderColor: '#cbd5e1',
       scaleMargins: {top: 0.08, bottom: 0.28}
     },
@@ -136,7 +142,8 @@ function renderTimelineSeries() {
     color: '#2563eb',
     lineWidth: 2,
     priceLineVisible: false,
-    lastValueVisible: true
+    lastValueVisible: true,
+    priceScaleId: 'left'
   })
   priceLine.setData(props.bars.map(item => ({
     time: chartTime(item),
@@ -147,7 +154,8 @@ function renderTimelineSeries() {
     color: '#f59e0b',
     lineWidth: 1,
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    priceScaleId: 'left'
   })
   let amount = 0
   let volume = 0
@@ -160,6 +168,7 @@ function renderTimelineSeries() {
     }
   }))
 
+  addPercentScaleSeries()
   addVolumeSeries()
 }
 
@@ -171,7 +180,8 @@ function renderCandlestickSeries() {
     borderDownColor: '#16a34a',
     wickUpColor: '#dc2626',
     wickDownColor: '#16a34a',
-    priceLineVisible: false
+    priceLineVisible: false,
+    priceScaleId: 'left'
   })
   candles.setData(props.bars.map(item => ({
     time: chartTime(item),
@@ -185,6 +195,7 @@ function renderCandlestickSeries() {
   addMaLine('ma10', '#7c3aed')
   addMaLine('ma20', '#2563eb')
   addMaLine('ma60', '#111827')
+  addPercentScaleSeries()
   addVolumeSeries()
 }
 
@@ -197,9 +208,37 @@ function addMaLine(key: 'ma5' | 'ma10' | 'ma20' | 'ma60', color: string) {
     color,
     lineWidth: 1,
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    priceScaleId: 'left'
   })
   series.setData(data)
+}
+
+function addPercentScaleSeries() {
+  const basePrice = getPercentBasePrice()
+  if (!basePrice) return
+  const series = chart.addSeries(LineSeries, {
+    color: 'rgba(37, 99, 235, 0)',
+    lineWidth: 1,
+    priceLineVisible: false,
+    lastValueVisible: false,
+    priceScaleId: 'right',
+    priceFormat: {
+      type: 'custom',
+      formatter: (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
+    }
+  })
+  series.setData(props.bars.map(item => ({
+    time: chartTime(item),
+    value: ((item.close_price - basePrice) / basePrice) * 100
+  })))
+}
+
+function getPercentBasePrice() {
+  const first = props.bars[0]
+  if (!first) return 0
+  const previousClose = first.change_amount != null ? first.close_price - first.change_amount : 0
+  return previousClose || first.open_price || first.close_price || 0
 }
 
 function addVolumeSeries() {
