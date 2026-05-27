@@ -27,85 +27,80 @@
     </section>
 
     <v-card class="user-table-card" variant="outlined">
-      <v-table class="user-table">
-        <thead>
-        <tr>
-          <th>用户</th>
-          <th>用户 ID</th>
-          <th>邮箱</th>
-          <th>状态</th>
-          <th>角色</th>
-          <th>权限</th>
-          <th>更新时间</th>
-          <th class="text-right">操作</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-if="!loading && users.length === 0">
-          <td colspan="8" class="empty-cell">暂无用户</td>
-        </tr>
-        <tr v-for="user in users" :key="user.user_id">
-          <td>
-            <div class="user-cell">
-              <v-avatar size="36" color="primary" variant="tonal">
-                <img v-if="user.avatar" :src="user.avatar" alt="avatar"/>
-                <span v-else>{{ user.username.slice(0, 1).toUpperCase() }}</span>
-              </v-avatar>
-              <div>
-                <strong>{{ user.username }}</strong>
-                <span>{{ user.roles.join(', ') || 'user' }}</span>
-              </div>
+      <v-data-table-server
+          v-model:page="page"
+          v-model:items-per-page="pageSize"
+          :headers="headers"
+          :items="users"
+          :items-length="total"
+          :items-per-page-options="pageSizeOptions"
+          :loading="loading"
+          item-value="user_id"
+          density="comfortable"
+          fixed-header
+          height="620"
+          no-data-text="暂无用户"
+          loading-text="正在加载用户..."
+          @update:page="loadUsers"
+          @update:items-per-page="handlePageSizeChange"
+      >
+        <template #item.username="{ item }">
+          <div class="user-cell">
+            <v-avatar size="36" color="primary" variant="tonal">
+              <img v-if="item.avatar" :src="item.avatar" alt="avatar"/>
+              <span v-else>{{ item.username.slice(0, 1).toUpperCase() }}</span>
+            </v-avatar>
+            <div>
+              <strong>{{ item.username }}</strong>
+              <span>{{ item.roles.join(', ') || 'user' }}</span>
             </div>
-          </td>
-          <td><span class="user-id">{{ user.user_id }}</span></td>
-          <td>{{ user.email || '未填写' }}</td>
-          <td>
-            <v-chip :color="user.status === 'active' ? 'success' : 'warning'" size="small" variant="tonal">
-              {{ user.status === 'active' ? '启用' : '禁用' }}
+          </div>
+        </template>
+
+        <template #item.user_id="{ item }">
+          <span class="user-id">{{ item.user_id }}</span>
+        </template>
+
+        <template #item.email="{ item }">
+          {{ item.email || '未填写' }}
+        </template>
+
+        <template #item.status="{ item }">
+          <v-chip :color="item.status === 'active' ? 'success' : 'warning'" size="small" variant="tonal">
+            {{ item.status === 'active' ? '启用' : '禁用' }}
+          </v-chip>
+        </template>
+
+        <template #item.roles="{ item }">
+          <div class="chip-row">
+            <v-chip v-for="role in item.roles" :key="role" size="small" variant="tonal">{{ role }}</v-chip>
+          </div>
+        </template>
+
+        <template #item.permissions="{ item }">
+          <div class="chip-row">
+            <v-chip v-for="permission in item.permissions" :key="permission" size="small" variant="tonal">
+              {{ permission }}
             </v-chip>
-          </td>
-          <td>
-            <div class="chip-row">
-              <v-chip v-for="role in user.roles" :key="role" size="small" variant="tonal">{{ role }}</v-chip>
-            </div>
-          </td>
-          <td>
-            <div class="chip-row">
-              <v-chip v-for="permission in user.permissions" :key="permission" size="small" variant="tonal">
-                {{ permission }}
-              </v-chip>
-              <span v-if="user.permissions.length === 0" class="muted">无</span>
-            </div>
-          </td>
-          <td>{{ formatDate(user.updated_at) }}</td>
-          <td class="text-right">
-            <v-btn icon="mdi-pencil-outline" variant="text" size="small" @click="openEdit(user)"/>
-            <v-btn icon="mdi-lock-reset" variant="text" size="small" @click="openPassword(user)"/>
-          </td>
-        </tr>
-        </tbody>
-      </v-table>
-      <v-progress-linear v-if="loading" indeterminate color="primary"/>
-      <div class="pagination-row">
-        <span class="muted">共 {{ total }} 个用户</span>
-        <v-select
-            v-model="pageSize"
-            :items="pageSizeOptions"
-            density="compact"
-            variant="outlined"
-            hide-details
-            label="每页"
-            class="page-size-select"
-            @update:model-value="handlePageSizeChange"
-        />
-        <v-pagination
-            v-model="page"
-            :length="pageCount"
-            :total-visible="7"
-            density="comfortable"
-            @update:model-value="loadUsers"
-        />
-      </div>
+            <span v-if="item.permissions.length === 0" class="muted">无</span>
+          </div>
+        </template>
+
+        <template #item.updated_at="{ item }">
+          {{ formatDate(item.updated_at) }}
+        </template>
+
+        <template #item.actions="{ item }">
+          <div class="action-cell">
+            <v-btn icon="mdi-pencil-outline" variant="text" size="small" @click="openEdit(item)"/>
+            <v-btn icon="mdi-lock-reset" variant="text" size="small" @click="openPassword(item)"/>
+          </div>
+        </template>
+
+        <template #bottom.prepend>
+          <span class="table-total">共 {{ total }} 个用户</span>
+        </template>
+      </v-data-table-server>
     </v-card>
 
     <v-dialog v-model="editDialog" max-width="640">
@@ -181,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {
   listAdminUsers,
   resetAdminUserPassword,
@@ -210,8 +205,22 @@ const statusOptions = [
   {title: '启用', value: 'active'},
   {title: '禁用', value: 'disabled'}
 ]
-const pageSizeOptions = [10, 20, 50, 100]
-const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const pageSizeOptions = [
+  {value: 10, title: '10'},
+  {value: 20, title: '20'},
+  {value: 50, title: '50'},
+  {value: 100, title: '100'}
+]
+const headers = [
+  {title: '用户', key: 'username', sortable: false, minWidth: '170px'},
+  {title: '用户 ID', key: 'user_id', sortable: false, minWidth: '120px'},
+  {title: '邮箱', key: 'email', sortable: false, minWidth: '160px'},
+  {title: '状态', key: 'status', sortable: false, width: '96px'},
+  {title: '角色', key: 'roles', sortable: false, minWidth: '120px'},
+  {title: '权限', key: 'permissions', sortable: false, minWidth: '120px'},
+  {title: '更新时间', key: 'updated_at', sortable: false, minWidth: '170px'},
+  {title: '操作', key: 'actions', sortable: false, align: 'end' as const, width: '110px'}
+]
 
 const editForm = ref({
   email: '',
@@ -408,24 +417,16 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.pagination-row {
+.action-cell {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 14px;
-  padding: 12px 16px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
+  gap: 2px;
 }
 
-.page-size-select {
-  max-width: 110px;
-}
-
-.empty-cell {
-  height: 120px;
-  text-align: center;
+.table-total {
+  margin-left: 16px;
   color: #64748b;
+  font-size: 13px;
 }
 
 .dialog-grid {
@@ -449,8 +450,7 @@ onMounted(() => {
   }
 
   .page-header,
-  .toolbar-row,
-  .pagination-row {
+  .toolbar-row {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
