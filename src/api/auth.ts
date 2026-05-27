@@ -98,7 +98,7 @@ export interface AdminUser {
     username: string
     email?: string
     avatar?: string
-    status: 'active' | 'disabled'
+    status: 'active' | 'disabled' | 'frozen'
     roles: string[]
     permissions: string[]
     created_at: string
@@ -115,7 +115,7 @@ export interface AdminUserPage {
 export interface AdminUserUpdatePayload {
     email?: string
     avatar?: string
-    status?: 'active' | 'disabled'
+    status?: 'active' | 'disabled' | 'frozen'
     roles?: string[]
     permissions?: string[]
 }

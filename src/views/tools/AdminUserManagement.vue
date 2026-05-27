@@ -66,8 +66,8 @@
         </template>
 
         <template #item.status="{ item }">
-          <v-chip :color="item.status === 'active' ? 'success' : 'warning'" size="small" variant="tonal">
-            {{ item.status === 'active' ? '启用' : '禁用' }}
+          <v-chip :color="statusMeta[item.status].color" size="small" variant="tonal">
+            {{ statusMeta[item.status].label }}
           </v-chip>
         </template>
 
@@ -90,8 +90,29 @@
           {{ formatDate(item.updated_at) }}
         </template>
 
+        <template #item.created_at="{ item }">
+          {{ formatDate(item.created_at) }}
+        </template>
+
         <template #item.actions="{ item }">
           <div class="action-cell">
+            <v-btn
+                :icon="item.status === 'active' ? 'mdi-pause-circle-outline' : 'mdi-play-circle-outline'"
+                variant="text"
+                size="small"
+                :color="item.status === 'active' ? undefined : 'success'"
+                :loading="statusChangingUserId === item.user_id"
+                @click="item.status === 'active' ? changeStatus(item, 'disabled') : changeStatus(item, 'active')"
+            />
+            <v-btn
+                icon="mdi-snowflake"
+                variant="text"
+                size="small"
+                color="info"
+                :disabled="item.status === 'frozen'"
+                :loading="statusChangingUserId === item.user_id"
+                @click="changeStatus(item, 'frozen')"
+            />
             <v-btn icon="mdi-pencil-outline" variant="text" size="small" @click="openEdit(item)"/>
             <v-btn icon="mdi-lock-reset" variant="text" size="small" @click="openPassword(item)"/>
           </div>
@@ -198,13 +219,20 @@ const passwordDialog = ref(false)
 const savingEdit = ref(false)
 const savingPassword = ref(false)
 const showPassword = ref(false)
+const statusChangingUserId = ref<string | null>(null)
 const editingUser = ref<AdminUser | null>(null)
 const passwordUser = ref<AdminUser | null>(null)
 
 const statusOptions = [
   {title: '启用', value: 'active'},
-  {title: '禁用', value: 'disabled'}
+  {title: '禁用', value: 'disabled'},
+  {title: '冻结', value: 'frozen'}
 ]
+const statusMeta = {
+  active: {label: '启用', color: 'success'},
+  disabled: {label: '禁用', color: 'warning'},
+  frozen: {label: '冻结', color: 'info'}
+} as const
 const pageSizeOptions = [
   {value: 10, title: '10'},
   {value: 20, title: '20'},
@@ -219,13 +247,14 @@ const headers = [
   {title: '角色', key: 'roles', sortable: false, minWidth: '120px'},
   {title: '权限', key: 'permissions', sortable: false, minWidth: '120px'},
   {title: '更新时间', key: 'updated_at', sortable: false, minWidth: '170px'},
-  {title: '操作', key: 'actions', sortable: false, align: 'end' as const, width: '110px'}
+  {title: '创建时间', key: 'created_at', sortable: false, minWidth: '170px'},
+  {title: '操作', key: 'actions', sortable: false, align: 'end' as const, width: '180px'}
 ]
 
 const editForm = ref({
   email: '',
   avatar: '',
-  status: 'active' as 'active' | 'disabled',
+  status: 'active' as AdminUser['status'],
   roles: [] as string[],
   permissions: [] as string[]
 })
@@ -299,6 +328,23 @@ async function submitEdit() {
     showError(error.response?.data?.detail || error.message || '保存用户失败')
   } finally {
     savingEdit.value = false
+  }
+}
+
+async function changeStatus(user: AdminUser, status: AdminUser['status']) {
+  statusChangingUserId.value = user.user_id
+  try {
+    const {data} = await updateAdminUser(user.user_id, {
+      status,
+      roles: user.roles,
+      permissions: user.permissions
+    })
+    users.value = users.value.map(item => item.user_id === data.user_id ? data : item)
+    showSuccess(`用户已${statusMeta[status].label}`)
+  } catch (error: any) {
+    showError(error.response?.data?.detail || error.message || '更新用户状态失败')
+  } finally {
+    statusChangingUserId.value = null
   }
 }
 
