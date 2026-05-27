@@ -19,9 +19,9 @@
           prepend-inner-icon="mdi-magnify"
           label="搜索用户"
           placeholder="用户名 / 用户 ID / 邮箱"
-          @keyup.enter="loadUsers"
+          @keyup.enter="searchUsers"
       />
-      <v-btn color="primary" prepend-icon="mdi-magnify" :loading="loading" @click="loadUsers">
+      <v-btn color="primary" prepend-icon="mdi-magnify" :loading="loading" @click="searchUsers">
         查询
       </v-btn>
     </section>
@@ -31,6 +31,7 @@
         <thead>
         <tr>
           <th>用户</th>
+          <th>用户 ID</th>
           <th>邮箱</th>
           <th>状态</th>
           <th>角色</th>
@@ -41,7 +42,7 @@
         </thead>
         <tbody>
         <tr v-if="!loading && users.length === 0">
-          <td colspan="7" class="empty-cell">暂无用户</td>
+          <td colspan="8" class="empty-cell">暂无用户</td>
         </tr>
         <tr v-for="user in users" :key="user.user_id">
           <td>
@@ -52,10 +53,11 @@
               </v-avatar>
               <div>
                 <strong>{{ user.username }}</strong>
-                <span>{{ user.user_id }}</span>
+                <span>{{ user.roles.join(', ') || 'user' }}</span>
               </div>
             </div>
           </td>
+          <td><span class="user-id">{{ user.user_id }}</span></td>
           <td>{{ user.email || '未填写' }}</td>
           <td>
             <v-chip :color="user.status === 'active' ? 'success' : 'warning'" size="small" variant="tonal">
@@ -84,6 +86,26 @@
         </tbody>
       </v-table>
       <v-progress-linear v-if="loading" indeterminate color="primary"/>
+      <div class="pagination-row">
+        <span class="muted">共 {{ total }} 个用户</span>
+        <v-select
+            v-model="pageSize"
+            :items="pageSizeOptions"
+            density="compact"
+            variant="outlined"
+            hide-details
+            label="每页"
+            class="page-size-select"
+            @update:model-value="handlePageSizeChange"
+        />
+        <v-pagination
+            v-model="page"
+            :length="pageCount"
+            :total-visible="7"
+            density="comfortable"
+            @update:model-value="loadUsers"
+        />
+      </div>
     </v-card>
 
     <v-dialog v-model="editDialog" max-width="640">
@@ -159,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {
   listAdminUsers,
   resetAdminUserPassword,
@@ -172,6 +194,9 @@ const {showError, showSuccess, showWarning} = useMessage()
 
 const users = ref<AdminUser[]>([])
 const keyword = ref('')
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 const loading = ref(false)
 const editDialog = ref(false)
 const passwordDialog = ref(false)
@@ -185,6 +210,8 @@ const statusOptions = [
   {title: '启用', value: 'active'},
   {title: '禁用', value: 'disabled'}
 ]
+const pageSizeOptions = [10, 20, 50, 100]
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
 const editForm = ref({
   email: '',
@@ -204,15 +231,28 @@ async function loadUsers() {
   try {
     const {data} = await listAdminUsers({
       keyword: keyword.value.trim() || undefined,
-      limit: 100,
-      offset: 0
+      page: page.value,
+      page_size: pageSize.value
     })
-    users.value = data
+    users.value = data.items
+    total.value = data.total
+    page.value = data.page
+    pageSize.value = data.page_size
   } catch (error: any) {
     showError(error.response?.data?.detail || error.message || '加载用户列表失败')
   } finally {
     loading.value = false
   }
+}
+
+function searchUsers() {
+  page.value = 1
+  void loadUsers()
+}
+
+function handlePageSizeChange() {
+  page.value = 1
+  void loadUsers()
 }
 
 function openEdit(user: AdminUser) {
@@ -339,7 +379,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 210px;
+  min-width: 150px;
 }
 
 .user-cell strong,
@@ -358,6 +398,28 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 6px;
   min-width: 120px;
+}
+
+.user-id {
+  display: inline-block;
+  min-width: 96px;
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+}
+
+.page-size-select {
+  max-width: 110px;
 }
 
 .empty-cell {
@@ -387,7 +449,8 @@ onMounted(() => {
   }
 
   .page-header,
-  .toolbar-row {
+  .toolbar-row,
+  .pagination-row {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;

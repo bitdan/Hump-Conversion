@@ -105,6 +105,13 @@ export interface AdminUser {
     updated_at: string
 }
 
+export interface AdminUserPage {
+    items: AdminUser[]
+    total: number
+    page: number
+    page_size: number
+}
+
 export interface AdminUserUpdatePayload {
     email?: string
     avatar?: string
@@ -180,8 +187,8 @@ export function getLoginStats() {
     return request.get<ApiResponse<LoginStats>>('/api/v1/profile/login-stats')
 }
 
-export function listAdminUsers(params?: { keyword?: string; limit?: number; offset?: number }) {
-    return request.get<ApiResponse<AdminUser[]>>('/api/v1/admin/users', {params} as any)
+export function listAdminUsers(params?: { keyword?: string; page?: number; page_size?: number }) {
+    return request.get<ApiResponse<AdminUserPage>>('/api/v1/admin/users', {params} as any)
 }
 
 export function updateAdminUser(userId: string, data: AdminUserUpdatePayload) {
