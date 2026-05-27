@@ -81,6 +81,12 @@
                 @click="navigateTo('/tools/profile-center')"
             />
             <v-list-item
+                v-if="isAdmin"
+                prepend-icon="mdi-account-group-outline"
+                title="用户管理"
+                @click="navigateTo('/tools/admin-users')"
+            />
+            <v-list-item
                 v-if="!userStore.token"
                 prepend-icon="mdi-login"
                 title="登录"
@@ -129,6 +135,7 @@ const isMobile = computed(() => mdAndDown.value)
 const drawer = ref(true)
 const rail = ref(false)
 const keyword = ref('')
+const isAdmin = computed(() => userStore.roles.includes('admin') || userStore.permissions.includes('*'))
 
 const openGroups = reactive<Record<string, boolean>>({
   tools: true,

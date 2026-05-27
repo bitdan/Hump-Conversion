@@ -264,6 +264,18 @@ export const routes: RouteRecordRaw[] = [
                 }
             },
             {
+                path: '/tools/admin-users',
+                name: 'AdminUsers',
+                component: () => import('@/views/tools/AdminUserManagement.vue'),
+                meta: {
+                    title: '用户管理',
+                    icon: 'mdi-account-group-outline',
+                    description: '管理员查看用户、调整状态和重置密码。',
+                    requiresAuth: true,
+                    hiddenInNav: true
+                }
+            },
+            {
                 path: '/tools/jetbrain-checker',
                 name: 'JetbrainChecker',
                 component: () => import('@/views/tools/JetbrainChecker.vue'),

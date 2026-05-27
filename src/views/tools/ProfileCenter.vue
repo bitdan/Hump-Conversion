@@ -13,6 +13,9 @@
         </div>
       </div>
       <div class="header-actions">
+        <v-btn v-if="isAdmin" prepend-icon="mdi-account-group-outline" color="primary" variant="tonal" to="/tools/admin-users">
+          用户管理
+        </v-btn>
         <v-btn prepend-icon="mdi-shield-key-outline" variant="tonal" to="/tools/two-factor-manager">
           2FA 管理
         </v-btn>
@@ -183,6 +186,7 @@ const passwordForm = ref({
 })
 
 const avatarFallback = computed(() => (userStore.username || 'U').slice(0, 1).toUpperCase())
+const isAdmin = computed(() => userStore.roles.includes('admin') || userStore.permissions.includes('*'))
 
 async function loadProfile() {
   if (!checkAuth()) return

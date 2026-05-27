@@ -7,8 +7,8 @@ export const useUserStore = defineStore('user', () => {
   const username = ref<string | null>(localStorage.getItem('username'))
     const email = ref<string | null>(localStorage.getItem('email'))
   const avatar = ref<string | null>(localStorage.getItem('avatar'))
-  const roles = ref<string[]>([])
-  const permissions = ref<string[]>([])
+  const roles = ref<string[]>(JSON.parse(localStorage.getItem('roles') || '[]'))
+  const permissions = ref<string[]>(JSON.parse(localStorage.getItem('permissions') || '[]'))
 
   const setToken = (newToken: string) => {
     token.value = newToken
@@ -34,6 +34,8 @@ export const useUserStore = defineStore('user', () => {
     
     localStorage.setItem('userId', userInfo.user.userId)
     localStorage.setItem('username', userInfo.user.username)
+    localStorage.setItem('roles', JSON.stringify(userInfo.roles))
+    localStorage.setItem('permissions', JSON.stringify(userInfo.permissions))
       if (userInfo.user.email) {
           localStorage.setItem('email', userInfo.user.email)
       } else {
@@ -58,6 +60,8 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
     localStorage.removeItem('username')
+      localStorage.removeItem('roles')
+      localStorage.removeItem('permissions')
       localStorage.removeItem('email')
     localStorage.removeItem('avatar')
   }

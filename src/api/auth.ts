@@ -93,6 +93,31 @@ export interface LoginStats {
     recent_days: LoginStatsDay[]
 }
 
+export interface AdminUser {
+    user_id: string
+    username: string
+    email?: string
+    avatar?: string
+    status: 'active' | 'disabled'
+    roles: string[]
+    permissions: string[]
+    created_at: string
+    updated_at: string
+}
+
+export interface AdminUserUpdatePayload {
+    email?: string
+    avatar?: string
+    status?: 'active' | 'disabled'
+    roles?: string[]
+    permissions?: string[]
+}
+
+export interface AdminPasswordResetPayload {
+    newPassword: string
+    confirmPassword: string
+}
+
 function normalizeCaptchaData(data: RawCaptchaData): CaptchaData {
     return {
         captchaEnabled: data.captchaEnabled ?? data.captcha_enabled ?? true,
@@ -153,6 +178,18 @@ export function changePassword(data: ChangePasswordPayload) {
 
 export function getLoginStats() {
     return request.get<ApiResponse<LoginStats>>('/api/v1/profile/login-stats')
+}
+
+export function listAdminUsers(params?: { keyword?: string; limit?: number; offset?: number }) {
+    return request.get<ApiResponse<AdminUser[]>>('/api/v1/admin/users', {params} as any)
+}
+
+export function updateAdminUser(userId: string, data: AdminUserUpdatePayload) {
+    return request.put<ApiResponse<AdminUser>>(`/api/v1/admin/users/${userId}`, data)
+}
+
+export function resetAdminUserPassword(userId: string, data: AdminPasswordResetPayload) {
+    return request.put<ApiResponse<void>>(`/api/v1/admin/users/${userId}/password`, data)
 }
 
 // 用户登出
