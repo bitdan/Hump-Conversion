@@ -60,21 +60,12 @@ export const routes: RouteRecordRaw[] = [
     {
         path: '/tools',
         name: 'Tools',
+        redirect: '/tools/skill-chat-workspace',
         meta: {
             title: '工具',
             icon: 'mdi-tools'
         },
         children: [
-            {
-                path: '',
-                name: 'ToolsIndex',
-                component: () => import('@/views/tools/ToolsIndex.vue'),
-                meta: {
-                    title: '工具',
-                    icon: 'mdi-tools',
-                    description: 'Tool Hub 在线开发者工具集合。'
-                }
-            },
             {
                 path: '/tools/skill-chat-workspace',
                 name: 'SkillChatWorkspace',
