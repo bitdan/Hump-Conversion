@@ -3,6 +3,7 @@
     <div class="page-header">
       <div>
         <h1>涨停池复盘</h1>
+        <p>按交易日查看涨停池、板块强度、连板候选和观察池。</p>
       </div>
       <div class="toolbar">
         <v-text-field
@@ -25,9 +26,10 @@
         variant="tonal"
         density="comfortable"
         class="mb-4"
-    >
-      {{ error }}
-    </v-alert>
+        title="数据暂时不可用"
+      >
+        {{ error }}
+      </v-alert>
 
     <div class="summary-grid">
       <v-card v-for="item in summaryCards" :key="item.label" class="summary-card" variant="flat">
@@ -91,6 +93,7 @@
               :headers="poolHeaders"
               :items="filteredLimitUpPool"
               :loading="loading"
+              no-data-text="当前日期暂无涨停池数据"
               density="compact"
               item-value="code"
               fixed-header
@@ -187,6 +190,7 @@
                   :items="selectedSectorStocks"
                   density="compact"
                   item-value="code"
+                  no-data-text="当前板块暂无个股数据"
                   fixed-header
                   height="360"
               >
@@ -264,6 +268,7 @@
               :headers="candidateHeaders"
               :items="filteredCandidates"
               :loading="loading"
+              no-data-text="当前筛选下暂无连板候选"
               density="compact"
               item-value="stock.code"
               fixed-header
@@ -314,6 +319,7 @@
               :headers="signalHeaders"
               :items="filteredSignals"
               :loading="loading"
+              no-data-text="当前筛选下暂无分歧转一致信号"
               density="compact"
               item-value="code"
               fixed-header
@@ -363,6 +369,7 @@
           <v-data-table
               :headers="watchHeaders"
               :items="watchRows"
+              no-data-text="观察池为空，可从涨停池或候选列表加入"
               density="compact"
               item-value="code"
               fixed-header
@@ -1032,6 +1039,10 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.table-card {
+  overflow: hidden;
 }
 
 .stock-name {

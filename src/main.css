@@ -1,35 +1,59 @@
 :root {
-  --blue: rgb(88, 164, 246);
-  --light: #fff;
+  --app-primary: #2563eb;
+  --app-primary-soft: #dbeafe;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f8fafc;
+  --app-border: #dbe4ef;
+  --app-text: #0f172a;
+  --app-muted: #64748b;
+  --app-radius: 8px;
+  --app-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
+  min-width: 320px;
 }
 
-button {
-  border: none;
-  background: none var(--blue);
-  color: var(--light);
-  line-height: 2.5;
-  cursor: pointer;
-  transition: opacity .2s;
+body {
+  background: var(--app-surface-muted);
+  color: var(--app-text);
+  font-family: Inter, "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
 }
 
 button:disabled {
-  filter: grayscale(1);
   cursor: not-allowed;
 }
 
-button:not(:disabled):active {
-  opacity: 0.6;
+button {
+  font: inherit;
 }
 
 textarea {
   display: block;
   margin: 0;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.45);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track-piece {
+  background-color: transparent;
 }
 
 @media (prefers-color-scheme: light) {
@@ -47,17 +71,7 @@ textarea {
 }
 
 @media (prefers-color-scheme: dark) {
-  &::-webkit-scrollbar-track-piece {
-    background-color: #303133;
-  }
-
-  &::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background-color: #666;
-    border-color: #303133;
-  }
-
-  body {
-    background-color: #303133;
-    color: #fff;
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <ToolPageLayout :card="false" max-width="max-w-7xl">
+  <ToolPageLayout :card="false" hide-header density="workspace" theme="none" max-width="max-w-7xl">
     <div class="chat-shell">
     <header class="topbar">
       <div>

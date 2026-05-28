@@ -1,81 +1,74 @@
 <template>
   <ToolPageLayout max-width="max-w-4xl">
-      <!-- 输入区域 -->
-      <div class="space-y-4 mb-8">
-        <div class="flex gap-4 items-center">
-          <v-text-field
-            v-model="inputText"
-            placeholder="输入文本，自动识别格式并转换"
-            variant="outlined"
-            class="flex-1 bg-white/80 rounded-xl"
-            hide-details
-          />
-          <span class="text-gray-600 font-medium">当前格式：{{ currentTypeLabel }}</span>
-        </div>
-      </div>
+    <div class="case-converter">
+      <v-text-field
+          v-model="inputText"
+          label="输入文本"
+          placeholder="例如 userName、user_name、user-name"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+          autofocus
+      >
+        <template #append-inner>
+          <v-chip size="small" color="primary" variant="tonal">
+            {{ currentTypeLabel }}
+          </v-chip>
+        </template>
+      </v-text-field>
 
-      <!-- 转换结果 -->
-      <div class="grid gap-4">
-        <div
-          v-for="(result, index) in convertedResults"
-          :key="index"
-          class="bg-white/80 backdrop-blur-sm rounded-xl p-6 transition-all duration-300 hover:shadow-lg relative group"
-          :class="{ 'ring-2 ring-blue-500 bg-blue-50': copiedIndex === index }"
+      <v-alert
+          v-if="!inputText"
+          type="info"
+          variant="tonal"
+          density="comfortable"
+          icon="mdi-lightbulb-outline"
+      >
+        输入一个变量名后，会自动生成驼峰、下划线、中划线和大小写格式。
+      </v-alert>
+
+      <div v-else class="result-grid">
+        <v-card
+            v-for="(result, index) in convertedResults"
+            :key="result.label"
+            class="result-card"
+            :class="{ copied: copiedIndex === index }"
+            variant="flat"
         >
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-gray-600 mb-2">{{ result.label }}</div>
-              <div class="font-mono text-lg text-gray-800 break-all">{{ result.value }}</div>
-            </div>
-            <button
+          <div class="result-copy">
+            <span>{{ result.label }}</span>
+            <v-btn
+                :icon="copiedIndex === index ? 'mdi-check' : 'mdi-content-copy'"
+                :color="copiedIndex === index ? 'success' : undefined"
+                variant="text"
+                size="small"
+                :aria-label="`复制${result.label}`"
                 @click="copyToClipboard(result.value, index)"
-                class="flex-shrink-0 p-2 rounded-lg transition-all duration-200 hover:bg-blue-100 group-hover:bg-blue-50"
-                :class="{ 'bg-blue-100 text-blue-600': copiedIndex === index }"
-            >
-              <svg
-                  v-if="copiedIndex !== index"
-                  class="w-5 h-5 text-gray-400 hover:text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-              >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-              <svg
-                  v-else
-                  class="w-5 h-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-              >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </button>
+            />
           </div>
-        </div>
+          <code>{{ result.value }}</code>
+        </v-card>
       </div>
+    </div>
   </ToolPageLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
+
+type CaseType = 'camel' | 'underscore' | 'kebab' | 'lower' | 'upper' | 'empty'
+
+interface ConvertResult {
+  label: string
+  value: string
+}
 
 const inputText = ref('')
 const copiedIndex = ref(-1)
 
-// 类型标签映射
-const typeLabels = {
+const typeLabels: Record<CaseType, string> = {
   camel: '驼峰格式',
   underscore: '下划线格式',
   kebab: '中划线格式',
@@ -84,135 +77,136 @@ const typeLabels = {
   empty: '空'
 }
 
-// 转换函数
 const converters = {
-  camelToUnderscore: (str) => {
-    return str
-        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
-        .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-        .toLowerCase()
-  },
-  camelToKebab: (str) => {
-    return str
-        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
-        .replace(/([a-z\d])([A-Z])/g, '$1-$2')
-        .toLowerCase()
-  },
-  underscoreToCamel: (str) => {
-    return str.toLowerCase()
-        .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-  },
-  kebabToCamel: (str) => {
-    return str.toLowerCase()
-        .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-  },
-  underscoreToKebab: (str) => str.replace(/_/g, '-'),
-  kebabToUnderscore: (str) => str.replace(/-/g, '_'),
-
-  // 新增大小写转换函数
-  toUpper: (str) => {
-    // 如果是驼峰、下划线或中划线格式，先转换为对应的分隔形式
-    let processed = str
-    if (/[A-Z]/.test(str) && !/[_-]/.test(str)) {
-      processed = converters.camelToUnderscore(str)
-    }
-    return processed.toUpperCase()
-  },
-  toLower: (str) => {
-    // 如果是驼峰、下划线或中划线格式，先转换为对应的分隔形式
-    let processed = str
-    if (/[A-Z]/.test(str) && !/[_-]/.test(str)) {
-      processed = converters.camelToUnderscore(str)
-    }
-    return processed.toLowerCase()
-  }
+  camelToUnderscore: (str: string) => str
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+      .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+      .toLowerCase(),
+  camelToKebab: (str: string) => str
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+      .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+      .toLowerCase(),
+  underscoreToCamel: (str: string) => str.toLowerCase().replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()),
+  kebabToCamel: (str: string) => str.toLowerCase().replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase()),
+  underscoreToKebab: (str: string) => str.replace(/_/g, '-'),
+  kebabToUnderscore: (str: string) => str.replace(/-/g, '_'),
+  toUpper: (str: string) => normalizeDelimited(str).toUpperCase(),
+  toLower: (str: string) => normalizeDelimited(str).toLowerCase()
 }
 
-// 检测输入文本的类型
-const detectType = (str) => {
+function normalizeDelimited(str: string) {
+  if (/[A-Z]/.test(str) && !/[_-]/.test(str)) {
+    return converters.camelToUnderscore(str)
+  }
+  return str
+}
+
+function detectType(str: string): CaseType {
   if (!str) return 'empty'
-  // 全大写检测
   if (str === str.toUpperCase() && str.includes('_')) return 'upper'
-  // 全小写检测
-  if (str === str.toLowerCase() && !str.includes('_') && !str.includes('-')) return 'lower'
-  // 其他检测
-  if (/[A-Z]/.test(str) && !/[_-]/.test(str)) return 'camel'
   if (str.includes('_')) return 'underscore'
   if (str.includes('-')) return 'kebab'
+  if (/[A-Z]/.test(str)) return 'camel'
   return 'lower'
 }
 
-// 计算当前类型
 const currentType = computed(() => detectType(inputText.value))
 const currentTypeLabel = computed(() => typeLabels[currentType.value] || '未知格式')
 
-// 计算转换结果
-const convertedResults = computed(() => {
-  if (!inputText.value || currentType.value === 'empty') return []
+const convertedResults = computed<ConvertResult[]>(() => {
+  const value = inputText.value.trim()
+  if (!value) return []
 
-  const results = []
-  switch (currentType.value) {
-    case 'camel':
-      results.push(
-          {label: '下划线格式', value: converters.camelToUnderscore(inputText.value)},
-          {label: '中划线格式', value: converters.camelToKebab(inputText.value)},
-          {label: '全大写格式', value: converters.toUpper(inputText.value)},
-          {label: '全小写格式', value: converters.toLower(inputText.value)}
-      )
-      break
-    case 'underscore':
-      results.push(
-          {label: '驼峰格式', value: converters.underscoreToCamel(inputText.value)},
-          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
-          {label: '全大写格式', value: converters.toUpper(inputText.value)},
-          {label: '全小写格式', value: converters.toLower(inputText.value)}
-      )
-      break
-    case 'kebab':
-      results.push(
-          {label: '驼峰格式', value: converters.kebabToCamel(inputText.value)},
-          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
-          {label: '全大写格式', value: converters.toUpper(inputText.value)},
-          {label: '全小写格式', value: converters.toLower(inputText.value)}
-      )
-      break
-    case 'upper':
-      results.push(
-          {label: '驼峰格式', value: converters.kebabToCamel(inputText.value)},
-          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
-          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
-          {label: '全小写格式', value: converters.toLower(inputText.value)}
-      )
-      break
-    case 'lower':
-      results.push(
-          {label: '驼峰格式', value: converters.underscoreToCamel(inputText.value)},
-          {label: '下划线格式', value: converters.kebabToUnderscore(inputText.value)},
-          {label: '中划线格式', value: converters.underscoreToKebab(inputText.value)},
-          {label: '全大写格式', value: converters.toUpper(inputText.value)},
-          {label: '全小写格式', value: converters.toLower(inputText.value)}
-      )
-      break
+  const resultsByType: Record<Exclude<CaseType, 'empty'>, ConvertResult[]> = {
+    camel: [
+      {label: '下划线格式', value: converters.camelToUnderscore(value)},
+      {label: '中划线格式', value: converters.camelToKebab(value)},
+      {label: '全大写格式', value: converters.toUpper(value)},
+      {label: '全小写格式', value: converters.toLower(value)}
+    ],
+    underscore: [
+      {label: '驼峰格式', value: converters.underscoreToCamel(value)},
+      {label: '中划线格式', value: converters.underscoreToKebab(value)},
+      {label: '全大写格式', value: converters.toUpper(value)},
+      {label: '全小写格式', value: converters.toLower(value)}
+    ],
+    kebab: [
+      {label: '驼峰格式', value: converters.kebabToCamel(value)},
+      {label: '下划线格式', value: converters.kebabToUnderscore(value)},
+      {label: '全大写格式', value: converters.toUpper(value)},
+      {label: '全小写格式', value: converters.toLower(value)}
+    ],
+    upper: [
+      {label: '驼峰格式', value: converters.underscoreToCamel(value)},
+      {label: '中划线格式', value: converters.underscoreToKebab(value)},
+      {label: '全小写格式', value: converters.toLower(value)}
+    ],
+    lower: [
+      {label: '驼峰格式', value: converters.underscoreToCamel(value)},
+      {label: '下划线格式', value: converters.kebabToUnderscore(value)},
+      {label: '中划线格式', value: converters.underscoreToKebab(value)},
+      {label: '全大写格式', value: converters.toUpper(value)}
+    ]
   }
-  return results
+
+  const type = currentType.value
+  if (type === 'empty') return []
+  return resultsByType[type]
 })
 
-// 复制到剪贴板
-const copyToClipboard = async (text, index) => {
+async function copyToClipboard(text: string, index: number) {
   try {
     await navigator.clipboard.writeText(text)
     copiedIndex.value = index
-    setTimeout(() => {
+    window.setTimeout(() => {
       copiedIndex.value = -1
-    }, 2000)
+    }, 1600)
   } catch (err) {
     console.error('复制失败:', err)
-    const textarea = document.createElement('textarea')
-    textarea.value = text
-    document.body.appendChild(textarea)
-    textarea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textarea)
   }
 }
 </script>
+
+<style scoped>
+.case-converter {
+  display: grid;
+  gap: 18px;
+}
+
+.result-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.result-card {
+  padding: 16px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.result-card.copied {
+  border-color: #22c55e;
+  box-shadow: 0 12px 28px rgba(34, 197, 94, 0.12);
+}
+
+.result-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.result-card code {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+</style>

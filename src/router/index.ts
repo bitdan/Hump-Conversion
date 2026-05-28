@@ -9,6 +9,9 @@ declare module 'vue-router' {
         icon?: string;
         requiresAuth?: boolean;
         hiddenInNav?: boolean;
+        keywords?: string[];
+        featured?: boolean;
+        groupOrder?: number;
     }
 }
 
@@ -19,7 +22,8 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/components/Home.vue'),
         meta: {
             title: 'Tool Hub - 在线开发者工具箱与小游戏集合',
-            description: 'Tool Hub 提供在线驼峰转换、JSON 编辑器、文件 Diff、二维码生成、时间戳转换、MCP 测试台以及多种网页小游戏。'
+            description: 'Tool Hub 提供在线驼峰转换、JSON 编辑器、文件 Diff、二维码生成、时间戳转换、MCP 测试台以及多种网页小游戏。',
+            keywords: ['工具箱', '开发工具', '小游戏', 'AI 对话']
         }
     },
     {
@@ -63,7 +67,8 @@ export const routes: RouteRecordRaw[] = [
         redirect: '/tools/skill-chat-workspace',
         meta: {
             title: '工具',
-            icon: 'mdi-tools'
+            icon: 'mdi-tools',
+            groupOrder: 1
         },
         children: [
             {
@@ -73,7 +78,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: 'AI 对话工作台',
                     icon: 'mdi-robot-outline',
-                    description: 'Tool Hub AI 对话工作台，支持技能路由、多轮对话和结构化结果展示。'
+                    description: 'Tool Hub AI 对话工作台，支持技能路由、多轮对话和结构化结果展示。',
+                    keywords: ['AI', '对话', '堆栈', 'LeetCode', '技能'],
+                    featured: true
                 }
             },
             {
@@ -85,9 +92,11 @@ export const routes: RouteRecordRaw[] = [
                 name: 'MysqlAnalysis',
                 component: () => import('@/views/tools/MysqlAnalysis.vue'),
                 meta: {
-                    title: 'MysqlAnalysis',
-                    icon: 'mdi-link-variant',
-                    description: '在线 MySQL 慢 SQL 与日志分析工具。'
+                    title: '慢 SQL 分析',
+                    icon: 'mdi-database-search-outline',
+                    description: '在线 MySQL 慢 SQL 与日志分析工具。',
+                    keywords: ['MySQL', '慢 SQL', '日志', '数据库'],
+                    featured: true
                 }
             },
             {
@@ -97,7 +106,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: 'MCP 测试台',
                     icon: 'mdi-connection',
-                    description: '在线测试 MCP SSE 连接、工具列表与工具调用结果。'
+                    description: '在线测试 MCP SSE 连接、工具列表与工具调用结果。',
+                    keywords: ['MCP', 'SSE', '工具调用'],
+                    featured: true
                 }
             },
             {
@@ -107,7 +118,8 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '字符串生成',
                     icon: 'mdi-format-letter-case',
-                    description: '在线字符串生成工具，快速生成随机文本与测试数据。'
+                    description: '在线字符串生成工具，快速生成随机文本与测试数据。',
+                    keywords: ['随机', '字符串', '测试数据']
                 }
             },
             {
@@ -117,7 +129,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '驼峰转换',
                     icon: 'mdi-format-letter-case',
-                    description: '在线驼峰转换工具，支持驼峰、下划线、中划线、大小写格式互转。'
+                    description: '在线驼峰转换工具，支持驼峰、下划线、中划线、大小写格式互转。',
+                    keywords: ['驼峰', '下划线', '中划线', '大小写'],
+                    featured: true
                 }
             },
             //
@@ -138,7 +152,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '文件对比 Diff',
                     icon: 'mdi-file-compare',
-                    description: '在线文件 Diff 对比工具，快速比较文本与代码差异。'
+                    description: '在线文件 Diff 对比工具，快速比较文本与代码差异。',
+                    keywords: ['Diff', '文件对比', '代码差异'],
+                    featured: true
                 }
             },
             {
@@ -148,7 +164,8 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: 'EPUB 阅读器',
                     icon: 'mdi-book-open-page-variant-outline',
-                    description: '在线 EPUB 阅读器，支持本地文件解析、目录导航、阅读主题和字号调节。'
+                    description: '在线 EPUB 阅读器，支持本地文件解析、目录导航、阅读主题和字号调节。',
+                    keywords: ['EPUB', '阅读器', '电子书']
                 }
             },
             // {
@@ -178,7 +195,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '时间戳工具',
                     icon: 'mdi-clock-outline',
-                    description: '在线时间戳转换工具，支持时间与 Unix 时间戳互转。'
+                    description: '在线时间戳转换工具，支持时间与 Unix 时间戳互转。',
+                    keywords: ['时间戳', 'Unix', '日期'],
+                    featured: true
                 }
             },
             {
@@ -188,7 +207,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: 'Cron 表达式助手',
                     icon: 'mdi-calendar-clock',
-                    description: '在线 Cron 表达式助手，支持生成 Cron、反解析字段含义和下次执行时间预览。'
+                    description: '在线 Cron 表达式助手，支持生成 Cron、反解析字段含义和下次执行时间预览。',
+                    keywords: ['Cron', '定时任务', '表达式'],
+                    featured: true
                 }
             },
             {
@@ -228,7 +249,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '文字转二维码',
                     icon: 'mdi-qrcode',
-                    description: '在线二维码生成工具，支持文本与链接即时转二维码。'
+                    description: '在线二维码生成工具，支持文本与链接即时转二维码。',
+                    keywords: ['二维码', 'QR Code', '链接'],
+                    featured: true
                 }
             },
             {
@@ -238,7 +261,8 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '代码截图',
                     icon: 'mdi-camera-outline',
-                    description: '在线代码截图生成器，支持主题、语言、背景和 PNG 导出。'
+                    description: '在线代码截图生成器，支持主题、语言、背景和 PNG 导出。',
+                    keywords: ['代码截图', 'PNG', '主题']
                 }
             },
             {
@@ -303,7 +327,8 @@ export const routes: RouteRecordRaw[] = [
         name: 'Market',
         meta: {
             title: '市场',
-            icon: 'mdi-finance'
+            icon: 'mdi-finance',
+            groupOrder: 2
         },
         children: [
             {
@@ -313,7 +338,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '涨停池复盘',
                     icon: 'mdi-chart-timeline-variant',
-                    description: '涨停池、板块强度、2进3候选和分歧转一致识别。'
+                    description: '涨停池、板块强度、2进3候选和分歧转一致识别。',
+                    keywords: ['股票', '涨停池', '复盘', '板块强度'],
+                    featured: true
                 }
             }
         ]
@@ -323,7 +350,8 @@ export const routes: RouteRecordRaw[] = [
         name: 'Community',
         meta: {
             title: '社区',
-            icon: 'mdi-forum-outline'
+            icon: 'mdi-forum-outline',
+            groupOrder: 3
         },
         children: [
             {
@@ -333,7 +361,9 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '帖子',
                     icon: 'mdi-post-outline',
-                    description: 'Tool Hub 社区帖子列表，发布和查看工具使用经验。'
+                    description: 'Tool Hub 社区帖子列表，发布和查看工具使用经验。',
+                    keywords: ['社区', '帖子', '经验'],
+                    featured: true
                 }
             },
             {
@@ -375,7 +405,8 @@ export const routes: RouteRecordRaw[] = [
         name: 'Games',
         meta: {
             title: '游戏',
-            icon: 'mdi-gamepad-variant'
+            icon: 'mdi-gamepad-variant',
+            groupOrder: 4
         },
         children: [
             {

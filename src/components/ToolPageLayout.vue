@@ -2,7 +2,7 @@
   <div :class="pageClasses">
     <transition name="tool-page-fade" appear>
       <div :class="['tool-page-layout__inner', maxWidthClass]">
-        <header class="tool-page-layout__header">
+        <header v-if="!hideHeader" class="tool-page-layout__header">
           <div class="tool-page-layout__icon">
             <v-icon :icon="icon" size="28"/>
           </div>
@@ -31,10 +31,14 @@ const props = withDefaults(defineProps<{
   theme?: 'default' | 'dark' | 'none'
   maxWidth?: string
   card?: boolean
+  hideHeader?: boolean
+  density?: 'default' | 'workspace'
 }>(), {
   theme: 'default',
   maxWidth: 'max-w-5xl',
-  card: true
+  card: true,
+  hideHeader: false,
+  density: 'default'
 })
 
 const route = useRoute()
@@ -46,7 +50,8 @@ const maxWidthClass = computed(() => props.maxWidth)
 
 const pageClasses = computed(() => [
   'tool-page-layout',
-  `tool-page-layout--${props.theme}`
+  `tool-page-layout--${props.theme}`,
+  `tool-page-layout--${props.density}`
 ])
 </script>
 
@@ -55,6 +60,10 @@ const pageClasses = computed(() => [
   min-height: calc(100vh - 40px);
   margin: -20px;
   padding: 28px 20px 40px;
+}
+
+.tool-page-layout--workspace {
+  padding: 16px;
 }
 
 .tool-page-layout--default {
@@ -159,6 +168,10 @@ const pageClasses = computed(() => [
     min-height: calc(100vh - 24px);
     margin: -12px;
     padding: 20px 12px 32px;
+  }
+
+  .tool-page-layout--workspace {
+    padding: 12px;
   }
 
   .tool-page-layout__header {

@@ -42,10 +42,9 @@
         <div class="forum-shortcuts">
           <v-menu>
             <template #activator="{ props }">
-              <button type="button" class="shortcut-pill" v-bind="props">
-                categories
-                <v-icon size="16">mdi-chevron-right</v-icon>
-              </button>
+              <v-btn v-bind="props" variant="outlined" append-icon="mdi-chevron-down">
+                分类
+              </v-btn>
             </template>
             <v-list density="compact">
               <v-list-item title="全部分类" @click="applyCategory('')"/>
@@ -60,10 +59,9 @@
 
           <v-menu :close-on-content-click="false">
             <template #activator="{ props }">
-              <button type="button" class="shortcut-pill" v-bind="props">
-                tags
-                <v-icon size="16">mdi-chevron-right</v-icon>
-              </button>
+              <v-btn v-bind="props" variant="outlined" append-icon="mdi-chevron-down">
+                标签
+              </v-btn>
             </template>
             <div class="tag-filter-panel">
               <v-combobox
@@ -83,18 +81,23 @@
           </v-menu>
         </div>
 
-        <div class="forum-tabs" role="tablist" aria-label="帖子排序">
-          <button
+        <v-btn-toggle
+            v-model="activeTab"
+            class="forum-tabs"
+            density="comfortable"
+            mandatory
+            variant="text"
+            divided
+        >
+          <v-btn
               v-for="tab in tabs"
               :key="tab.value"
-              type="button"
-              class="forum-tab"
-              :class="{ active: activeTab === tab.value }"
-              @click="selectTab(tab.value)"
+              :value="tab.value"
+              size="small"
           >
             {{ tab.label }}
-          </button>
-        </div>
+          </v-btn>
+        </v-btn-toggle>
 
         <v-btn variant="text" prepend-icon="mdi-refresh" @click="reload">刷新</v-btn>
       </div>
@@ -126,9 +129,9 @@
 
       <template v-else>
         <div v-if="sortedPosts.length > 0" class="topic-hint">
-          <button type="button" class="new-topic-pill" @click="reload">
+          <v-btn variant="tonal" color="primary" prepend-icon="mdi-forum-outline" @click="reload">
             当前共 {{ total }} 个主题
-          </button>
+          </v-btn>
         </div>
 
         <div class="topic-table">
@@ -154,15 +157,16 @@
                 <span class="topic-badge" :style="{ color: categoryColor(post.category) }">
                   {{ post.category }}
                 </span>
-                <button
+                <v-chip
                     v-for="tag in post.tags"
                     :key="tag"
-                    type="button"
-                    class="topic-badge subtle topic-tag-button"
+                    size="small"
+                    variant="tonal"
+                    class="topic-tag-button"
                     @click.stop="applyTag(tag)"
                 >
                   #{{ tag }}
-                </button>
+                </v-chip>
               </div>
               <p>{{ summarize(post.content) }}</p>
             </div>
@@ -222,9 +226,9 @@ const selectedTag = ref('')
 const pendingTag = ref('')
 
 const tabs: Array<{ label: string; value: TabValue }> = [
-  {label: 'Latest', value: 'latest'},
-  {label: 'Top', value: 'top'},
-  {label: 'Hot', value: 'hot'}
+  {label: '最新', value: 'latest'},
+  {label: '高赞', value: 'top'},
+  {label: '热门', value: 'hot'}
 ]
 
 const categories = POST_CATEGORIES
@@ -273,10 +277,6 @@ async function loadPosts() {
 function reload() {
   reset()
   loadPosts()
-}
-
-function selectTab(tab: TabValue) {
-  activeTab.value = tab
 }
 
 function applyCategory(value: string) {
@@ -427,32 +427,11 @@ onMounted(loadPosts)
 }
 
 .forum-shortcuts,
-.forum-tabs,
 .active-filters {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.shortcut-pill,
-.forum-tab {
-  border: 0;
-  background: transparent;
-  color: #4b5563;
-  font: inherit;
-  cursor: pointer;
-}
-
-.shortcut-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 14px;
-  border: 1px solid #d8dee8;
-  border-radius: 10px;
-  background: #ffffff;
-  font-weight: 600;
 }
 
 .tag-filter-panel {
@@ -468,26 +447,10 @@ onMounted(loadPosts)
   margin-top: 12px;
 }
 
-.forum-tab {
-  position: relative;
-  padding: 10px 10px 14px;
-  color: #475569;
-  font-size: 16px;
-}
-
-.forum-tab.active {
-  color: var(--community-accent);
-}
-
-.forum-tab.active::after {
-  content: '';
-  position: absolute;
-  right: 8px;
-  bottom: 4px;
-  left: 8px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--community-accent);
+.forum-tabs {
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .active-filters {
@@ -502,17 +465,6 @@ onMounted(loadPosts)
   display: flex;
   justify-content: center;
   padding: 4px 22px 10px;
-}
-
-.new-topic-pill {
-  border: 0;
-  padding: 10px 18px;
-  border-radius: 12px;
-  background: var(--community-accent-soft);
-  color: #2086d5;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .topic-table {
@@ -599,7 +551,6 @@ onMounted(loadPosts)
 }
 
 .topic-tag-button {
-  border: 0;
   cursor: pointer;
 }
 

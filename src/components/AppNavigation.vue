@@ -13,12 +13,21 @@
       width="280"
       class="side-nav"
   >
-    <div class="px-2 pt-2 pb-1 flex justify-end" v-if="!isMobile">
-      <v-btn
-          variant="text"
-          :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-          @click="rail = !rail"
-      />
+    <div class="nav-header" v-if="!isMobile">
+      <div v-if="!rail" class="brand-mark">
+        <v-icon icon="mdi-tools"/>
+        <span>Tool Hub</span>
+      </div>
+      <v-tooltip location="right" :text="rail ? '展开导航' : '收起导航'">
+        <template #activator="{ props }">
+          <v-btn
+              v-bind="props"
+              variant="text"
+              :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+              @click="rail = !rail"
+          />
+        </template>
+      </v-tooltip>
     </div>
 
     <div class="px-3 pb-2" v-if="!rail || isMobile">
@@ -41,26 +50,47 @@
           v-model="openGroups[section.key]"
       >
         <template #activator="{ props }">
-          <v-list-item
-              v-bind="props"
-              :prepend-icon="section.icon"
-              :title="!isMobile && rail ? '' : section.title"
-              rounded="lg"
-          />
+          <v-tooltip location="right" :text="section.title" :disabled="!rail || isMobile">
+            <template #activator="{ props: tooltipProps }">
+              <v-list-item
+                  v-bind="{ ...props, ...tooltipProps }"
+                  :prepend-icon="section.icon"
+                  :title="!isMobile && rail ? '' : section.title"
+                  rounded="lg"
+              />
+            </template>
+          </v-tooltip>
         </template>
 
-        <v-list-item
+        <v-tooltip
             v-for="item in section.items"
             :key="item.path"
-            :to="item.path"
-            :title="item.title"
-            :prepend-icon="item.icon"
-            rounded="lg"
-            class="menu-item"
-            :class="{ 'menu-item-active': route.path === item.path }"
-            @click="handleMenuClick"
-        />
+            location="right"
+            :text="item.title"
+            :disabled="!rail || isMobile"
+        >
+          <template #activator="{ props }">
+            <v-list-item
+                v-bind="props"
+                :to="item.path"
+                :title="!isMobile && rail ? '' : item.title"
+                :prepend-icon="item.icon"
+                rounded="lg"
+                class="menu-item"
+                :class="{ 'menu-item-active': isMenuItemActive(item) }"
+                @click="handleMenuClick"
+            />
+          </template>
+        </v-tooltip>
       </v-list-group>
+
+      <v-empty-state
+          v-if="!rail && filteredSections.length === 0"
+          class="nav-empty"
+          icon="mdi-magnify-close"
+          title="没有匹配的菜单"
+          text="换个关键词试试"
+      />
     </v-list>
 
     <template #append>
@@ -116,6 +146,7 @@ interface MenuItem {
   path: string
   title: string
   icon: string
+  keywords: string[]
 }
 
 interface MenuSection {
@@ -146,7 +177,9 @@ const openGroups = reactive<Record<string, boolean>>({
 
 const sections = computed<MenuSection[]>(() => {
   const groupRoutes = router.options.routes.filter(item => item.path === '/tools' || item.path === '/market' || item.path === '/community' || item.path === '/games')
-  return groupRoutes.map(routeRecord => {
+  return groupRoutes
+      .sort((left, right) => Number(left.meta?.groupOrder || 99) - Number(right.meta?.groupOrder || 99))
+      .map(routeRecord => {
     const key = routeRecord.path.replace('/', '')
     const children = routeRecord.children || []
     return {
@@ -158,7 +191,8 @@ const sections = computed<MenuSection[]>(() => {
           .map(child => ({
             path: child.path,
             title: String(child.meta?.title || child.name || child.path),
-            icon: String(child.meta?.icon || 'mdi-chevron-right')
+            icon: String(child.meta?.icon || 'mdi-chevron-right'),
+            keywords: Array.isArray(child.meta?.keywords) ? child.meta.keywords.map(String) : []
           }))
     }
   })
@@ -184,9 +218,9 @@ function isSubsequenceMatch(query: string, target: string) {
   return false
 }
 
-function matchesMenuItem(query: string, title: string) {
-  const normalizedTitle = normalizeSearchText(title)
-  return normalizedTitle.includes(query) || isSubsequenceMatch(query, normalizedTitle)
+function matchesMenuItem(query: string, item: MenuItem) {
+  const normalizedText = normalizeSearchText([item.title, ...item.keywords].join(' '))
+  return normalizedText.includes(query) || isSubsequenceMatch(query, normalizedText)
 }
 
 const filteredSections = computed<MenuSection[]>(() => {
@@ -195,10 +229,14 @@ const filteredSections = computed<MenuSection[]>(() => {
   return sections.value
       .map(section => ({
         ...section,
-        items: section.items.filter(item => matchesMenuItem(q, item.title))
+        items: section.items.filter(item => matchesMenuItem(q, item))
       }))
       .filter(section => section.items.length > 0)
 })
+
+function isMenuItemActive(item: MenuItem) {
+  return route.path === item.path || route.path.startsWith(`${item.path}/`)
+}
 
 watch(
     () => route.path,
@@ -241,6 +279,23 @@ async function handleLogout() {
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 8px 8px 4px 14px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #0f172a;
+  font-weight: 800;
+}
+
 .side-nav :deep(.v-navigation-drawer__content) {
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -258,6 +313,13 @@ async function handleLogout() {
   background: rgba(37, 99, 235, 0.12);
   color: #1d4ed8;
   font-weight: 600;
+}
+
+.nav-empty {
+  margin: 14px 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .user-footer {
