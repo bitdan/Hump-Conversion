@@ -108,6 +108,9 @@ export interface AdminUser {
 export interface AdminUserPage {
     items: AdminUser[]
     total: number
+    total_active?: number
+    total_disabled?: number
+    total_frozen?: number
     page: number
     page_size: number
 }
