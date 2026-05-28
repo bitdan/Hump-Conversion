@@ -1,5 +1,5 @@
 <template>
-  <div class="qr-page">
+  <ToolPageLayout :card="false" max-width="max-w-6xl">
     <section class="qr-workspace">
       <aside class="qr-controls">
         <div class="control-group">
@@ -117,11 +117,12 @@
         <p v-if="qrValue" class="qr-value">{{ qrValue }}</p>
       </main>
     </section>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {nextTick, onBeforeUnmount, ref, watch} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 // @ts-ignore qrcode is provided by @chenfengyuan/vue-qrcode's peer dependency.
 import QRCode from 'qrcode'
 

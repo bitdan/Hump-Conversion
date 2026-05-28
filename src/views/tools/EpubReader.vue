@@ -1,5 +1,6 @@
 <template>
-  <div class="epub-page" :class="{ 'sidebar-collapsed': !showSidebar }">
+  <ToolPageLayout theme="none" :card="false" max-width="max-w-full">
+    <div class="epub-page" :class="{ 'sidebar-collapsed': !showSidebar }">
     <aside v-if="showSidebar" class="epub-sidebar">
       <div class="sidebar-header">
         <div>
@@ -158,12 +159,14 @@
         </div>
       </template>
     </main>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
 import {computed, nextTick, onBeforeUnmount, ref, watch} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 interface ZipEntry {
   name: string

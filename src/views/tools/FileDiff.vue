@@ -1,5 +1,6 @@
 <template>
-  <div class="p-4 space-y-4">
+  <ToolPageLayout max-width="max-w-6xl">
+    <div class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <v-card class="p-4">
         <div class="flex items-center justify-between mb-2">
@@ -98,11 +99,13 @@
         </div>
       </template>
     </v-card>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import { diffLines, summarizeDiff } from '@/utils/diff'
 import type { LineChange } from '@/utils/diffTypes'
 import { formatContent, detectFormat } from '@/utils/formatters'

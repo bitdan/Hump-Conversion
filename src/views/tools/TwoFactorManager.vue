@@ -1,5 +1,6 @@
 <template>
-  <div class="twofa-page">
+  <ToolPageLayout :card="false" max-width="max-w-7xl">
+    <div class="twofa-page">
     <section class="hero-card">
       <div>
         <p class="eyebrow">Account Bound TOTP Vault</p>
@@ -222,11 +223,13 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 // @ts-ignore
 import VueQrcode from '@chenfengyuan/vue-qrcode'
 import jsQR from 'jsqr'

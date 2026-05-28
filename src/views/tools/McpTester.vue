@@ -1,5 +1,6 @@
 <template>
-  <div class="mcp-tester-shell">
+  <ToolPageLayout theme="dark" :card="false" max-width="max-w-7xl">
+    <div class="mcp-tester-shell">
     <section class="hero-panel">
       <div>
         <p class="eyebrow">Tool Hub MCP Playground</p>
@@ -118,11 +119,13 @@
         </div>
       </section>
     </div>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import {useMessage} from '@/composables/useMessage'
 
 interface McpLogEntry {

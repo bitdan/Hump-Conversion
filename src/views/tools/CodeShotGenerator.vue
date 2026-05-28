@@ -1,5 +1,6 @@
 <template>
-  <div class="codeshot-page">
+  <ToolPageLayout theme="dark" :card="false" max-width="max-w-7xl">
+    <div class="codeshot-page">
     <header class="hero">
       <h1>code-format</h1>
     </header>
@@ -96,11 +97,13 @@
 
       <div v-if="errorMessage" class="error-text">{{ errorMessage }}</div>
     </main>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, nextTick, ref} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import html2canvas from 'html2canvas'
 
 type ThemeName = 'midnight' | 'light' | 'terminal' | 'rose'

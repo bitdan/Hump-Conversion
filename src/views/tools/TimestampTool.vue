@@ -1,7 +1,5 @@
 <template>
-  <div class="max-w-6xl mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">时间戳转换工具</h2>
-    
+  <ToolPageLayout max-width="max-w-6xl">
     <!-- 输入区域 -->
     <div class="mb-6">
       <!-- 当前输入格式显示 -->
@@ -73,11 +71,12 @@
         </div>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const inputValue = ref('')
 const currentTime = ref(Date.now())

@@ -1,12 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-          字符串生成器
-        </h1>
-      </div>
-
+  <ToolPageLayout max-width="max-w-4xl">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1">
           <div class="bg-gray-50 rounded-xl p-6 space-y-6">
@@ -114,12 +107,12 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const length = ref(10)
 const count = ref(5)

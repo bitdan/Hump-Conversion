@@ -1,13 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
-          计算稿纸
-        </h1>
-        <p class="text-gray-600 mt-2">支持多行计算，按回车自动计算结果并进入下一行</p>
-      </div>
-
+  <ToolPageLayout max-width="max-w-4xl">
       <!-- 计算区域 -->
       <div class="space-y-4 mb-6">
         <!-- 当前输入行 -->
@@ -109,12 +101,12 @@
           <li>• 点击复制按钮复制计算结果</li>
         </ul>
       </div>
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const currentInput = ref('')
 const calculationLines = ref([])

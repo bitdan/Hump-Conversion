@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import DOMPurify from 'dompurify'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const fileName = ref('简历')
 const markdownContent = ref(``)
@@ -425,12 +426,8 @@ function escapeHtml(text: string): string {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 p-4 md:p-6">
+  <ToolPageLayout :card="false" max-width="max-w-[1450px]">
     <div class="mx-auto max-w-[1450px]">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Markdown 简历转 PDF</h1>
-      </div>
-
       <div class="mb-4 rounded-xl bg-white/90 px-3 py-3 shadow-sm">
         <div class="top-toolbar">
           <div class="toolbar-group">
@@ -555,7 +552,7 @@ function escapeHtml(text: string): string {
         </v-card>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <style scoped>

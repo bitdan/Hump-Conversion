@@ -1,12 +1,8 @@
 <template>
-  <div class="cron-page">
+  <ToolPageLayout :card="false" max-width="max-w-7xl">
     <div class="cron-shell">
       <header class="cron-header">
-        <div>
-          <div class="eyebrow">Backend Ops Tool</div>
-          <h1>Cron 表达式助手</h1>
-          <p>生成 Cron、反解析字段含义，并预览本地时区下的后续执行时间。</p>
-        </div>
+        <div class="eyebrow">Backend Ops Tool</div>
         <v-chip color="primary" variant="tonal" prepend-icon="mdi-clock-check-outline">
           {{ cronModeLabel }}
         </v-chip>
@@ -221,11 +217,12 @@
     <v-snackbar v-model="snackbarVisible" :color="snackbarColor" timeout="2000" location="top">
       {{ snackbarText }}
     </v-snackbar>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, reactive, ref} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 type BuilderType = 'interval' | 'daily' | 'weekly' | 'monthly' | 'custom'
 type ParsedField = { raw: string; values: Set<number> | null; wildcard: boolean }

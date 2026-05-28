@@ -1,12 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-          驼峰转换工具
-        </h1>
-      </div>
-
+  <ToolPageLayout max-width="max-w-4xl">
       <!-- 输入区域 -->
       <div class="space-y-4 mb-8">
         <div class="flex gap-4 items-center">
@@ -71,12 +64,12 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup>
 import {computed, ref} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const inputText = ref('')
 const copiedIndex = ref(-1)

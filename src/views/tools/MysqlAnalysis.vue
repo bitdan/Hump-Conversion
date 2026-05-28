@@ -1,13 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-full bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-          MySQL慢查询日志分析器
-        </h1>
-        <p class="mt-2 text-gray-600">在浏览器中安全分析您的MySQL慢查询日志</p>
-      </div>
-
+  <ToolPageLayout max-width="max-w-full">
+    <div class="w-full">
       <!-- 文件上传区域 -->
       <div class="bg-white/80 rounded-xl p-6 mb-6">
         <div
@@ -413,11 +406,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, nextTick, onUnmounted, ref} from 'vue';
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import {
   ArcElement,
   BarController,

@@ -1,5 +1,6 @@
 <template>
-  <div class="chat-shell">
+  <ToolPageLayout :card="false" max-width="max-w-7xl">
+    <div class="chat-shell">
     <header class="topbar">
       <div>
         <h1 class="topbar-title">AI 对话工作台</h1>
@@ -75,12 +76,14 @@
         </div>
       </div>
     </footer>
-  </div>
+    </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
 import {nextTick, ref, watch} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import {useMessage} from '../../composables/useMessage'
 import {sendAgentChat} from '@/api/agentChat'
 

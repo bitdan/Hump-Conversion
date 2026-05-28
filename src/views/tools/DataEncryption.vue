@@ -1,12 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center py-8 px-4">
-    <div class="w-full max-w-4xl bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-          数据加密工具
-        </h1>
-      </div>
-
+  <ToolPageLayout max-width="max-w-4xl">
       <!-- 算法选择区域 -->
       <div class="bg-white/80 rounded-xl p-6 mb-6">
         <v-tabs v-model="selectedType" class="mb-4" density="comfortable">
@@ -81,12 +74,12 @@
           @click="copyText(result)"
         />
       </div>
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../../utils/crypto';
 
 // 基础状态
