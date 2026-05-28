@@ -1,12 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-4 sm:py-8 px-2 sm:px-4">
+  <ToolPageLayout :card="false" max-width="max-w-4xl">
     <div class="max-w-4xl mx-auto">
       <!-- 标题区域 -->
       <div class="text-center mb-4 sm:mb-8">
-        <h1 class="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-          连连看
-        </h1>
-        <div class="mt-2 flex justify-center items-center gap-4 sm:gap-8">
+        <div class="flex justify-center items-center gap-4 sm:gap-8">
           <p class="text-sm sm:text-base text-gray-600">
             <v-icon icon="mdi-clock-outline" class="text-blue-500" />
             剩余时间: {{ formatTime(remainingTime) }}
@@ -52,11 +49,12 @@
         ></canvas>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 游戏常量
 const BOARD_SIZE = 10 // 整个棋盘大小

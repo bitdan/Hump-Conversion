@@ -1,9 +1,9 @@
 <template>
+  <ToolPageLayout :card="false" max-width="max-w-7xl">
   <div class="bird-game">
     <div class="game-shell">
       <header class="game-header">
         <div>
-          <h1>愤怒的小鸟</h1>
           <p>{{ currentLevel.name }} · {{ activeBirdLabel }}</p>
         </div>
         <div class="score-board">
@@ -55,10 +55,12 @@
       </div>
     </div>
   </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 type BirdType = 'red' | 'yellow' | 'blue'
 type Material = 'wood' | 'glass' | 'stone'

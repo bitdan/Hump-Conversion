@@ -1,7 +1,6 @@
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
-    <h1 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-8">五子棋</h1>
-
+  <ToolPageLayout :card="false" max-width="max-w-4xl">
+  <div class="flex flex-col items-center justify-center p-2 sm:p-4">
     <!-- 在线对战控制 -->
     <div v-if="!isOnlineMode" class="mb-4 flex gap-4">
       <v-btn color="primary" @click="createRoom">
@@ -199,6 +198,7 @@
       退出对战
     </button>
   </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -207,6 +207,7 @@ import {useAuthCheck} from '@/composables/useAuthCheck'
 import {useGomokuGame} from '@/composables/useGomokuGame'
 import {useMessage} from '@/composables/useMessage'
 import {createGomokuRoom, joinGomokuRoom, leaveGomokuRoom} from '@/api/game'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 const { withAuth } = useAuthCheck()
 const { showSuccess, showError } = useMessage()

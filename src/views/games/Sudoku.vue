@@ -1,10 +1,6 @@
 <template>
-  <div class="container mx-auto p-5">
+  <ToolPageLayout :card="false" max-width="max-w-4xl">
     <div class="flex flex-col items-center">
-      <h1 class="text-4xl font-bold mb-8 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
-        数独
-      </h1>
-
       <!-- 控制区 -->
       <div class="flex gap-4 mb-6">
         <v-btn
@@ -100,11 +96,12 @@
         </v-btn>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import {computed, onMounted, onUnmounted, ref} from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 type Cell = {
   value: number | null

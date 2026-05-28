@@ -1,12 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+  <ToolPageLayout :card="false" max-width="max-w-4xl">
     <div class="max-w-4xl mx-auto">
       <!-- 标题区域 -->
       <div class="text-center mb-6">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-          打砖块
-        </h1>
-        <div class="mt-4 flex justify-center items-center gap-8">
+        <div class="flex justify-center items-center gap-8">
           <p class="text-gray-600">
             <v-icon icon="mdi-star" class="text-yellow-500" />
             得分: {{ score }}
@@ -48,11 +45,12 @@
         />
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 游戏常量
 const CANVAS_WIDTH = 800

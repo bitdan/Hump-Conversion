@@ -1,13 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-8 px-4">
-      <div class="max-w-2xl mx-auto">
-        <!-- 标题区域 -->
-        <div class="text-center mb-12">
-          <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-            投色子
-          </h1>
-        </div>
-  
+    <ToolPageLayout :card="false" max-width="max-w-2xl">
         <!-- 骰子区域 -->
         <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
           <div class="flex flex-col items-center">
@@ -74,12 +66,12 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </ToolPageLayout>
   </template>
   
   <script setup lang="ts">
   import { ref, computed } from 'vue'
+  import ToolPageLayout from '@/components/ToolPageLayout.vue'
   
   const isRolling = ref(false)
   const currentNumber = ref<number | null>(null)

@@ -1,8 +1,6 @@
 <template>
-  <div class="container mx-auto p-2 sm:p-5 bg-white rounded-lg shadow-md">
+  <ToolPageLayout :card="false" max-width="max-w-4xl">
     <div class="flex flex-col items-center">
-      <h1 class="text-xl sm:text-2xl text-gray-800 py-3 sm:py-5">围棋</h1>
-
       <!-- 游戏控制区 -->
       <div class="flex gap-2 sm:gap-4 mb-4 sm:mb-6">
         <v-btn size="small" sm:size="medium" color="primary" @click="startNewGame">
@@ -30,11 +28,12 @@
         ></canvas>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 类型定义
 type Player = 'black' | 'white'
@@ -416,15 +415,4 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.container {
-  min-height: calc(100vh - 64px);
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0.5rem;
-  }
-}
 </style> 

@@ -1,7 +1,6 @@
 <template>
+  <ToolPageLayout :card="false" max-width="max-w-md">
   <div class="flex flex-col items-center justify-center">
-    <h1 class="text-4xl font-bold mb-8">井字棋</h1>
-    
     <div class="mb-4 text-xl">
       <p v-if="winner">获胜者: {{ winner }}</p>
       <p v-else-if="isDraw">平局!</p>
@@ -27,10 +26,12 @@
       重新开始
     </button>
   </div>
+  </ToolPageLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 初始化棋盘
 const board = ref(Array(9).fill(null))

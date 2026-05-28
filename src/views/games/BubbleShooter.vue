@@ -1,10 +1,6 @@
 <template>
-  <div class="container mx-auto p-5">
+  <ToolPageLayout :card="false" max-width="max-w-3xl">
     <div class="flex flex-col items-center">
-      <h1 class="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-        泡泡龙
-      </h1>
-
       <!-- 游戏控制区 -->
       <div class="flex gap-4 mb-6">
         <v-btn 
@@ -50,11 +46,12 @@
         @touchstart="handleTouchStart"
       ></canvas>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 游戏常量
 const CANVAS_WIDTH = 400

@@ -1,8 +1,6 @@
 <template>
-    <div class="container mx-auto p-5 bg-white rounded-lg shadow-md">
+    <ToolPageLayout :card="false" max-width="max-w-5xl">
       <div class="flex flex-col items-center">
-        <h1 class="text-2xl text-gray-800 py-5">拼图游戏</h1>
-        
         <!-- 游戏控制区 -->
         <div class="mb-6 space-x-4">
           <v-dialog v-model="showImageSelector" max-width="500px">
@@ -166,12 +164,13 @@
           </v-dialog>
         </div>
       </div>
-    </div>
+    </ToolPageLayout>
   </template>
   
   <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import html2canvas from 'html2canvas'
+  import ToolPageLayout from '@/components/ToolPageLayout.vue'
   
   // 状态变量
   const selectedImage = ref<string>('')

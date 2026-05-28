@@ -1,10 +1,6 @@
 <template>
-  <div class="container mx-auto p-5">
+  <ToolPageLayout :card="false" max-width="max-w-5xl">
     <div class="flex flex-col items-center">
-      <h1 class="text-4xl font-bold mb-8 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
-        俄罗斯方块
-      </h1>
-
       <div class="flex gap-8 items-start">
         <!-- 游戏主区域 -->
         <div class="relative">
@@ -122,11 +118,12 @@
         </v-btn>
       </div>
     </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 // 游戏常量
 const CANVAS_WIDTH = 300
