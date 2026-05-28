@@ -3,7 +3,6 @@
     <div class="page-header">
       <div>
         <h1>涨停池复盘</h1>
-        <p>按交易日查看涨停池、板块强度、连板候选和观察池。</p>
       </div>
       <div class="toolbar">
         <v-text-field
