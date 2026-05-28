@@ -204,6 +204,7 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {listPosts, type PostItem} from '@/api/post'
+import {usePagination} from '@/composables/usePagination'
 import {POST_CATEGORIES, POST_CATEGORY_COLORS} from '@/views/community/postMeta'
 import {replaceStickerTokens} from '@/utils/stickers'
 
@@ -211,9 +212,7 @@ type TabValue = 'latest' | 'top' | 'hot'
 
 const router = useRouter()
 const keyword = ref('')
-const page = ref(1)
-const pageSize = 10
-const total = ref(0)
+const {page, pageSize, total, pageCount, reset} = usePagination()
 const posts = ref<PostItem[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -229,8 +228,6 @@ const tabs: Array<{ label: string; value: TabValue }> = [
 ]
 
 const categories = POST_CATEGORIES
-
-const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
 const tagOptions = computed(() => {
   const tags = new Set<string>()
@@ -262,7 +259,7 @@ async function loadPosts() {
       category: selectedCategory.value,
       tag: selectedTag.value,
       page: page.value,
-      page_size: pageSize
+      page_size: pageSize.value
     })
     posts.value = response.data.items
     total.value = response.data.total
@@ -274,7 +271,7 @@ async function loadPosts() {
 }
 
 function reload() {
-  page.value = 1
+  reset()
   loadPosts()
 }
 
@@ -284,14 +281,14 @@ function selectTab(tab: TabValue) {
 
 function applyCategory(value: string) {
   selectedCategory.value = value
-  page.value = 1
+  reset()
   loadPosts()
 }
 
 function applyTag(value: string) {
   selectedTag.value = String(value || '').trim()
   pendingTag.value = selectedTag.value
-  page.value = 1
+  reset()
   loadPosts()
 }
 

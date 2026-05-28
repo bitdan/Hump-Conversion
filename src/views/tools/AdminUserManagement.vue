@@ -205,14 +205,13 @@ import {
   type AdminUser
 } from '@/api/auth'
 import {useMessage} from '@/composables/useMessage'
+import {usePagination} from '@/composables/usePagination'
 
 const {showError, showSuccess, showWarning} = useMessage()
 
 const users = ref<AdminUser[]>([])
 const keyword = ref('')
-const page = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const {page, pageSize, total, reset} = usePagination()
 const loading = ref(false)
 const editDialog = ref(false)
 const passwordDialog = ref(false)
@@ -284,12 +283,12 @@ async function loadUsers() {
 }
 
 function searchUsers() {
-  page.value = 1
+  reset()
   void loadUsers()
 }
 
 function handlePageSizeChange() {
-  page.value = 1
+  reset()
   void loadUsers()
 }
 
