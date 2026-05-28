@@ -74,7 +74,11 @@ service.interceptors.response.use(
   },
   (error) => {
     console.error('请求错误', error)
+      const apiPath = normalizeApiPath(error.config?.url)
     if (error.response?.status === 401) {
+        if (publicApiPaths.has(apiPath)) {
+            return Promise.reject(error)
+        }
         redirectToLogin()
       return Promise.reject(new Error('认证失败，请重新登录'))
     }

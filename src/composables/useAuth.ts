@@ -83,7 +83,6 @@ export function useAuth() {
   async function getCaptcha() {
     try {
       loading.value = true
-      error.value = null
       const { data } = await authGetCaptcha()
       captchaData.value = data
       return data
