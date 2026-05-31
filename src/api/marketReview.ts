@@ -132,7 +132,7 @@ export interface StockKlineSnapshot {
     intraday_signals: IntradayTradingSignal[]
 }
 
-export function getMarketReview(params: { date?: string }) {
+export function getMarketReview(params: { date?: string; refresh?: boolean }) {
     return request.get<ApiResponse<MarketReviewData>>('/api/v1/market-review', {params} as any)
 }
 

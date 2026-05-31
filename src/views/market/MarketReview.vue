@@ -13,7 +13,7 @@
             hide-details
             class="date-input"
         />
-        <v-btn color="primary" :loading="loading" prepend-icon="mdi-refresh" @click="loadReview">
+        <v-btn color="primary" :loading="loading" prepend-icon="mdi-refresh" @click="loadReview(true)">
           刷新
         </v-btn>
       </div>
@@ -813,11 +813,11 @@ function saveWatchlist() {
   localStorage.setItem(WATCH_STORAGE_KEY, JSON.stringify(watchedItems.value))
 }
 
-async function loadReview() {
+async function loadReview(refresh = false) {
   loading.value = true
   error.value = ''
   try {
-    const response = await getMarketReview({date: queryDate.value})
+    const response = await getMarketReview({date: queryDate.value, refresh})
     review.value = response.data
   } catch (err: any) {
     error.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '市场复盘数据加载失败')
