@@ -2,29 +2,41 @@
   <ToolPageLayout :card="false" max-width="max-w-4xl">
   <div class="flex flex-col items-center justify-center p-2 sm:p-4">
     <!-- 在线对战控制 -->
-    <div v-if="!isOnlineMode" class="mb-4 flex gap-4">
-      <v-btn color="primary" @click="createRoom">
-        创建对战房间
-      </v-btn>
-      <v-text-field
-        v-model="inputRoomId"
-        label="房间ID"
-        placeholder="输入房间ID加入游戏"
-        variant="outlined"
-        hide-details
-        class="max-w-xs"
-      >
-        <template v-slot:append>
-          <v-btn
-            color="primary"
-            variant="text"
-            :disabled="!inputRoomId"
-            @click="joinRoom(inputRoomId)"
-          >
-            加入
-          </v-btn>
-        </template>
-      </v-text-field>
+    <div v-if="!isOnlineMode" class="online-lobby mb-4">
+      <div class="lobby-action">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus-box-outline"
+          class="lobby-create-btn"
+          @click="createRoom"
+        >
+          创建对战房间
+        </v-btn>
+      </div>
+      <v-divider vertical class="lobby-divider" />
+      <div class="join-room-form">
+        <v-text-field
+          v-model.trim="inputRoomId"
+          label="加入房间"
+          placeholder="粘贴或输入房间 ID"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+          prepend-inner-icon="mdi-pound"
+          class="room-id-input"
+          @keyup.enter="joinInputRoom"
+        />
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-login"
+          class="join-room-button"
+          :disabled="!trimmedRoomId"
+          @click="joinInputRoom"
+        >
+          加入
+        </v-btn>
+      </div>
     </div>
 
     <!-- 在线对战信息 -->
@@ -240,6 +252,7 @@ const activeOnlineGame = computed(() => onlineGame.value?.game.value ?? null)
 const isOnlineConnected = computed(() => onlineGame.value?.isConnected.value ?? false)
 const currentUserId = computed(() => localStorage.getItem('userId') || localStorage.getItem('user_id') || '')
 const isRoomHost = computed(() => activeOnlineGame.value?.host.userId === currentUserId.value)
+const trimmedRoomId = computed(() => inputRoomId.value.trim())
 const displayLastMove = computed(() => (
     isOnlineMode.value
         ? activeOnlineGame.value?.gameState.lastMove ?? null
@@ -364,12 +377,23 @@ async function createRoom() {
 }
 
 // 加入在线房间
+function joinInputRoom() {
+  if (!trimmedRoomId.value) {
+    return
+  }
+  joinRoom(trimmedRoomId.value)
+}
+
 async function joinRoom(id: string) {
   await withAuth(async () => {
+    const normalizedRoomId = id.trim()
+    if (!normalizedRoomId) {
+      return
+    }
     try {
-      const res = await joinGomokuRoom(id)
+      const res = await joinGomokuRoom(normalizedRoomId)
       if (res.code === 200) {
-        roomId.value = id
+        roomId.value = normalizedRoomId
         isOnlineMode.value = true
         showSuccess('加入房间成功')
       } else {
@@ -492,9 +516,74 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.online-lobby {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1px minmax(320px, 1fr);
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  max-width: 760px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.lobby-action {
+  display: flex;
+}
+
+.lobby-create-btn,
+.join-room-button {
+  min-height: 48px;
+}
+
+.lobby-create-btn {
+  width: 100%;
+}
+
+.lobby-divider {
+  align-self: stretch;
+  height: auto;
+}
+
+.join-room-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-id-input {
+  min-width: 0;
+}
+
+.join-room-button {
+  min-width: 104px;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0.5rem;
+  }
+
+  .online-lobby {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .lobby-divider {
+    display: none;
+  }
+
+  .join-room-form {
+    grid-template-columns: 1fr;
+  }
+
+  .join-room-button {
+    width: 100%;
   }
 }
 </style>
