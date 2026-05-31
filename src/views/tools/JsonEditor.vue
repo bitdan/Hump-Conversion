@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-1">
+  <div class="page-container p-1" style="height: 100vh; overflow: hidden">
     <div class="max-w-full mx-auto h-full flex flex-col">
       <!-- 标题区域 -->
       <div class="text-center mb-1 flex-shrink-0">
@@ -10,7 +10,7 @@
       </div>
 
       <!-- 主要内容区域 -->
-      <div class="bg-white/70 backdrop-blur-sm rounded-lg shadow-lg p-1 flex-1 flex flex-col">
+      <div class="glass-card !rounded-lg p-1 flex-1 flex flex-col">
         <!-- 工具栏 -->
         <div class="flex flex-wrap items-center justify-between mb-1 gap-1 flex-shrink-0">
           <div class="flex flex-wrap items-center gap-1">

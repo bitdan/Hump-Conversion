@@ -2,7 +2,7 @@
   <ToolPageLayout max-width="max-w-6xl">
     <div class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <v-card class="p-4">
+      <v-card class="p-4 solid-card" variant="flat">
         <div class="flex items-center justify-between mb-2">
           <div class="font-medium">文件 A</div>
           <v-btn size="small" variant="text" @click="clearBoth">清空</v-btn>
@@ -17,7 +17,7 @@
         <v-textarea v-model="left" rows="12" auto-grow class="mt-2" />
       </v-card>
 
-      <v-card class="p-4">
+      <v-card class="p-4 solid-card" variant="flat">
         <div class="flex items-center justify-between mb-2">
           <div class="font-medium">文件 B</div>
           <v-btn size="small" variant="text" @click="clearBoth">清空</v-btn>
@@ -44,7 +44,7 @@
       </div>
     </div>
 
-    <v-card class="p-2">
+    <v-card class="p-2 solid-card" variant="flat">
       <div v-if="!result" class="text-gray-500 p-4">加载两侧内容并点击“对比”</div>
       <template v-else>
         <div class="text-sm px-3 py-2 text-gray-600 flex items-center gap-4">

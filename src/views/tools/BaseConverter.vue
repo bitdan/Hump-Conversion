@@ -1,13 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+  <div class="page-container">
     <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-          进制转换工具
-        </h1>
+      <div class="page-header">
+        <div>
+          <h1>进制转换工具</h1>
+          <p>支持 2~36 进制互转，可带前导负号与分组显示</p>
+        </div>
       </div>
 
-      <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6">
+      <div class="glass-card p-6">
         <div class="grid grid-cols-2 gap-8">
           <!-- 左侧输入 -->
           <div class="space-y-4">

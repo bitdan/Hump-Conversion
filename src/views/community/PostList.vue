@@ -42,9 +42,10 @@
         <div class="forum-shortcuts">
           <v-menu>
             <template #activator="{ props }">
-              <v-btn v-bind="props" variant="outlined" append-icon="mdi-chevron-down">
-                分类
-              </v-btn>
+              <button type="button" class="shortcut-pill" v-bind="props">
+                categories
+                <v-icon size="16">mdi-chevron-right</v-icon>
+              </button>
             </template>
             <v-list density="compact">
               <v-list-item title="全部分类" @click="applyCategory('')"/>
@@ -59,9 +60,10 @@
 
           <v-menu :close-on-content-click="false">
             <template #activator="{ props }">
-              <v-btn v-bind="props" variant="outlined" append-icon="mdi-chevron-down">
-                标签
-              </v-btn>
+              <button type="button" class="shortcut-pill" v-bind="props">
+                tags
+                <v-icon size="16">mdi-chevron-right</v-icon>
+              </button>
             </template>
             <div class="tag-filter-panel">
               <v-combobox
@@ -81,23 +83,18 @@
           </v-menu>
         </div>
 
-        <v-btn-toggle
-            v-model="activeTab"
-            class="forum-tabs"
-            density="comfortable"
-            mandatory
-            variant="text"
-            divided
-        >
-          <v-btn
+        <div class="forum-tabs" role="tablist" aria-label="帖子排序">
+          <button
               v-for="tab in tabs"
               :key="tab.value"
-              :value="tab.value"
-              size="small"
+              type="button"
+              class="forum-tab"
+              :class="{ active: activeTab === tab.value }"
+              @click="selectTab(tab.value)"
           >
             {{ tab.label }}
-          </v-btn>
-        </v-btn-toggle>
+          </button>
+        </div>
 
         <v-btn variant="text" prepend-icon="mdi-refresh" @click="reload">刷新</v-btn>
       </div>
@@ -129,9 +126,9 @@
 
       <template v-else>
         <div v-if="sortedPosts.length > 0" class="topic-hint">
-          <v-btn variant="tonal" color="primary" prepend-icon="mdi-forum-outline" @click="reload">
+          <button type="button" class="new-topic-pill" @click="reload">
             当前共 {{ total }} 个主题
-          </v-btn>
+          </button>
         </div>
 
         <div class="topic-table">
@@ -157,16 +154,15 @@
                 <span class="topic-badge" :style="{ color: categoryColor(post.category) }">
                   {{ post.category }}
                 </span>
-                <v-chip
+                <button
                     v-for="tag in post.tags"
                     :key="tag"
-                    size="small"
-                    variant="tonal"
-                    class="topic-tag-button"
+                    type="button"
+                    class="topic-badge subtle topic-tag-button"
                     @click.stop="applyTag(tag)"
                 >
                   #{{ tag }}
-                </v-chip>
+                </button>
               </div>
               <p>{{ summarize(post.content) }}</p>
             </div>
@@ -208,7 +204,6 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {listPosts, type PostItem} from '@/api/post'
-import {usePagination} from '@/composables/usePagination'
 import {POST_CATEGORIES, POST_CATEGORY_COLORS} from '@/views/community/postMeta'
 import {replaceStickerTokens} from '@/utils/stickers'
 
@@ -216,7 +211,9 @@ type TabValue = 'latest' | 'top' | 'hot'
 
 const router = useRouter()
 const keyword = ref('')
-const {page, pageSize, total, pageCount, reset} = usePagination()
+const page = ref(1)
+const pageSize = 10
+const total = ref(0)
 const posts = ref<PostItem[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -226,12 +223,14 @@ const selectedTag = ref('')
 const pendingTag = ref('')
 
 const tabs: Array<{ label: string; value: TabValue }> = [
-  {label: '最新', value: 'latest'},
-  {label: '高赞', value: 'top'},
-  {label: '热门', value: 'hot'}
+  {label: 'Latest', value: 'latest'},
+  {label: 'Top', value: 'top'},
+  {label: 'Hot', value: 'hot'}
 ]
 
 const categories = POST_CATEGORIES
+
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
 const tagOptions = computed(() => {
   const tags = new Set<string>()
@@ -263,7 +262,7 @@ async function loadPosts() {
       category: selectedCategory.value,
       tag: selectedTag.value,
       page: page.value,
-      page_size: pageSize.value
+      page_size: pageSize
     })
     posts.value = response.data.items
     total.value = response.data.total
@@ -275,20 +274,24 @@ async function loadPosts() {
 }
 
 function reload() {
-  reset()
+  page.value = 1
   loadPosts()
+}
+
+function selectTab(tab: TabValue) {
+  activeTab.value = tab
 }
 
 function applyCategory(value: string) {
   selectedCategory.value = value
-  reset()
+  page.value = 1
   loadPosts()
 }
 
 function applyTag(value: string) {
   selectedTag.value = String(value || '').trim()
   pendingTag.value = selectedTag.value
-  reset()
+  page.value = 1
   loadPosts()
 }
 
@@ -352,17 +355,12 @@ onMounted(loadPosts)
 
 <style scoped>
 .community-page {
-  --community-bg: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%, #f5f7fb 100%);
-  --community-panel: #ffffff;
-  --community-text: #1f2937;
-  --community-muted: #6b7280;
-  --community-accent: #2596f3;
-  --community-accent-soft: #d9eefc;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  background: var(--community-bg);
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%, #f5f7fb 100%);
+  color: var(--color-text);
 }
 
 .hero-panel {
@@ -375,7 +373,7 @@ onMounted(loadPosts)
 
 .hero-copy h1 {
   margin: 0;
-  color: #1d2433;
+  color: var(--color-text);
   font-size: clamp(34px, 5vw, 60px);
   line-height: .95;
   font-weight: 800;
@@ -384,7 +382,7 @@ onMounted(loadPosts)
 .hero-copy p {
   max-width: 760px;
   margin: 14px 0 0;
-  color: var(--community-muted);
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -411,9 +409,9 @@ onMounted(loadPosts)
 }
 
 .forum-shell {
-  border: 1px solid rgba(214, 223, 232, .9);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
-  background: var(--community-panel);
+  background: var(--color-surface);
   box-shadow: 0 18px 40px rgba(15, 23, 42, .05);
   overflow: hidden;
 }
@@ -427,11 +425,32 @@ onMounted(loadPosts)
 }
 
 .forum-shortcuts,
+.forum-tabs,
 .active-filters {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.shortcut-pill,
+.forum-tab {
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  cursor: pointer;
+}
+
+.shortcut-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid #d8dee8;
+  border-radius: 10px;
+  background: #ffffff;
+  font-weight: 600;
 }
 
 .tag-filter-panel {
@@ -447,10 +466,26 @@ onMounted(loadPosts)
   margin-top: 12px;
 }
 
-.forum-tabs {
-  border: 1px solid #d8dee8;
-  border-radius: 8px;
-  overflow: hidden;
+.forum-tab {
+  position: relative;
+  padding: 10px 10px 14px;
+  color: #475569;
+  font-size: 16px;
+}
+
+.forum-tab.active {
+  color: var(--color-primary);
+}
+
+.forum-tab.active::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+  left: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-primary);
 }
 
 .active-filters {
@@ -465,6 +500,17 @@ onMounted(loadPosts)
   display: flex;
   justify-content: center;
   padding: 4px 22px 10px;
+}
+
+.new-topic-pill {
+  border: 0;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .topic-table {
@@ -520,7 +566,7 @@ onMounted(loadPosts)
 
 .topic-main h2 {
   margin: 0;
-  color: var(--community-text);
+  color: var(--color-text);
   font-size: 18px;
   font-weight: 700;
   overflow: hidden;
@@ -551,6 +597,7 @@ onMounted(loadPosts)
 }
 
 .topic-tag-button {
+  border: 0;
   cursor: pointer;
 }
 

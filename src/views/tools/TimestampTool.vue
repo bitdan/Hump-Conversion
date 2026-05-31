@@ -1,5 +1,6 @@
 <template>
-  <ToolPageLayout max-width="max-w-6xl">
+  <ToolPageLayout max-width="max-w-6xl" :card="false">
+
     <!-- 输入区域 -->
     <div class="mb-6">
       <!-- 当前输入格式显示 -->
@@ -25,7 +26,7 @@
     <!-- 两列布局 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- 左侧：当前时间 -->
-      <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 shadow-lg">
+      <div class="glass-card p-6">
         <div class="text-lg font-semibold text-purple-800 mb-4 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -38,7 +39,7 @@
             v-for="(time, index) in timeFormats"
             :key="'current-' + index"
             @click="selectTime(time)"
-            class="p-4 bg-white rounded-lg hover:bg-pink-50 cursor-pointer transition-colors border border-pink-100"
+            class="solid-card p-4 cursor-pointer transition-colors hover:border-primary-200"
           >
             <div class="text-sm text-purple-600 font-medium mb-1">{{ time.label }}</div>
             <div class="font-mono text-lg text-gray-800">{{ time.value }}</div>
@@ -47,7 +48,7 @@
       </div>
 
       <!-- 右侧：转换结果 -->
-      <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-6 shadow-lg">
+      <div class="glass-card p-6">
         <div class="text-lg font-semibold text-teal-800 mb-4 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -60,13 +61,13 @@
             v-for="(time, index) in convertedFormats"
             :key="'converted-' + index"
             @click="selectTime(time)"
-            class="p-4 bg-white rounded-lg hover:bg-teal-50 cursor-pointer transition-colors border border-teal-100"
+            class="solid-card p-4 cursor-pointer transition-colors hover:border-primary-200"
           >
             <div class="text-sm text-teal-600 font-medium mb-1">{{ time.label }}</div>
             <div class="font-mono text-lg text-gray-800">{{ time.value }}</div>
           </div>
         </div>
-        <div v-else class="p-4 bg-white rounded-lg text-gray-500 border border-teal-100">
+        <div v-else class="solid-card p-4 text-gray-500">
           请输入或选择一个时间格式进行转换
         </div>
       </div>

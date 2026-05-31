@@ -275,8 +275,8 @@ async function handleLogout() {
 
 <style scoped>
 .side-nav {
-  border-right: 1px solid rgba(15, 23, 42, 0.08);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-right: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
 }
 
 .nav-header {
@@ -310,8 +310,8 @@ async function handleLogout() {
 }
 
 .menu-item-active {
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
   font-weight: 600;
 }
 

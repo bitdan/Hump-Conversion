@@ -896,7 +896,7 @@ onMounted(() => {
   max-width: 1440px;
   margin: 0 auto;
   padding: 24px;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .page-header {
@@ -916,7 +916,7 @@ onMounted(() => {
 
 .page-header p {
   margin: 0;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .toolbar {
@@ -941,9 +941,9 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
 }
 
 .summary-icon {
@@ -952,8 +952,8 @@ onMounted(() => {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: #eef2ff;
-  color: #2563eb;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .summary-value {
@@ -965,7 +965,7 @@ onMounted(() => {
 .summary-label {
   margin-top: 5px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .tabs {
@@ -977,29 +977,29 @@ onMounted(() => {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
   margin-bottom: 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #e2e8f0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-border);
   overflow: hidden;
 }
 
 .brief-item {
   min-width: 0;
   padding: 10px 12px;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .brief-item span {
   display: block;
   margin-bottom: 4px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
 .brief-item strong {
   display: block;
   overflow: hidden;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1022,22 +1022,22 @@ onMounted(() => {
 }
 
 .watch-count {
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 600;
 }
 
 .pool-selected {
-  border-color: #2563eb;
-  color: #1d4ed8;
-  background: #eff6ff;
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
 }
 
 .table-card,
 .sector-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
 }
 
 .table-card {
@@ -1060,15 +1060,15 @@ onMounted(() => {
 }
 
 .stock-button strong {
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .stock-button:hover strong {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .stock-name span {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -1094,14 +1094,14 @@ onMounted(() => {
 .score-track {
   height: 7px;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: var(--color-border);
   overflow: hidden;
 }
 
 .score-fill {
   height: 100%;
   border-radius: inherit;
-  background: #2563eb;
+  background: var(--color-primary);
 }
 
 .up-text {
@@ -1115,7 +1115,7 @@ onMounted(() => {
 }
 
 .flat-text {
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .sector-grid {
@@ -1132,7 +1132,7 @@ onMounted(() => {
 
 .sector-card:hover,
 .sector-card.active {
-  border-color: #2563eb;
+  border-color: var(--color-primary);
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
 }
 
@@ -1156,7 +1156,7 @@ onMounted(() => {
 
 .sector-head p {
   margin: 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 13px;
 }
 
@@ -1165,7 +1165,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 10px;
   margin: 12px 0;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 13px;
 }
 
@@ -1196,7 +1196,7 @@ onMounted(() => {
 
 .dialog-card {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
 }
 
 .dialog-toolbar {
@@ -1214,7 +1214,7 @@ onMounted(() => {
 
 .dialog-toolbar p {
   margin: 0;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .dialog-actions {
@@ -1226,21 +1226,21 @@ onMounted(() => {
 
 .kline-period-tabs {
   margin-top: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--color-bg);
   overflow: hidden;
 }
 
 .kline-period-tab {
   min-width: 112px;
-  color: #334155;
+  color: var(--color-text);
   font-weight: 600;
 }
 
 .kline-period-tabs :deep(.kline-period-tab-selected) {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
 }
 
 .kline-period-tabs :deep(.v-tab__slider) {

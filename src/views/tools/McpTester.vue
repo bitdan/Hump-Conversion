@@ -514,11 +514,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .mcp-tester-shell {
-  min-height: 100vh;
+  min-height: calc(100vh - 96px);
   background:
-    radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(14, 116, 144, 0.18), transparent 24%),
-    linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.10), transparent 24%),
+    radial-gradient(circle at top right, rgba(14, 116, 144, 0.10), transparent 24%),
+    linear-gradient(180deg, var(--color-bg) 0%, #edf2f7 100%);
   padding: 20px;
 }
 
@@ -552,13 +552,13 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: clamp(28px, 4vw, 42px);
   line-height: 1.05;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .hero-copy {
   max-width: 760px;
   margin: 14px 0 0;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -611,14 +611,14 @@ onBeforeUnmount(() => {
 
 .panel-header h2 {
   margin: 0;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: 20px;
 }
 
 .soft-tag {
   padding: 6px 12px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
 }
 
 .status-pill {
@@ -626,17 +626,17 @@ onBeforeUnmount(() => {
 }
 
 .status-idle {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--color-border);
+  color: var(--color-text-muted);
 }
 
 .status-connecting {
-  background: #fef3c7;
+  background: var(--color-warning-light);
   color: #b45309;
 }
 
 .status-ready {
-  background: #dcfce7;
+  background: var(--color-success-light);
   color: #15803d;
 }
 
@@ -697,7 +697,7 @@ onBeforeUnmount(() => {
 .log-item {
   padding: 14px 16px;
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--color-bg);
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
@@ -706,7 +706,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -715,22 +715,22 @@ onBeforeUnmount(() => {
 }
 
 .log-kind-info {
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .log-kind-send {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
 }
 
 .log-kind-receive {
-  background: #dcfce7;
+  background: var(--color-success-light);
   color: #15803d;
 }
 
 .log-kind-error {
-  background: #fee2e2;
+  background: var(--color-error-light);
   color: #b91c1c;
 }
 

@@ -349,9 +349,8 @@ onBeforeUnmount(() => clearLogo(false))
 
 <style scoped>
 .qr-page {
-  min-height: 100vh;
-  background: #f6f8fb;
   padding: 24px;
+  color: var(--color-text);
 }
 
 .qr-workspace {
@@ -364,10 +363,10 @@ onBeforeUnmount(() => clearLogo(false))
 
 .qr-controls,
 .qr-preview {
-  background: #ffffff;
-  border: 1px solid #dbe4ef;
-  border-radius: 8px;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .qr-controls {
@@ -392,14 +391,14 @@ onBeforeUnmount(() => clearLogo(false))
 
 .preview-toolbar h1 {
   margin: 0 0 6px;
-  color: #172033;
+  color: var(--color-text);
   font-size: 28px;
   line-height: 1.2;
 }
 
 .preview-toolbar p {
   margin: 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -416,7 +415,7 @@ onBeforeUnmount(() => clearLogo(false))
 }
 
 .field-label {
-  color: #334155;
+  color: var(--color-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -431,10 +430,10 @@ onBeforeUnmount(() => clearLogo(false))
 .color-input {
   width: 48px;
   height: 40px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 3px;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .action-row {
@@ -448,12 +447,12 @@ onBeforeUnmount(() => clearLogo(false))
   display: grid;
   place-items: center;
   min-height: 460px;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed var(--color-border);
   border-radius: 8px;
-  background: linear-gradient(45deg, #f8fafc 25%, transparent 25%),
-  linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
-  linear-gradient(45deg, transparent 75%, #f8fafc 75%),
-  linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+  background: linear-gradient(45deg, var(--color-bg) 25%, transparent 25%),
+  linear-gradient(-45deg, var(--color-bg) 25%, transparent 25%),
+  linear-gradient(45deg, transparent 75%, var(--color-bg) 75%),
+  linear-gradient(-45deg, transparent 75%, var(--color-bg) 75%);
   background-size: 24px 24px;
   background-position: 0 0, 0 12px, 12px -12px, -12px 0;
 }
@@ -472,21 +471,21 @@ onBeforeUnmount(() => clearLogo(false))
   place-items: center;
   align-content: center;
   gap: 10px;
-  color: #94a3b8;
+  color: var(--color-text-subtle);
   background: rgba(246, 248, 251, 0.82);
   font-size: 15px;
 }
 
 .qr-value {
   margin: 18px 0 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
 .error-text {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 13px;
 }
 

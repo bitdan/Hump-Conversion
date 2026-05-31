@@ -1,45 +1,44 @@
 <template>
   <ToolPageLayout max-width="max-w-4xl">
-      <!-- 计算区域 -->
-      <div class="space-y-4 mb-6">
-        <!-- 当前输入行 -->
-        <div class="flex gap-4 items-center">
-          <v-text-field
-            v-model="currentInput"
-            placeholder="输入数学表达式，如：2 + 3 * 4"
-            variant="outlined"
-            class="flex-1 bg-white/80 rounded-xl"
-            hide-details
-            @keydown.enter="calculateAndAddLine"
-            @keydown.escape="clearAll"
-            ref="inputField"
-          />
-          <v-btn
-            @click="calculateAndAddLine"
-            color="primary"
-            variant="elevated"
-            class="rounded-xl"
-            :disabled="!currentInput.trim()"
-          >
-            计算
-          </v-btn>
-          <v-btn
-            @click="clearAll"
-            color="error"
-            variant="outlined"
-            class="rounded-xl"
-          >
-            清空
-          </v-btn>
-        </div>
+    <!-- 计算区域 -->
+    <div class="space-y-4 mb-6">
+      <div class="flex gap-4 items-center">
+        <v-text-field
+          v-model="currentInput"
+          placeholder="输入数学表达式，如：2 + 3 * 4"
+          variant="outlined"
+          class="flex-1 bg-white/80 rounded-xl"
+          hide-details
+          @keydown.enter="calculateAndAddLine"
+          @keydown.escape="clearAll"
+          ref="inputField"
+        />
+        <v-btn
+          @click="calculateAndAddLine"
+          color="primary"
+          variant="elevated"
+          class="rounded-xl"
+          :disabled="!currentInput.trim()"
+        >
+          计算
+        </v-btn>
+        <v-btn
+          @click="clearAll"
+          color="error"
+          variant="outlined"
+          class="rounded-xl"
+        >
+          清空
+        </v-btn>
       </div>
+    </div>
 
       <!-- 计算历史 -->
       <div class="space-y-3 max-h-96 overflow-y-auto">
         <div
           v-for="(line, index) in calculationLines"
           :key="index"
-          class="bg-white/80 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:shadow-md"
+          class="glass-card p-4 transition-all duration-300 hover:shadow-card-hover"
         >
           <div class="flex items-center justify-between">
             <div class="flex-1">
@@ -80,7 +79,7 @@
       </div>
 
       <!-- 统计信息 -->
-      <div v-if="calculationLines.length > 0" class="mt-6 p-4 bg-blue-50/80 rounded-xl">
+      <div v-if="calculationLines.length > 0" class="mt-6 p-4 solid-card">
         <div class="flex justify-between items-center text-sm text-gray-600">
           <span>总计算行数: {{ calculationLines.length }}</span>
           <span>成功计算: {{ successfulCalculations }}</span>
@@ -89,7 +88,7 @@
       </div>
 
       <!-- 使用说明 -->
-      <div class="mt-8 p-4 bg-gray-50/80 rounded-xl">
+      <div class="mt-8 p-4 solid-card">
         <h3 class="text-lg font-semibold text-gray-800 mb-2">使用说明</h3>
         <ul class="text-sm text-gray-600 space-y-1">
           <li>• 支持基本数学运算：+、-、*、/、()</li>

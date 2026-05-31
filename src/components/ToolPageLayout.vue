@@ -69,7 +69,7 @@ const pageClasses = computed(() => [
 .tool-page-layout--default {
   background:
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 32%),
-    linear-gradient(135deg, #eff6ff 0%, #eef2ff 46%, #f8fafc 100%);
+    linear-gradient(135deg, #eff6ff 0%, #eef2ff 46%, var(--color-bg) 100%);
 }
 
 .tool-page-layout--dark {
@@ -79,7 +79,7 @@ const pageClasses = computed(() => [
 }
 
 .tool-page-layout--none {
-  background: #f8fafc;
+  background: var(--color-bg);
 }
 
 .tool-page-layout__inner {
@@ -100,10 +100,10 @@ const pageClasses = computed(() => [
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: var(--radius-element);
   background: rgba(255, 255, 255, 0.78);
-  color: #2563eb;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-card);
   backdrop-filter: blur(12px);
 }
 
@@ -113,7 +113,7 @@ const pageClasses = computed(() => [
 
 .tool-page-layout__title-block h1 {
   margin: 0;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: clamp(1.55rem, 3vw, 2.15rem);
   font-weight: 800;
   line-height: 1.16;
@@ -121,7 +121,7 @@ const pageClasses = computed(() => [
 
 .tool-page-layout__title-block p {
   margin: 6px 0 0;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 0.95rem;
   line-height: 1.55;
 }
@@ -129,9 +129,9 @@ const pageClasses = computed(() => [
 .tool-page-layout__card {
   padding: 28px;
   border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+  box-shadow: var(--shadow-card);
   backdrop-filter: blur(14px);
 }
 

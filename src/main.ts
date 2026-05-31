@@ -10,9 +10,25 @@ import '@mdi/font/css/materialdesignicons.css'
 import VueKonva from 'vue-konva'
 
 const lightTheme: ThemeDefinition = {
+  dark: false,
   colors: {
-    primary: '#1867C0',
-    secondary: '#5CBBF6',
+    primary: '#2563eb',
+    secondary: '#64748b',
+    success: '#16a34a',
+    warning: '#d97706',
+    error: '#dc2626',
+    info: '#0ea5e9',
+    'surface': '#ffffff',
+    'surface-variant': '#f8fafc',
+    'background': '#f8fafc',
+    'on-primary': '#ffffff',
+    'on-secondary': '#ffffff',
+    'on-surface': '#0f172a',
+    'on-surface-variant': '#64748b',
+    'on-success': '#ffffff',
+    'on-warning': '#ffffff',
+    'on-error': '#ffffff',
+    'on-info': '#ffffff',
   },
 }
 
@@ -32,4 +48,4 @@ app.use(pinia)
 app.use(VueKonva)
 app.use(router)
 app.use(vuetify)
-app.mount('#app') 
+app.mount('#app')

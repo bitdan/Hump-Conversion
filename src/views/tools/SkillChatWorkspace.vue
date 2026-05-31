@@ -239,7 +239,7 @@ async function submit(): Promise<void> {
   height: calc(100vh - 112px);
   min-height: 640px;
   padding: 0;
-  background: #f8fafc;
+  background: var(--color-bg);
 }
 
 .topbar {
@@ -248,21 +248,21 @@ async function submit(): Promise<void> {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 18px;
-  border: 1px solid #dbe4ef;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
 }
 
 .topbar-title {
   margin: 0;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: 22px;
   line-height: 1.2;
 }
 
 .topbar-subtitle {
   margin: 6px 0 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -275,9 +275,9 @@ async function submit(): Promise<void> {
 .chat-main {
   min-height: 0;
   margin-top: 12px;
-  border: 1px solid #dbe4ef;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
   overflow: hidden;
 }
 
@@ -296,9 +296,9 @@ async function submit(): Promise<void> {
 .empty-card {
   width: min(520px, 100%);
   padding: 28px 24px;
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-  border-radius: 8px;
+  border: 1px dashed var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--radius-card);
   text-align: center;
 }
 
@@ -309,19 +309,19 @@ async function submit(): Promise<void> {
   place-items: center;
   margin: 0 auto 14px;
   border-radius: 8px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .empty-card h2 {
   margin: 0 0 8px;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: 20px;
 }
 
 .empty-card p {
   margin: 0;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -362,8 +362,8 @@ async function submit(): Promise<void> {
   align-items: center;
   padding: 4px 8px;
   border-radius: 6px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
   font-size: 12px;
   font-weight: 700;
 }
@@ -382,9 +382,9 @@ async function submit(): Promise<void> {
 }
 
 .assistant .message-bubble {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  color: #0f172a;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .composer-shell {
@@ -393,9 +393,9 @@ async function submit(): Promise<void> {
 
 .composer {
   width: 100%;
-  border: 1px solid #dbe4ef;
-  background: #ffffff;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
   padding: 10px 14px 12px;
 }
 
@@ -412,7 +412,7 @@ async function submit(): Promise<void> {
 }
 
 .composer-hint {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
