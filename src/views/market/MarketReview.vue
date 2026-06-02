@@ -108,7 +108,7 @@
               <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
             </template>
             <template #item.limit_up_stat="{ item }">
-              <span class="stat-text">{{ item.limit_up_stat || '-' }}</span>
+              <span class="stat-text">{{ formatLimitUpStat(item.limit_up_stat) }}</span>
             </template>
             <template #item.board_quality_score="{ item }">
               <score-bar :value="item.board_quality_score"/>
@@ -206,7 +206,7 @@
                   <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
                 </template>
                 <template #item.limit_up_stat="{ item }">
-                  <span class="stat-text">{{ item.limit_up_stat || '-' }}</span>
+                  <span class="stat-text">{{ formatLimitUpStat(item.limit_up_stat) }}</span>
                 </template>
                 <template #item.board_quality_score="{ item }">
                   <score-bar :value="item.board_quality_score"/>
@@ -284,6 +284,9 @@
                 <strong>{{ item.stock.name }}</strong>
                 <span>{{ item.stock.code }}</span>
               </button>
+            </template>
+            <template #item.stock.limit_up_stat="{ item }">
+              <span class="stat-text">{{ formatLimitUpStat(item.stock.limit_up_stat) }}</span>
             </template>
             <template #item.level="{ item }">
               <v-chip size="small" :color="levelColor(item.level)" variant="tonal">{{ item.level }}</v-chip>
@@ -719,6 +722,15 @@ function formatTime(value?: string) {
   if (!value || value.length < 4) return '-'
   const text = value.padEnd(6, '0')
   return `${text.slice(0, 2)}:${text.slice(2, 4)}:${text.slice(4, 6)}`
+}
+
+function formatLimitUpStat(value?: string) {
+  if (!value) return '-'
+  const match = value.match(/^(\d+)\s*\/\s*(\d+)$/)
+  if (match) {
+    return `${match[1]}天${match[2]}板`
+  }
+  return value
 }
 
 function formatMoney(value?: number | null) {
