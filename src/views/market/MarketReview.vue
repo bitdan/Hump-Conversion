@@ -107,6 +107,9 @@
             <template #item.consecutive_boards="{ item }">
               <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
             </template>
+            <template #item.limit_up_stat="{ item }">
+              <span class="stat-text">{{ item.limit_up_stat || '-' }}</span>
+            </template>
             <template #item.board_quality_score="{ item }">
               <score-bar :value="item.board_quality_score"/>
             </template>
@@ -201,6 +204,9 @@
                 </template>
                 <template #item.consecutive_boards="{ item }">
                   <v-chip size="small" color="red" variant="tonal">{{ item.consecutive_boards }}板</v-chip>
+                </template>
+                <template #item.limit_up_stat="{ item }">
+                  <span class="stat-text">{{ item.limit_up_stat || '-' }}</span>
                 </template>
                 <template #item.board_quality_score="{ item }">
                   <score-bar :value="item.board_quality_score"/>
@@ -644,6 +650,7 @@ const poolHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
   {title: '梯队', key: 'consecutive_boards', width: 86},
+  {title: '涨停统计', key: 'limit_up_stat', width: 96},
   {title: '质量分', key: 'board_quality_score', minWidth: 140},
   {title: '首次封板', key: 'first_limit_time', width: 96},
   {title: '最后封板', key: 'last_limit_time', width: 96},
@@ -657,6 +664,7 @@ const poolHeaders = [
 const sectorStockHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '梯队', key: 'consecutive_boards', width: 86},
+  {title: '涨停统计', key: 'limit_up_stat', width: 96},
   {title: '涨跌幅', key: 'change_percent', width: 90},
   {title: '质量分', key: 'board_quality_score', minWidth: 140},
   {title: '首次封板', key: 'first_limit_time', width: 96},
@@ -671,6 +679,7 @@ const sectorStockHeaders = [
 const candidateHeaders = [
   {title: '股票', key: 'stock.name', minWidth: 130},
   {title: '行业', key: 'stock.industry', minWidth: 110},
+  {title: '涨停统计', key: 'stock.limit_up_stat', width: 96},
   {title: '等级', key: 'level', width: 92},
   {title: '候选分', key: 'candidate_score', minWidth: 140},
   {title: '板块分', key: 'sector.strength_score', width: 90},
@@ -1070,6 +1079,11 @@ onMounted(() => {
 .stock-name span {
   color: var(--color-text-muted);
   font-size: 12px;
+}
+
+.stat-text {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .chip-row {
