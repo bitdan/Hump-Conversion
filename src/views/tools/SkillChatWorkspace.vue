@@ -116,7 +116,7 @@ import DOMPurify from 'dompurify'
 import {nextTick, ref, watch} from 'vue'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import {useMessage} from '../../composables/useMessage'
-import {sendAgentChat} from '@/api/agentChat'
+import {streamAgentChat} from '@/api/agentChat'
 
 const {showSuccess, showError} = useMessage()
 
@@ -133,6 +133,7 @@ const userInput = ref('')
 const loading = ref(false)
 const messageContainer = ref<HTMLElement | null>(null)
 const streamingToken = ref(0)
+const sessionId = ref<string | undefined>()
 
 watch(messages, async () => {
   await nextTick()
@@ -157,33 +158,6 @@ function formatDraft(draft: string): string {
 function scrollToBottom(): void {
   if (messageContainer.value) {
     messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function getDelayForChar(char: string): number {
-  if (char === '\n') return 30
-  if (/[\.\!\?]/.test(char)) return 55
-  if (/[,:;，。；：]/.test(char)) return 35
-  return 8
-}
-
-async function typeWriter(
-    fullText: string,
-    onUpdate: (html: string) => void,
-    tokenSnapshot: number
-): Promise<void> {
-  let buffer = ''
-  for (let i = 0; i < fullText.length; i++) {
-    if (tokenSnapshot !== streamingToken.value) return
-    const ch = fullText[i]
-    buffer += ch
-    onUpdate(formatDraft(buffer))
-    scrollToBottom()
-    await delay(getDelayForChar(ch))
   }
 }
 
@@ -230,8 +204,26 @@ Caused by: java.lang.NullPointerException`
 }
 
 function getTrace(message: ChatMessage): Array<Record<string, any>> {
-  const trace = message.structuredContent?.trace
+  const trace = message.structuredContent?.trace || message.structuredContent?.steps
   return Array.isArray(trace) ? trace : []
+}
+
+function routeTitle(route?: string): string {
+  const titles: Record<string, string> = {
+    leetcode_coach: 'LeetCode 陪练',
+    java_stacktrace: 'Java 堆栈诊断',
+    nl_to_sql: 'NL To SQL',
+    agent_architecture: 'Agent 架构顾问',
+    langgraph: '通用工作流'
+  }
+  return route ? titles[route] || route : 'Agent'
+}
+
+function appendTrace(message: ChatMessage, step: Record<string, any>): void {
+  const structured = message.structuredContent || {}
+  const trace = Array.isArray(structured.trace) ? structured.trace : []
+  structured.trace = [...trace, step]
+  message.structuredContent = structured
 }
 
 async function submit(): Promise<void> {
@@ -249,30 +241,86 @@ async function submit(): Promise<void> {
   loading.value = true
   streamingToken.value += 1
   const currentToken = streamingToken.value
+  let rawAnswer = ''
+  const assistantIndex = messages.value.push({
+    role: 'assistant',
+    content: '',
+    structuredContent: {
+      trace: []
+    },
+  }) - 1
 
   try {
-    const data = await sendAgentChat({
+    await streamAgentChat({
       message: input,
+      session_id: sessionId.value,
       history: [],
+    }, (event) => {
+      if (currentToken !== streamingToken.value) return
+      const assistant = messages.value[assistantIndex]
+      if (event.event === 'route_decided') {
+        assistant.route = event.data.route
+        assistant.title = routeTitle(event.data.route)
+        sessionId.value = event.data.session_id || sessionId.value
+        appendTrace(assistant, {
+          node: 'route_decided',
+          status: 'success',
+          input_summary: event.data.reason || '-',
+          output_summary: event.data.route || '-',
+          latency_ms: 0,
+          tool_name: 'intent_router'
+        })
+      } else if (event.event === 'plan_created') {
+        appendTrace(assistant, {
+          node: 'plan_created',
+          status: 'success',
+          input_summary: event.data.route || '-',
+          output_summary: `${event.data.steps?.length || 0} steps`,
+          latency_ms: 0,
+          tool_name: 'planner'
+        })
+      } else if (event.event === 'tool_started') {
+        appendTrace(assistant, {
+          node: 'tool_started',
+          status: 'running',
+          input_summary: event.data.tool_name || '-',
+          output_summary: 'running',
+          latency_ms: 0,
+          tool_name: event.data.tool_name
+        })
+      } else if (event.event === 'tool_finished') {
+        appendTrace(assistant, {
+          node: 'tool_finished',
+          status: event.data.status || 'success',
+          input_summary: event.data.tool_name || '-',
+          output_summary: event.data.output_summary || '-',
+          latency_ms: event.data.latency_ms || 0,
+          error: event.data.error,
+          tool_name: event.data.tool_name
+        })
+      } else if (event.event === 'answer_delta') {
+        rawAnswer += event.data.delta || ''
+        assistant.content = formatDraft(rawAnswer)
+      } else if (event.event === 'final') {
+        sessionId.value = event.data.session_id || sessionId.value
+        assistant.route = event.data.route
+        assistant.title = event.data.title
+        assistant.structuredContent = event.data.structured_content || {
+          trace: event.data.steps || [],
+          tool_calls: event.data.tool_calls || []
+        }
+        assistant.content = formatDraft(event.data.answer || rawAnswer)
+        showSuccess(`已自动使用 ${event.data.title}`)
+      } else if (event.event === 'error') {
+        const message = event.data.message || 'Agent 执行失败'
+        assistant.content = formatDraft(message)
+        showError(message)
+      }
+      scrollToBottom()
     })
-    const assistantIndex = messages.value.push({
-      role: 'assistant',
-      content: '',
-      route: data.route,
-      title: data.title,
-      structuredContent: data.structured_content,
-    }) - 1
-
-    await typeWriter(
-        data.answer || '',
-        (html) => {
-          messages.value[assistantIndex].content = html
-        },
-        currentToken
-    )
-    showSuccess(`已自动使用 ${data.title}`)
   } catch (error) {
     console.error('Agent chat 调用失败:', error)
+    messages.value[assistantIndex].content = formatDraft('调用失败，请检查后端接口')
     showError('调用失败，请检查后端接口')
   } finally {
     if (currentToken === streamingToken.value) {
