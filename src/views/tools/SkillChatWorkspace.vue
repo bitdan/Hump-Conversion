@@ -4,19 +4,6 @@
     <header class="topbar">
       <div>
         <h1 class="topbar-title">Agent 任务工作台</h1>
-        <p class="topbar-subtitle">描述目标并补充必要上下文，系统会按意图进入架构设计、代码诊断、算法辅导或 SQL 流程。</p>
-      </div>
-      <div class="topbar-actions">
-        <v-btn size="small" variant="tonal" prepend-icon="mdi-robot-outline" @click="fillExample('agent')">
-          Agent 设计
-        </v-btn>
-        <v-btn size="small" variant="tonal" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
-          堆栈示例
-        </v-btn>
-        <v-btn size="small" variant="text" prepend-icon="mdi-delete-outline" :disabled="messages.length === 0"
-               @click="messages = []">
-          清空
-        </v-btn>
       </div>
     </header>
 
@@ -24,25 +11,7 @@
       <div class="chat-messages" ref="messageContainer">
         <div v-if="messages.length === 0" class="empty-state">
           <div class="empty-card">
-            <div class="empty-icon">
-              <v-icon icon="mdi-message-text-outline" size="28"/>
-            </div>
-            <h2>开始一段任务</h2>
-            <p>输入目标、问题背景和已有材料，工作台会选择对应处理流程并保留结构化轨迹。</p>
-            <div class="quick-actions">
-              <v-btn variant="outlined" prepend-icon="mdi-robot-outline" @click="fillExample('agent')">
-                Agent 设计
-              </v-btn>
-              <v-btn variant="outlined" prepend-icon="mdi-code-braces" @click="fillExample('leetcode')">
-                算法题
-              </v-btn>
-              <v-btn variant="outlined" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
-                异常堆栈
-              </v-btn>
-              <v-btn variant="outlined" prepend-icon="mdi-database-search-outline" @click="fillExample('sql')">
-                SQL 生成
-              </v-btn>
-            </div>
+            <h2>开始对话</h2>
           </div>
         </div>
 
@@ -53,9 +22,6 @@
             :class="msg.role"
         >
           <div class="message-card">
-            <div v-if="msg.role === 'assistant' && msg.route" class="message-meta">
-              <span class="route-pill">{{ msg.title || msg.route }}</span>
-            </div>
             <div class="message-bubble" v-html="msg.content"></div>
             <v-expansion-panels
                 v-if="msg.role === 'assistant' && getTrace(msg).length > 0"
@@ -94,7 +60,7 @@
             auto-grow
             rows="1"
             max-rows="8"
-            placeholder="描述目标，例如：如何实现 agent、分析这段堆栈、优化这道题、生成只读 SQL"
+            placeholder="输入消息"
             variant="plain"
             class="composer-input"
             @keydown.ctrl.enter.prevent="submit"
@@ -160,49 +126,6 @@ function scrollToBottom(): void {
     messageContainer.value.scrollTop = messageContainer.value.scrollHeight
   }
 }
-
-function fillExample(type: 'agent' | 'leetcode' | 'stacktrace' | 'sql') {
-  if (type === 'agent') {
-    userInput.value = `如何实现 agent
-
-我希望它能根据用户目标自动选择工具，支持读取项目代码、生成修改计划、必要时运行测试，并且前端能看到执行轨迹。`
-    return
-  }
-
-  if (type === 'leetcode') {
-    userInput.value = `Two Sum
-
-Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
-
-Constraints:
-- 2 <= nums.length <= 10^4
-- -10^9 <= nums[i] <= 10^9
-
-我知道暴力解，但不知道怎么优化到 O(n)。
-
-\`\`\`java
-class Solution {
-  public int[] twoSum(int[] nums, int target) {
-    for (int i = 0; i < nums.length; i++) {
-    }
-    return new int[0];
-  }
-}
-\`\`\``
-    return
-  }
-
-  if (type === 'sql') {
-    userInput.value = `请生成只读 SQL：查询 US-CA 账号近30天销量最高的 SKU，返回 sku、销量、订单数和销售额。`
-    return
-  }
-
-  userInput.value = `java.lang.NullPointerException: Cannot invoke "com.example.demo.service.UserService.getUserById(java.lang.Long)" because "this.userService" is null
-    at com.example.demo.controller.UserController.getUser(UserController.java:32)
-    at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205)
-Caused by: java.lang.NullPointerException`
-}
-
 function getTrace(message: ChatMessage): Array<Record<string, any>> {
   const trace = message.structuredContent?.trace || message.structuredContent?.steps
   return Array.isArray(trace) ? trace : []
@@ -364,12 +287,6 @@ async function submit(): Promise<void> {
   font-size: 14px;
 }
 
-.topbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .chat-main {
   min-height: 0;
   margin-top: 12px;
@@ -393,22 +310,8 @@ async function submit(): Promise<void> {
 
 .empty-card {
   width: min(520px, 100%);
-  padding: 28px 24px;
-  border: 1px dashed var(--color-border);
-  background: var(--color-bg);
-  border-radius: var(--radius-card);
+  padding: 24px;
   text-align: center;
-}
-
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 14px;
-  border-radius: 8px;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
 }
 
 .empty-card h2 {
@@ -422,14 +325,6 @@ async function submit(): Promise<void> {
   color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.7;
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
 }
 
 .message-row {
@@ -447,23 +342,6 @@ async function submit(): Promise<void> {
 
 .message-card {
   max-width: min(920px, 84%);
-}
-
-.message-meta {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.route-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .message-bubble {
