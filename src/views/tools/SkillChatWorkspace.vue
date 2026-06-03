@@ -3,12 +3,12 @@
     <div class="chat-shell">
     <header class="topbar">
       <div>
-        <h1 class="topbar-title">AI 对话工作台</h1>
-        <p class="topbar-subtitle">粘贴问题、代码或异常堆栈，系统会选择合适的处理流程。</p>
+        <h1 class="topbar-title">Agent 任务工作台</h1>
+        <p class="topbar-subtitle">描述目标并补充必要上下文，系统会按意图进入架构设计、代码诊断、算法辅导或 SQL 流程。</p>
       </div>
       <div class="topbar-actions">
-        <v-btn size="small" variant="tonal" prepend-icon="mdi-code-braces" @click="fillExample('leetcode')">
-          LeetCode 示例
+        <v-btn size="small" variant="tonal" prepend-icon="mdi-robot-outline" @click="fillExample('agent')">
+          Agent 设计
         </v-btn>
         <v-btn size="small" variant="tonal" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
           堆栈示例
@@ -28,13 +28,19 @@
               <v-icon icon="mdi-message-text-outline" size="28"/>
             </div>
             <h2>开始一段任务</h2>
-            <p>可以直接输入，也可以先载入一个示例。</p>
+            <p>输入目标、问题背景和已有材料，工作台会选择对应处理流程并保留结构化轨迹。</p>
             <div class="quick-actions">
+              <v-btn variant="outlined" prepend-icon="mdi-robot-outline" @click="fillExample('agent')">
+                Agent 设计
+              </v-btn>
               <v-btn variant="outlined" prepend-icon="mdi-code-braces" @click="fillExample('leetcode')">
                 算法题
               </v-btn>
               <v-btn variant="outlined" prepend-icon="mdi-alert-circle-outline" @click="fillExample('stacktrace')">
                 异常堆栈
+              </v-btn>
+              <v-btn variant="outlined" prepend-icon="mdi-database-search-outline" @click="fillExample('sql')">
+                SQL 生成
               </v-btn>
             </div>
           </div>
@@ -51,6 +57,31 @@
               <span class="route-pill">{{ msg.title || msg.route }}</span>
             </div>
             <div class="message-bubble" v-html="msg.content"></div>
+            <v-expansion-panels
+                v-if="msg.role === 'assistant' && getTrace(msg).length > 0"
+                class="trace-panels"
+                variant="accordion"
+            >
+              <v-expansion-panel>
+                <v-expansion-panel-title>
+                  <v-icon icon="mdi-timeline-clock-outline" size="16" class="mr-2"/>
+                  执行轨迹
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                  <div class="trace-list">
+                    <div v-for="(step, stepIndex) in getTrace(msg)" :key="stepIndex" class="trace-item">
+                      <span class="trace-index">{{ stepIndex + 1 }}</span>
+                      <div>
+                        <div class="trace-node">{{ step.node || 'step' }}</div>
+                        <div class="trace-detail">
+                          {{ step.input_summary || '-' }} -> {{ step.output_summary || '-' }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
           </div>
         </div>
       </div>
@@ -63,7 +94,7 @@
             auto-grow
             rows="1"
             max-rows="8"
-            placeholder="输入问题，或粘贴代码、题目描述、异常堆栈"
+            placeholder="描述目标，例如：如何实现 agent、分析这段堆栈、优化这道题、生成只读 SQL"
             variant="plain"
             class="composer-input"
             @keydown.ctrl.enter.prevent="submit"
@@ -94,6 +125,7 @@ interface ChatMessage {
   content: string
   route?: string
   title?: string
+  structuredContent?: Record<string, any>
 }
 
 const messages = ref<ChatMessage[]>([])
@@ -155,7 +187,14 @@ async function typeWriter(
   }
 }
 
-function fillExample(type: 'leetcode' | 'stacktrace') {
+function fillExample(type: 'agent' | 'leetcode' | 'stacktrace' | 'sql') {
+  if (type === 'agent') {
+    userInput.value = `如何实现 agent
+
+我希望它能根据用户目标自动选择工具，支持读取项目代码、生成修改计划、必要时运行测试，并且前端能看到执行轨迹。`
+    return
+  }
+
   if (type === 'leetcode') {
     userInput.value = `Two Sum
 
@@ -179,10 +218,20 @@ class Solution {
     return
   }
 
+  if (type === 'sql') {
+    userInput.value = `请生成只读 SQL：查询 US-CA 账号近30天销量最高的 SKU，返回 sku、销量、订单数和销售额。`
+    return
+  }
+
   userInput.value = `java.lang.NullPointerException: Cannot invoke "com.example.demo.service.UserService.getUserById(java.lang.Long)" because "this.userService" is null
     at com.example.demo.controller.UserController.getUser(UserController.java:32)
     at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205)
 Caused by: java.lang.NullPointerException`
+}
+
+function getTrace(message: ChatMessage): Array<Record<string, any>> {
+  const trace = message.structuredContent?.trace
+  return Array.isArray(trace) ? trace : []
 }
 
 async function submit(): Promise<void> {
@@ -211,6 +260,7 @@ async function submit(): Promise<void> {
       content: '',
       route: data.route,
       title: data.title,
+      structuredContent: data.structured_content,
     }) - 1
 
     await typeWriter(
@@ -377,7 +427,7 @@ async function submit(): Promise<void> {
 }
 
 .user .message-bubble {
-  background: #2563eb;
+  background: var(--color-primary);
   color: white;
 }
 
@@ -385,6 +435,51 @@ async function submit(): Promise<void> {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+}
+
+.trace-panels {
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element);
+  overflow: hidden;
+}
+
+.trace-list {
+  display: grid;
+  gap: 10px;
+}
+
+.trace-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.trace-index {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trace-node {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.trace-detail {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .composer-shell {

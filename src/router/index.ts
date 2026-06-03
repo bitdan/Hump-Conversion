@@ -76,10 +76,10 @@ export const routes: RouteRecordRaw[] = [
                 name: 'SkillChatWorkspace',
                 component: () => import('@/views/tools/SkillChatWorkspace.vue'),
                 meta: {
-                    title: 'AI 对话工作台',
+                    title: 'Agent 任务工作台',
                     icon: 'mdi-robot-outline',
-                    description: 'Tool Hub AI 对话工作台，支持技能路由、多轮对话和结构化结果展示。',
-                    keywords: ['AI', '对话', '堆栈', 'LeetCode', '技能'],
+                    description: '面向开发任务的 Agent 工作台，支持意图路由、架构设计、堆栈诊断、算法辅导、SQL 生成和结构化轨迹展示。',
+                    keywords: ['AI', 'Agent', '工具调用', '堆栈', 'LeetCode', 'SQL'],
                     featured: true
                 }
             },
