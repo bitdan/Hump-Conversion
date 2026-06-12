@@ -71,3 +71,30 @@ export function minifyJsonWithNestedStrings(text: string): JsonTransformResult &
     text: JSON.stringify(result.value)
   }
 }
+
+export function escapeJsonText(text: string): string {
+  JSON.parse(text)
+  return JSON.stringify(text)
+}
+
+export function unescapeJsonText(text: string): string {
+  const trimmed = text.trim()
+  let unescaped: unknown
+
+  try {
+    unescaped = JSON.parse(trimmed)
+    if (typeof unescaped !== 'string') {
+      throw new Error('当前内容不是转义后的 JSON 字符串')
+    }
+  } catch (error) {
+    try {
+      // 兼容旧版“添加转义”生成的无外层引号内容。
+      unescaped = JSON.parse(`"${text}"`)
+    } catch {
+      throw error
+    }
+  }
+
+  JSON.parse(unescaped)
+  return unescaped
+}
