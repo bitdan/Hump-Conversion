@@ -1,21 +1,46 @@
 <template>
-  <div ref="editorHost" class="json-code-editor" />
+  <div ref="editorHost" class="code-editor" />
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { basicSetup } from 'codemirror'
-import { EditorState } from '@codemirror/state'
-import { EditorView, placeholder } from '@codemirror/view'
+import { Compartment, EditorState } from '@codemirror/state'
+import type { Extension } from '@codemirror/state'
+import { EditorView, placeholder as placeholderExtension } from '@codemirror/view'
 import { json } from '@codemirror/lang-json'
+import { yaml } from '@codemirror/lang-yaml'
+import { xml } from '@codemirror/lang-xml'
+import { html } from '@codemirror/lang-html'
+import { javascript } from '@codemirror/lang-javascript'
+import { css } from '@codemirror/lang-css'
+import { markdown } from '@codemirror/lang-markdown'
 import { lintGutter, linter } from '@codemirror/lint'
 import type { Diagnostic } from '@codemirror/lint'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 
-const props = defineProps<{
+type CodeEditorLanguage =
+  | 'json'
+  | 'yaml'
+  | 'xml'
+  | 'html'
+  | 'javascript'
+  | 'typescript'
+  | 'css'
+  | 'markdown'
+  | 'text'
+
+const props = withDefaults(defineProps<{
   modelValue: string
-}>()
+  language?: CodeEditorLanguage
+  placeholder?: string
+  lineWrapping?: boolean
+}>(), {
+  language: 'text',
+  placeholder: '在此输入或粘贴内容...',
+  lineWrapping: true
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
@@ -24,17 +49,22 @@ const emit = defineEmits<{
 }>()
 
 const editorHost = ref<HTMLElement>()
+const languageCompartment = new Compartment()
+const wrappingCompartment = new Compartment()
 let editorView: EditorView | undefined
 let applyingExternalValue = false
 
-const jsonHighlightStyle = HighlightStyle.define([
+const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.propertyName, color: 'var(--color-primary-dark)', fontWeight: '600' },
-  { tag: tags.string, color: 'var(--color-success)' },
+  { tag: [tags.string, tags.attributeValue], color: 'var(--color-success)' },
   { tag: tags.number, color: 'var(--color-warning)' },
-  { tag: tags.bool, color: 'var(--color-info)', fontWeight: '600' },
+  { tag: [tags.bool, tags.keyword], color: 'var(--color-info)', fontWeight: '600' },
   { tag: tags.null, color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  { tag: [tags.squareBracket, tags.brace], color: 'var(--color-text)' },
-  { tag: tags.separator, color: 'var(--color-text-subtle)' }
+  { tag: [tags.typeName, tags.className, tags.heading], color: 'var(--color-primary-dark)', fontWeight: '600' },
+  { tag: [tags.function(tags.variableName), tags.labelName], color: 'var(--color-primary)' },
+  { tag: tags.comment, color: 'var(--color-text-subtle)', fontStyle: 'italic' },
+  { tag: [tags.squareBracket, tags.brace, tags.paren], color: 'var(--color-text)' },
+  { tag: [tags.separator, tags.operator], color: 'var(--color-text-muted)' }
 ])
 
 function createJsonDiagnostic(text: string): Diagnostic[] {
@@ -58,6 +88,33 @@ function createJsonDiagnostic(text: string): Diagnostic[] {
   }
 }
 
+function languageExtensions(language: CodeEditorLanguage): Extension {
+  switch (language) {
+    case 'json':
+      return [json(), linter(view => createJsonDiagnostic(view.state.doc.toString()), { delay: 250 })]
+    case 'yaml':
+      return yaml()
+    case 'xml':
+      return xml()
+    case 'html':
+      return html()
+    case 'javascript':
+      return javascript({ jsx: true })
+    case 'typescript':
+      return javascript({ typescript: true, jsx: true })
+    case 'css':
+      return css()
+    case 'markdown':
+      return markdown()
+    default:
+      return []
+  }
+}
+
+function wrappingExtension(enabled: boolean): Extension {
+  return enabled ? EditorView.lineWrapping : []
+}
+
 function emitCursorPosition(view: EditorView) {
   const head = view.state.selection.main.head
   const line = view.state.doc.lineAt(head)
@@ -76,12 +133,11 @@ onMounted(() => {
     doc: props.modelValue,
     extensions: [
       basicSetup,
-      json(),
       lintGutter(),
-      linter(view => createJsonDiagnostic(view.state.doc.toString()), { delay: 250 }),
-      syntaxHighlighting(jsonHighlightStyle),
-      placeholder('在此输入或粘贴 JSON 数据...'),
-      EditorView.lineWrapping,
+      languageCompartment.of(languageExtensions(props.language)),
+      wrappingCompartment.of(wrappingExtension(props.lineWrapping)),
+      syntaxHighlighting(editorHighlightStyle),
+      placeholderExtension(props.placeholder),
       EditorView.updateListener.of(update => {
         if (update.docChanged && !applyingExternalValue) {
           const value = update.state.doc.toString()
@@ -168,13 +224,25 @@ watch(() => props.modelValue, value => {
   }
 })
 
+watch(() => props.language, language => {
+  editorView?.dispatch({
+    effects: languageCompartment.reconfigure(languageExtensions(language))
+  })
+})
+
+watch(() => props.lineWrapping, enabled => {
+  editorView?.dispatch({
+    effects: wrappingCompartment.reconfigure(wrappingExtension(enabled))
+  })
+})
+
 onBeforeUnmount(() => {
   editorView?.destroy()
 })
 </script>
 
 <style scoped>
-.json-code-editor {
+.code-editor {
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -183,7 +251,7 @@ onBeforeUnmount(() => {
   background: var(--color-surface);
 }
 
-.json-code-editor:focus-within {
+.code-editor:focus-within {
   border-color: var(--color-primary);
 }
 </style>

@@ -1,53 +1,85 @@
 <template>
-  <ToolPageLayout max-width="max-w-6xl">
-    <div class="space-y-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <v-card class="p-4 solid-card" variant="flat">
-        <div class="flex items-center justify-between mb-2">
-          <div class="font-medium">文件 A</div>
-          <v-btn size="small" variant="text" @click="clearBoth">清空</v-btn>
+  <ToolPageLayout :card="false" :hide-header="true" density="workspace" max-width="max-w-full">
+    <div class="diff-workspace">
+    <div class="diff-input-grid">
+      <v-card class="diff-input-card solid-card" variant="flat">
+        <div class="diff-input-header">
+          <div class="diff-input-title">
+            <div class="font-medium">文件 A</div>
+            <v-chip size="x-small" color="primary" variant="tonal">{{ leftLanguage }}</v-chip>
+          </div>
+          <v-file-input
+            v-model="leftFile"
+            label="选择文件 A"
+            prepend-inner-icon="mdi-file"
+            prepend-icon=""
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="diff-file-input"
+            accept=".json,.yaml,.yml,.xml,.csv,.txt,.md,.ts,.js,.vue,.css,.html"
+            @change="handleFile('left')"
+          />
+          <v-btn size="small" variant="text" icon="mdi-close" @click="clearSide('left')" />
         </div>
-        <v-file-input
-          v-model="leftFile"
-          label="选择文件 A"
-          prepend-icon="mdi-file"
-          accept=".json,.yaml,.yml,.xml,.csv,.txt,.md,.ts,.js,.vue,.css,.html"
-          @change="handleFile('left')"
+        <CodeEditor
+          v-model="left"
+          :language="leftLanguage"
+          :line-wrapping="false"
+          class="diff-input-editor"
+          placeholder="输入或加载文件 A..."
         />
-        <v-textarea v-model="left" rows="12" auto-grow class="mt-2" />
       </v-card>
 
-      <v-card class="p-4 solid-card" variant="flat">
-        <div class="flex items-center justify-between mb-2">
-          <div class="font-medium">文件 B</div>
-          <v-btn size="small" variant="text" @click="clearBoth">清空</v-btn>
+      <v-card class="diff-input-card solid-card" variant="flat">
+        <div class="diff-input-header">
+          <div class="diff-input-title">
+            <div class="font-medium">文件 B</div>
+            <v-chip size="x-small" color="primary" variant="tonal">{{ rightLanguage }}</v-chip>
+          </div>
+          <v-file-input
+            v-model="rightFile"
+            label="选择文件 B"
+            prepend-inner-icon="mdi-file"
+            prepend-icon=""
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="diff-file-input"
+            accept=".json,.yaml,.yml,.xml,.csv,.txt,.md,.ts,.js,.vue,.css,.html"
+            @change="handleFile('right')"
+          />
+          <v-btn size="small" variant="text" icon="mdi-close" @click="clearSide('right')" />
         </div>
-        <v-file-input
-          v-model="rightFile"
-          label="选择文件 B"
-          prepend-icon="mdi-file"
-          accept=".json,.yaml,.yml,.xml,.csv,.txt,.md,.ts,.js,.vue,.css,.html"
-          @change="handleFile('right')"
+        <CodeEditor
+          v-model="right"
+          :language="rightLanguage"
+          :line-wrapping="false"
+          class="diff-input-editor"
+          placeholder="输入或加载文件 B..."
         />
-        <v-textarea v-model="right" rows="12" auto-grow class="mt-2" />
       </v-card>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <v-btn variant="outlined" :disabled="!canRun" @click="formatBoth">格式化</v-btn>
-      <v-switch v-model="showOnlyChanges" label="仅显示差异" inset class="ml-2" />
-      <v-divider vertical class="mx-2" />
+    <div class="diff-toolbar glass-card">
+      <v-btn size="small" variant="tonal" color="primary" :disabled="!canRun" @click="formatBoth">格式化</v-btn>
+      <v-switch v-model="showOnlyChanges" label="仅显示差异" density="compact" hide-details inset />
+      <v-divider vertical />
       <v-btn size="small" :disabled="diffTargets.length === 0" @click="prevDiff">上一处</v-btn>
       <v-btn size="small" :disabled="diffTargets.length === 0" @click="nextDiff">下一处</v-btn>
-      <div class="text-xs text-gray-500 ml-2" v-if="diffTargets.length > 0">
+      <div class="text-xs text-gray-500" v-if="diffTargets.length > 0">
         {{ activeDiffIndex + 1 }} / {{ diffTargets.length }}
       </div>
+      <v-spacer />
+      <v-btn size="small" variant="text" prepend-icon="mdi-delete-outline" :disabled="!canRun" @click="clearBoth">
+        清空全部
+      </v-btn>
     </div>
 
-    <v-card class="p-2 solid-card" variant="flat">
+    <v-card class="diff-result-card solid-card" variant="flat">
       <div v-if="!result" class="text-gray-500 p-4">加载两侧内容并点击“对比”</div>
       <template v-else>
-        <div class="text-sm px-3 py-2 text-gray-600 flex items-center gap-4">
+        <div class="diff-result-header">
           <div>
             新增: <span class="text-emerald-600 font-medium">{{ summary.added }}</span>
             删除: <span class="text-rose-600 font-medium">{{ summary.removed }}</span>
@@ -55,7 +87,7 @@
           <div class="text-xs text-gray-500">侧边对比视图</div>
         </div>
 
-        <div class="overflow-auto" ref="scrollContainer">
+        <div class="diff-result-scroll" ref="scrollContainer">
           <div class="grid grid-cols-2 text-xs text-gray-500 px-3 py-1">
             <div>A</div>
             <div>B</div>
@@ -106,6 +138,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
+import CodeEditor from '@/components/tools/CodeEditor.vue'
 import { diffLines, summarizeDiff } from '@/utils/diff'
 import type { LineChange } from '@/utils/diffTypes'
 import { formatContent, detectFormat } from '@/utils/formatters'
@@ -118,6 +151,55 @@ const result = ref<{ changes: LineChange[] } | null>(null)
 const showOnlyChanges = ref(false)
 
 const canRun = computed(() => left.value.length > 0 || right.value.length > 0)
+
+type CodeEditorLanguage =
+  | 'json'
+  | 'yaml'
+  | 'xml'
+  | 'html'
+  | 'javascript'
+  | 'typescript'
+  | 'css'
+  | 'markdown'
+  | 'text'
+
+const EXTENSION_LANGUAGES: Record<string, CodeEditorLanguage> = {
+  json: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  xml: 'xml',
+  html: 'html',
+  htm: 'html',
+  vue: 'html',
+  js: 'javascript',
+  jsx: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  css: 'css',
+  md: 'markdown',
+  markdown: 'markdown'
+}
+
+function detectEditorLanguage(file: File | null, content: string): CodeEditorLanguage {
+  const extension = file?.name.split('.').pop()?.toLowerCase()
+  if (extension && EXTENSION_LANGUAGES[extension]) {
+    return EXTENSION_LANGUAGES[extension]
+  }
+
+  const format = detectFormat(content)
+  if (format === 'json' || format === 'yaml' || format === 'xml') {
+    return format
+  }
+
+  const trimmed = content.trimStart().toLowerCase()
+  if (trimmed.startsWith('<!doctype html') || trimmed.startsWith('<html')) {
+    return 'html'
+  }
+  return 'text'
+}
+
+const leftLanguage = computed(() => detectEditorLanguage(leftFile.value, left.value))
+const rightLanguage = computed(() => detectEditorLanguage(rightFile.value, right.value))
 
 function readFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -151,6 +233,16 @@ function clearBoth() {
   left.value = ''
   right.value = ''
   leftFile.value = null
+  rightFile.value = null
+}
+
+function clearSide(side: 'left' | 'right') {
+  if (side === 'left') {
+    left.value = ''
+    leftFile.value = null
+    return
+  }
+  right.value = ''
   rightFile.value = null
 }
 
@@ -407,6 +499,120 @@ function segmentClass(seg: InlineSegment, side: 'left' | 'right') {
 </script>
 
 <style scoped>
+.diff-workspace {
+  height: calc(100dvh - 32px);
+  min-height: 640px;
+  display: grid;
+  grid-template-rows: minmax(320px, 55%) auto minmax(200px, 1fr);
+  gap: var(--space-tight);
+  overflow: hidden;
+}
+
+.diff-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-tight);
+  min-height: 0;
+}
+
+.diff-input-card {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+  padding: var(--space-tight);
+}
+
+.diff-input-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+  flex: 0 0 auto;
+}
+
+.diff-input-title {
+  min-width: 82px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diff-file-input {
+  min-width: 120px;
+  flex: 1;
+}
+
+.diff-input-editor {
+  min-height: 0;
+  flex: 1;
+}
+
+.diff-toolbar {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+  padding: 4px var(--space-tight);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.diff-toolbar > * {
+  flex: 0 0 auto;
+}
+
+.diff-toolbar :deep(.v-spacer) {
+  flex: 1 1 auto;
+}
+
+.diff-result-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.diff-result-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-card);
+  flex: 0 0 auto;
+  padding: 6px var(--space-element);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.diff-result-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+@media (max-width: 960px) {
+  .diff-workspace {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .diff-input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diff-input-editor {
+    height: 280px;
+    flex: none;
+  }
+
+  .diff-result-card {
+    max-height: 480px;
+  }
+}
 </style>
 
 

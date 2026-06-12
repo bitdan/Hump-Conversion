@@ -1,8 +1,8 @@
 <template>
-  <ToolPageLayout :card="false" density="workspace" max-width="max-w-full">
+  <ToolPageLayout :card="false" :hide-header="true" density="workspace" max-width="max-w-full">
     <div class="json-workspace glass-card">
       <div class="json-toolbar">
-        <div class="toolbar">
+        <div class="json-actions">
           <v-btn
             color="primary"
             variant="tonal"
@@ -75,18 +75,10 @@
             清空
           </v-btn>
         </div>
-
-        <v-switch
-          v-model="autoFormat"
-          color="primary"
-          density="compact"
-          hide-details
-          label="自动格式化"
-        />
       </div>
 
       <div class="json-status">
-        <div class="toolbar">
+        <div class="json-status__summary">
           <v-chip :color="isValidJson ? 'success' : 'error'" size="small" variant="tonal">
             <v-icon :icon="isValidJson ? 'mdi-check-circle' : 'mdi-alert-circle'" start />
             {{ isValidJson ? '有效 JSON' : errorMessage }}
@@ -97,11 +89,22 @@
           </v-chip>
         </div>
 
-        <span>行 {{ currentLine }} | 列 {{ currentColumn }}</span>
+        <div class="json-status__controls">
+          <v-switch
+            v-model="autoFormat"
+            color="primary"
+            density="compact"
+            hide-details
+            label="自动格式化"
+          />
+          <span class="json-cursor">行 {{ currentLine }} | 列 {{ currentColumn }}</span>
+        </div>
       </div>
 
-      <JsonCodeEditor
+      <CodeEditor
         v-model="jsonInput"
+        language="json"
+        placeholder="在此输入或粘贴 JSON 数据..."
         class="json-editor"
         @change="handleEditorChange"
         @cursor-change="updateCursorPosition"
@@ -122,7 +125,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import ToolPageLayout from '../../components/ToolPageLayout.vue'
-import JsonCodeEditor from '../../components/tools/JsonCodeEditor.vue'
+import CodeEditor from '../../components/tools/CodeEditor.vue'
 import { debounce } from '../../utils/helpers'
 import {
   escapeJsonText,
@@ -282,36 +285,81 @@ watch(autoFormat, enabled => {
 
 <style scoped>
 .json-workspace {
-  height: calc(100vh - 170px);
-  min-height: 520px;
+  height: calc(100dvh - 32px);
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-tight);
-  padding: var(--space-element);
+  gap: 6px;
+  padding: var(--space-tight);
+  overflow: hidden;
 }
 
-.json-toolbar,
+.json-toolbar {
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.json-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.json-actions :deep(.v-btn) {
+  flex: 0 0 auto;
+}
+
 .json-status {
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-element);
-  flex-wrap: wrap;
-}
-
-.json-status {
+  gap: var(--space-tight);
+  flex: 0 0 auto;
   color: var(--color-text-muted);
   font-size: 0.75rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.json-status__summary,
+.json-status__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.json-status__controls :deep(.v-switch) {
+  flex: 0 0 auto;
+}
+
+.json-status__controls :deep(.v-label) {
+  font-size: 0.75rem;
+}
+
+.json-cursor {
+  min-width: 74px;
+  text-align: right;
 }
 
 .json-editor {
   flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 960px) {
   .json-workspace {
-    height: calc(100vh - 150px);
-    min-height: 460px;
+    height: calc(100dvh - 80px);
+  }
+
+  .json-status {
+    min-height: 30px;
   }
 }
 </style>
