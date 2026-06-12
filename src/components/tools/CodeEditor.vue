@@ -15,6 +15,9 @@ import { html } from '@codemirror/lang-html'
 import { javascript } from '@codemirror/lang-javascript'
 import { css } from '@codemirror/lang-css'
 import { markdown } from '@codemirror/lang-markdown'
+import { java } from '@codemirror/lang-java'
+import { python } from '@codemirror/lang-python'
+import { sql } from '@codemirror/lang-sql'
 import { lintGutter, linter } from '@codemirror/lint'
 import type { Diagnostic } from '@codemirror/lint'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
@@ -29,6 +32,9 @@ type CodeEditorLanguage =
   | 'typescript'
   | 'css'
   | 'markdown'
+  | 'java'
+  | 'python'
+  | 'sql'
   | 'text'
 
 const props = withDefaults(defineProps<{
@@ -106,6 +112,12 @@ function languageExtensions(language: CodeEditorLanguage): Extension {
       return css()
     case 'markdown':
       return markdown()
+    case 'java':
+      return java()
+    case 'python':
+      return python()
+    case 'sql':
+      return sql()
     default:
       return []
   }
