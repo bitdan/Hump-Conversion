@@ -168,16 +168,18 @@ export const routes: RouteRecordRaw[] = [
                     keywords: ['EPUB', '阅读器', '电子书']
                 }
             },
-            // {
-            //     path: '/tools/json-editor',
-            //     name: 'JsonEditor',
-            //     component: () => import('@/views/tools/JsonEditor.vue'),
-            //     meta: {
-            //         title: 'JSON 编辑器',
-            //         icon: 'mdi-code-json',
-            //         description: '在线 JSON 编辑器，支持格式化、校验与结构化浏览。'
-            //     }
-            // },
+            {
+                path: '/tools/json-editor',
+                name: 'JsonEditor',
+                component: () => import('@/views/tools/JsonEditor.vue'),
+                meta: {
+                    title: 'JSON 编辑器',
+                    icon: 'mdi-code-json',
+                    description: '在线 JSON 编辑器，支持递归格式化转义 JSON、校验与压缩。',
+                    keywords: ['JSON', '格式化', '转义', '压缩'],
+                    featured: true
+                }
+            },
             {
                 path: '/tools/calculator',
                 name: 'Calculator',

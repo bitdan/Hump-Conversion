@@ -199,6 +199,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { debounce } from '../../utils/helpers'
+import {
+  formatJsonWithNestedStrings,
+  minifyJsonWithNestedStrings
+} from '../../utils/jsonFormatter'
 
 // 状态定义
 const jsonInput = ref('')
@@ -241,10 +245,9 @@ const lineNumbers = computed(() => {
 const handleInput = debounce(() => {
   if (autoFormat.value && isValidJson.value) {
     try {
-      const parsed = JSON.parse(jsonInput.value)
-      const formatted = JSON.stringify(parsed, null, 2)
-      if (formatted !== jsonInput.value) {
-        jsonInput.value = formatted
+      const result = formatJsonWithNestedStrings(jsonInput.value)
+      if (result.text !== jsonInput.value) {
+        jsonInput.value = result.text
       }
     } catch {
       // 忽略格式化错误，保持用户输入
@@ -301,9 +304,9 @@ function formatJson() {
   if (!jsonInput.value.trim()) return
   
   try {
-    const parsed = JSON.parse(jsonInput.value)
-    jsonInput.value = JSON.stringify(parsed, null, 2)
-    showSuccessMessage('JSON 格式化成功')
+    const result = formatJsonWithNestedStrings(jsonInput.value)
+    jsonInput.value = result.text
+    showSuccessMessage(getFormatSuccessMessage(result.expandedStringCount))
   } catch (e) {
     showErrorMessage('JSON 格式错误，无法格式化')
   }
@@ -314,12 +317,20 @@ function minifyJson() {
   if (!jsonInput.value.trim()) return
   
   try {
-    const parsed = JSON.parse(jsonInput.value)
-    jsonInput.value = JSON.stringify(parsed)
-    showSuccessMessage('JSON 压缩成功')
+    const result = minifyJsonWithNestedStrings(jsonInput.value)
+    jsonInput.value = result.text
+    showSuccessMessage(getFormatSuccessMessage(result.expandedStringCount, true))
   } catch (e) {
     showErrorMessage('JSON 格式错误，无法压缩')
   }
+}
+
+function getFormatSuccessMessage(expandedStringCount: number, minified = false) {
+  const action = minified ? '压缩' : '格式化'
+  if (expandedStringCount === 0) {
+    return `JSON ${action}成功`
+  }
+  return `JSON ${action}成功，已展开 ${expandedStringCount} 个转义 JSON 字段`
 }
 
 // 添加转义字符
