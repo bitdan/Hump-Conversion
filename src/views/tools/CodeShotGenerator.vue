@@ -217,7 +217,7 @@ async function loadUser(id: number): Promise<User> {
 const code = ref(normalizeCode(sampleCode))
 const language = ref('typescript')
 const themeName = ref<ThemeName>('midnight')
-const backgroundName = ref<BackgroundName>('aurora')
+const backgroundName = ref<BackgroundName>('paper')
 const windowStyle = ref<WindowStyle>('mac')
 const fontSize = ref(16)
 const framePadding = ref(56)
