@@ -71,11 +71,19 @@
               variant="outlined"
               hide-details
             />
+            <v-text-field
+              v-model="fileName"
+              label="文件名"
+              density="compact"
+              variant="outlined"
+              hide-details
+              clearable
+            />
           </div>
         </v-menu>
 
         <v-spacer />
-        <span class="toolbar-summary">{{ codeLines.length }} 行</span>
+        <span class="toolbar-summary">{{ codeLines.length }} 行 · {{ characterCount }} 字符</span>
         <v-btn
           size="small"
           color="primary"
@@ -136,7 +144,7 @@
                   <div v-else class="tab-title">
                     <v-icon icon="mdi-code-tags" size="16" />
                   </div>
-                  <span class="file-title">{{ languageLabel }}</span>
+                  <span class="file-title">{{ displayFileName }}</span>
                   <span class="header-spacer"></span>
                 </header>
 
@@ -155,6 +163,16 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import html2canvas from 'html2canvas'
+import { html } from '@codemirror/lang-html'
+import { java } from '@codemirror/lang-java'
+import { javascript } from '@codemirror/lang-javascript'
+import { json } from '@codemirror/lang-json'
+import { python } from '@codemirror/lang-python'
+import { sql } from '@codemirror/lang-sql'
+import { StreamLanguage } from '@codemirror/language'
+import type { Language } from '@codemirror/language'
+import { shell } from '@codemirror/legacy-modes/mode/shell'
+import { highlightCode, tagHighlighter, tags } from '@lezer/highlight'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import CodeEditor from '@/components/tools/CodeEditor.vue'
 
@@ -169,6 +187,7 @@ type EditorLanguage =
   | 'java'
   | 'python'
   | 'sql'
+  | 'shell'
   | 'text'
 
 interface Theme {
@@ -192,11 +211,6 @@ interface Background {
   title: string
   value: BackgroundName
   style: string
-}
-
-interface CodeSegment {
-  type: 'plain' | 'string' | 'comment'
-  value: string
 }
 
 const sampleCode = `type User = {
@@ -223,6 +237,7 @@ const fontSize = ref(16)
 const framePadding = ref(56)
 const showLineNumbers = ref(true)
 const showHeader = ref(true)
+const fileName = ref('')
 const copying = ref(false)
 const errorMessage = ref('')
 const shotRef = ref<HTMLElement | null>(null)
@@ -334,13 +349,37 @@ const windowStyleOptions = [
   { title: '极简标题栏', value: 'minimal' }
 ]
 
+const codeLanguages: Record<string, Language | null> = {
+  typescript: javascript({ typescript: true, jsx: true }).language,
+  javascript: javascript({ jsx: true }).language,
+  vue: html().language,
+  java: java().language,
+  python: python().language,
+  sql: sql().language,
+  json: json().language,
+  shell: StreamLanguage.define(shell),
+  text: null
+}
+
+const codeHighlighter = tagHighlighter([
+  { tag: [tags.keyword, tags.controlKeyword, tags.definitionKeyword, tags.moduleKeyword, tags.operatorKeyword], class: 'syntax-keyword' },
+  { tag: [tags.string, tags.docString, tags.character, tags.attributeValue, tags.regexp, tags.escape], class: 'syntax-string' },
+  { tag: [tags.number, tags.integer, tags.float, tags.bool, tags.null, tags.atom], class: 'syntax-number' },
+  { tag: [tags.comment, tags.lineComment, tags.blockComment, tags.docComment], class: 'syntax-comment' },
+  { tag: [tags.function(tags.variableName), tags.labelName, tags.macroName], class: 'syntax-function' },
+  { tag: [tags.typeName, tags.className, tags.namespace, tags.tagName], class: 'syntax-type' },
+  { tag: [tags.propertyName, tags.attributeName], class: 'syntax-property' },
+  { tag: [tags.operator, tags.derefOperator, tags.arithmeticOperator, tags.logicOperator, tags.bitwiseOperator, tags.compareOperator, tags.updateOperator, tags.definitionOperator, tags.typeOperator, tags.controlOperator], class: 'syntax-operator' },
+  { tag: tags.invalid, class: 'syntax-invalid' }
+])
+
 const themeOptions = Object.values(themes).map(item => ({ title: item.title, value: item.value }))
 const backgroundOptions = Object.values(backgrounds).map(item => ({ title: item.title, value: item.value }))
 const activeTheme = computed(() => themes[themeName.value])
 const languageLabel = computed(() => languageOptions.find(item => item.value === language.value)?.title || 'Text')
+const displayFileName = computed(() => fileName.value.trim() || defaultFileName(language.value))
 const editorLanguage = computed<EditorLanguage>(() => {
   if (language.value === 'vue') return 'html'
-  if (language.value === 'shell') return 'text'
   return language.value as EditorLanguage
 })
 
@@ -368,15 +407,15 @@ const editorFrameStyle = computed(() => ({
 }))
 
 const codeLines = computed(() => normalizeCode(code.value).split('\n'))
+const characterCount = computed(() => Array.from(code.value).length)
 const tabSize = computed(() => language.value === 'java' ? 4 : 2)
 const maxLineLength = computed(() => codeLines.value.reduce((max, line) => Math.max(max, visualLineLength(line)), 0))
 
-const highlightedCode = computed(() => codeLines.value.map((line, index) => {
-  const content = highlightLine(line, language.value)
+const highlightedCode = computed(() => highlightCodeLines(normalizeCode(code.value), language.value).map((line, index) => {
   const lineNumber = showLineNumbers.value
     ? `<span class="line-number" style="color:${activeTheme.value.line}">${String(index + 1).padStart(2, ' ')}</span>`
     : ''
-  return `<span class="code-line">${lineNumber}<span class="line-code">${content || '&nbsp;'}</span></span>`
+  return `<span class="code-line">${lineNumber}<span class="line-code">${line || '&nbsp;'}</span></span>`
 }).join(''))
 
 function escapeHtml(value: string) {
@@ -400,129 +439,42 @@ function visualLineLength(line: string) {
   return length
 }
 
-function token(color: string, value: string, className: string) {
-  return `<span class="${className}" style="color:${color}">${value}</span>`
-}
+function highlightCodeLines(source: string, mode: string) {
+  const codeLanguage = codeLanguages[mode]
+  if (!codeLanguage) return source.split('\n').map(escapeHtml)
 
-function highlightLine(line: string, mode: string) {
-  const theme = activeTheme.value
-  if (!line.trim()) return ''
-  if (mode === 'text') return escapeHtml(line)
-
-  return splitLineSegments(line, mode).map(segment => {
-    if (segment.type === 'string') return token(theme.string, escapeHtml(segment.value), 'syntax-string')
-    if (segment.type === 'comment') return token(theme.comment, escapeHtml(segment.value), 'syntax-comment')
-    return highlightPlainText(segment.value, mode)
-  }).join('')
-}
-
-function splitLineSegments(line: string, mode: string): CodeSegment[] {
-  const segments: CodeSegment[] = []
-  const commentIndex = findCommentIndex(line, mode)
-  const codePart = commentIndex >= 0 ? line.slice(0, commentIndex) : line
-  let buffer = ''
-  let quote: string | null = null
-  let stringBuffer = ''
-
-  for (let index = 0; index < codePart.length; index += 1) {
-    const char = codePart[index]
-    const previous = codePart[index - 1]
-    if (quote) {
-      stringBuffer += char
-      if (char === quote && previous !== '\\') {
-        segments.push({ type: 'string', value: stringBuffer })
-        quote = null
-        stringBuffer = ''
-      }
-    } else if (char === '"' || char === '\'' || char === '`') {
-      if (buffer) segments.push({ type: 'plain', value: buffer })
-      buffer = ''
-      quote = char
-      stringBuffer = char
-    } else {
-      buffer += char
+  const lines: string[] = []
+  let currentLine = ''
+  highlightCode(
+    source,
+    codeLanguage.parser.parse(source),
+    codeHighlighter,
+    (text, classes) => {
+      const content = escapeHtml(text)
+      currentLine += classes ? `<span class="${classes}">${content}</span>` : content
+    },
+    () => {
+      lines.push(currentLine)
+      currentLine = ''
     }
+  )
+  lines.push(currentLine)
+  return lines
+}
+
+function defaultFileName(mode: string) {
+  const names: Record<string, string> = {
+    typescript: 'example.ts',
+    javascript: 'example.js',
+    vue: 'Example.vue',
+    java: 'Example.java',
+    python: 'example.py',
+    sql: 'query.sql',
+    json: 'data.json',
+    shell: 'script.sh',
+    text: 'snippet.txt'
   }
-
-  if (stringBuffer) segments.push({ type: 'string', value: stringBuffer })
-  if (buffer) segments.push({ type: 'plain', value: buffer })
-  if (commentIndex >= 0) segments.push({ type: 'comment', value: line.slice(commentIndex) })
-  return segments
-}
-
-function findCommentIndex(line: string, mode: string) {
-  const markers = mode === 'python' || mode === 'shell' ? ['#'] : mode === 'sql' ? ['--'] : ['//']
-  let quote: string | null = null
-
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index]
-    const previous = line[index - 1]
-    if (quote) {
-      if (char === quote && previous !== '\\') quote = null
-    } else if (char === '"' || char === '\'' || char === '`') {
-      quote = char
-    } else if (markers.some(marker => line.startsWith(marker, index))) {
-      return index
-    }
-  }
-  return -1
-}
-
-function highlightPlainText(value: string, mode: string) {
-  const theme = activeTheme.value
-  const keywordSet = new Set(keywordList(mode).map(item => mode === 'sql' ? item.toUpperCase() : item))
-  let output = ''
-  let index = 0
-
-  while (index < value.length) {
-    const rest = value.slice(index)
-    const word = rest.match(/^[A-Za-z_$][\w$]*/)
-    if (word) {
-      const text = word[0]
-      const key = mode === 'sql' ? text.toUpperCase() : text
-      if (keywordSet.has(key)) {
-        output += token(theme.keyword, escapeHtml(text), 'syntax-keyword')
-      } else if (/^\s*\(/.test(value.slice(index + text.length))) {
-        output += token(theme.function, escapeHtml(text), 'syntax-function')
-      } else {
-        output += escapeHtml(text)
-      }
-      index += text.length
-      continue
-    }
-
-    const number = rest.match(/^-?\d+(\.\d+)?/)
-    if (number) {
-      output += token(theme.number, escapeHtml(number[0]), 'syntax-number')
-      index += number[0].length
-      continue
-    }
-
-    const operator = rest.match(/^(===|!==|==|!=|=>|<=|>=|&&|\|\||[+\-*\/=<>])/)
-    if (operator) {
-      output += token(theme.operator, escapeHtml(operator[0]), 'syntax-operator')
-      index += operator[0].length
-      continue
-    }
-
-    output += escapeHtml(value[index])
-    index += 1
-  }
-  return output
-}
-
-function keywordList(mode: string) {
-  const common = 'const|let|var|function|return|if|else|for|while|switch|case|break|continue|try|catch|throw|new|class|extends|import|from|export|default|async|await|type|interface|public|private|protected|static|final|void|true|false|null|undefined'
-  const maps: Record<string, string> = {
-    typescript: common,
-    javascript: common,
-    vue: `${common}|template|script|style|setup|ref|computed|watch`,
-    java: 'public|private|protected|class|interface|enum|extends|implements|static|final|void|int|long|double|float|boolean|String|new|return|if|else|for|while|switch|case|break|continue|try|catch|throw|throws|null|true|false|package|import',
-    python: 'def|class|return|if|elif|else|for|while|try|except|raise|import|from|as|with|lambda|yield|async|await|None|True|False|self|in|is|not|and|or',
-    sql: 'SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|GROUP|BY|ORDER|LIMIT|INSERT|INTO|UPDATE|DELETE|CREATE|TABLE|ALTER|DROP|AND|OR|NOT|NULL|IS|AS|COUNT|SUM|AVG|MAX|MIN',
-    shell: 'if|then|else|fi|for|while|do|done|case|esac|function|export|echo|cd|grep|awk|sed|curl|git|npm|mvn'
-  }
-  return maps[mode]?.split('|') ?? []
+  return names[mode] || 'snippet.txt'
 }
 
 function loadSample() {
@@ -643,7 +595,7 @@ async function renderShotCanvas() {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(360px, 30%) minmax(0, 1fr);
   gap: var(--space-tight);
 }
 
@@ -786,9 +738,42 @@ async function renderShotCanvas() {
   min-width: max-content;
 }
 
+.code-block :deep(.syntax-keyword),
+.code-block :deep(.syntax-type) {
+  color: v-bind('activeTheme.keyword');
+  font-weight: 600;
+}
+
+.code-block :deep(.syntax-string) {
+  color: v-bind('activeTheme.string');
+}
+
+.code-block :deep(.syntax-number) {
+  color: v-bind('activeTheme.number');
+}
+
+.code-block :deep(.syntax-comment) {
+  color: v-bind('activeTheme.comment');
+  font-style: italic;
+}
+
+.code-block :deep(.syntax-function),
+.code-block :deep(.syntax-property) {
+  color: v-bind('activeTheme.function');
+}
+
+.code-block :deep(.syntax-operator) {
+  color: v-bind('activeTheme.operator');
+}
+
+.code-block :deep(.syntax-invalid) {
+  color: var(--color-error);
+  text-decoration: underline wavy;
+}
+
 @media (max-width: 1100px) {
   .codeshot-main {
-    grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(300px, 32%) minmax(0, 1fr);
   }
 }
 

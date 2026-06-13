@@ -20,7 +20,8 @@ import { python } from '@codemirror/lang-python'
 import { sql } from '@codemirror/lang-sql'
 import { lintGutter, linter } from '@codemirror/lint'
 import type { Diagnostic } from '@codemirror/lint'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language'
+import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { tags } from '@lezer/highlight'
 
 type CodeEditorLanguage =
@@ -35,6 +36,7 @@ type CodeEditorLanguage =
   | 'java'
   | 'python'
   | 'sql'
+  | 'shell'
   | 'text'
 
 const props = withDefaults(defineProps<{
@@ -57,6 +59,7 @@ const emit = defineEmits<{
 const editorHost = ref<HTMLElement>()
 const languageCompartment = new Compartment()
 const wrappingCompartment = new Compartment()
+const shellLanguage = StreamLanguage.define(shell)
 let editorView: EditorView | undefined
 let applyingExternalValue = false
 
@@ -118,6 +121,8 @@ function languageExtensions(language: CodeEditorLanguage): Extension {
       return python()
     case 'sql':
       return sql()
+    case 'shell':
+      return shellLanguage
     default:
       return []
   }
