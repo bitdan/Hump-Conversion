@@ -141,6 +141,60 @@ function emitCursorPosition(view: EditorView) {
   })
 }
 
+function focus() {
+  editorView?.focus()
+}
+
+function insertText(text: string) {
+  if (!editorView) return
+  const { from, to } = editorView.state.selection.main
+  editorView.dispatch({
+    changes: { from, to, insert: text },
+    selection: { anchor: from + text.length },
+    scrollIntoView: true
+  })
+  editorView.focus()
+}
+
+function wrapSelection(before: string, after = before, placeholder = '文本') {
+  if (!editorView) return
+  const { from, to } = editorView.state.selection.main
+  const selected = editorView.state.doc.sliceString(from, to)
+  const content = selected || placeholder
+  const inserted = `${before}${content}${after}`
+  const selectionStart = from + before.length
+  editorView.dispatch({
+    changes: { from, to, insert: inserted },
+    selection: selected
+      ? { anchor: from + inserted.length }
+      : { anchor: selectionStart, head: selectionStart + content.length },
+    scrollIntoView: true
+  })
+  editorView.focus()
+}
+
+function prefixSelection(prefix: string) {
+  if (!editorView) return
+  const { from, to } = editorView.state.selection.main
+  const startLine = editorView.state.doc.lineAt(from)
+  const endLine = editorView.state.doc.lineAt(to)
+  const selectedLines = editorView.state.doc.sliceString(startLine.from, endLine.to)
+  const inserted = selectedLines.split('\n').map(line => `${prefix}${line}`).join('\n')
+  editorView.dispatch({
+    changes: { from: startLine.from, to: endLine.to, insert: inserted },
+    selection: { anchor: startLine.from + inserted.length },
+    scrollIntoView: true
+  })
+  editorView.focus()
+}
+
+defineExpose({
+  focus,
+  insertText,
+  wrapSelection,
+  prefixSelection
+})
+
 onMounted(() => {
   if (!editorHost.value) {
     return

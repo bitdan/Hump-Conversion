@@ -39,22 +39,18 @@
       </v-alert>
 
       <div v-if="userStore.token" class="reply-box">
-        <div class="reply-toolbar">
-          <span>{{ replyTarget ? `回复 ${replyTarget.author_name}` : '写下你的回复' }}</span>
-          <EmojiStickerPicker @insert="appendReplyContent"/>
+        <div v-if="replyTarget" class="reply-context">
+          <span>正在回复 <strong>{{ replyTarget.author_name }}</strong></span>
+          <v-btn size="small" variant="text" @click="cancelReply">取消回复</v-btn>
         </div>
-        <v-textarea
-            ref="replyInputRef"
-            v-model="replyContent"
-            variant="outlined"
-            rows="4"
-            auto-grow
-            counter="5000"
-            maxlength="5000"
-            :label="replyTarget ? `回复 ${replyTarget.author_name}` : '写下你的回复'"
+        <MarkdownComposer
+          ref="replyComposerRef"
+          v-model="replyContent"
+          :placeholder="replyTarget ? `回复 ${replyTarget.author_name}，支持 Markdown...` : '写下你的回复，支持 Markdown...'"
+          :max-length="5000"
+          :height="190"
         />
         <div class="reply-actions">
-          <v-btn v-if="replyTarget" variant="text" @click="cancelReply">取消回复</v-btn>
           <v-btn color="primary" prepend-icon="mdi-reply" :loading="replying" @click="submitReply">回复</v-btn>
         </div>
       </div>
@@ -102,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineComponent, h, onMounted, ref} from 'vue'
+import {computed, defineComponent, h, nextTick, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {
   createPostComment,
@@ -114,8 +110,7 @@ import {
 } from '@/api/post'
 import {useUserStore} from '@/stores/user'
 import {renderMarkdown} from '@/utils/markdown'
-import EmojiStickerPicker from '@/components/common/EmojiStickerPicker.vue'
-import {insertTextAtCursor} from '@/utils/textInsertion'
+import MarkdownComposer from '@/components/community/MarkdownComposer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -127,7 +122,7 @@ const commentsLoading = ref(false)
 const error = ref('')
 const commentError = ref('')
 const replyContent = ref('')
-const replyInputRef = ref<any>(null)
+const replyComposerRef = ref<InstanceType<typeof MarkdownComposer> | null>(null)
 const replying = ref(false)
 const replyTarget = ref<CommentNode | null>(null)
 
@@ -257,17 +252,14 @@ async function submitReply() {
   }
 }
 
-function startReply(comment: CommentNode) {
+async function startReply(comment: CommentNode) {
   replyTarget.value = comment
-  replyContent.value = ''
+  await nextTick()
+  replyComposerRef.value?.focus()
 }
 
 function cancelReply() {
   replyTarget.value = null
-}
-
-async function appendReplyContent(value: string) {
-  await insertTextAtCursor(replyContent, replyInputRef, value)
 }
 
 function formatDate(value: string) {
@@ -391,20 +383,20 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
-.reply-toolbar {
+.reply-context {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 13px;
-  font-weight: 700;
 }
 
 .reply-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  margin-top: 10px;
 }
 
 .comment-list {
@@ -506,6 +498,49 @@ onMounted(async () => {
 
 .markdown-body :deep(a) {
   color: #2563eb;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  margin: 8px 0 12px;
+  padding-left: 24px;
+}
+
+.markdown-body :deep(li + li) {
+  margin-top: 4px;
+}
+
+.markdown-body :deep(table) {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background: var(--color-bg);
+}
+
+.markdown-body :deep(hr) {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.markdown-body :deep(img:not(.inline-sticker)) {
+  max-width: 100%;
+  border-radius: var(--radius-element);
+}
+
+.markdown-body :deep(input[type='checkbox']) {
+  accent-color: var(--color-primary);
 }
 
 .markdown-body :deep(.inline-sticker) {
