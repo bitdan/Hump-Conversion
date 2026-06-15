@@ -95,6 +95,9 @@ export function unescapeJsonText(text: string): string {
     }
   }
 
+  if (typeof unescaped !== 'string') {
+    throw new Error('当前内容不是转义后的 JSON 字符串')
+  }
   JSON.parse(unescaped)
   return unescaped
 }

@@ -1,5 +1,5 @@
 <template>
-  <ToolPageLayout theme="none" :card="false" max-width="max-w-full">
+  <ToolPageLayout theme="none" :card="false" hide-header max-width="max-w-full">
     <div class="epub-page" :class="{ 'sidebar-collapsed': !showSidebar }">
     <aside v-if="showSidebar" class="epub-sidebar">
       <div class="sidebar-header">
@@ -165,15 +165,9 @@
 
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
+import JSZip from 'jszip'
 import {computed, nextTick, onBeforeUnmount, ref, watch} from 'vue'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
-
-interface ZipEntry {
-  name: string
-  compression: number
-  compressedSize: number
-  localHeaderOffset: number
-}
 
 interface ManifestItem {
   id: string
@@ -205,8 +199,7 @@ const chapterProgress = ref(0)
 const showSidebar = ref(true)
 const showToc = ref(true)
 
-let zipData: ArrayBuffer | null = null
-let zipEntries = new Map<string, ZipEntry>()
+let zipArchive: JSZip | null = null
 let manifestItems = new Map<string, ManifestItem>()
 let resourceUrls = new Map<string, string>()
 let frameScrollHandler: (() => void) | null = null
@@ -251,8 +244,7 @@ async function loadEpub(file: File) {
   cleanupBook()
 
   try {
-    zipData = await file.arrayBuffer()
-    zipEntries = parseZipEntries(zipData)
+    zipArchive = await JSZip.loadAsync(file)
     const containerXml = await readZipText('META-INF/container.xml')
     const rootFilePath = parseRootFilePath(containerXml)
     const opfText = await readZipText(rootFilePath)
@@ -281,8 +273,7 @@ async function loadEpub(file: File) {
 function cleanupBook() {
   resourceUrls.forEach(url => URL.revokeObjectURL(url))
   resourceUrls = new Map()
-  zipData = null
-  zipEntries = new Map()
+  zipArchive = null
   manifestItems = new Map()
   bookTitle.value = ''
   chapters.value = []
@@ -291,76 +282,20 @@ function cleanupBook() {
   frameScrollHandler = null
 }
 
-function parseZipEntries(buffer: ArrayBuffer) {
-  const view = new DataView(buffer)
-  let eocdOffset = -1
-
-  for (let offset = buffer.byteLength - 22; offset >= Math.max(0, buffer.byteLength - 66000); offset--) {
-    if (view.getUint32(offset, true) === 0x06054b50) {
-      eocdOffset = offset
-      break
-    }
-  }
-
-  if (eocdOffset < 0) throw new Error('不是有效的 EPUB/ZIP 文件')
-
-  const totalEntries = view.getUint16(eocdOffset + 10, true)
-  const centralDirectoryOffset = view.getUint32(eocdOffset + 16, true)
-  const entries = new Map<string, ZipEntry>()
-  let offset = centralDirectoryOffset
-  const decoder = new TextDecoder('utf-8')
-
-  for (let i = 0; i < totalEntries; i++) {
-    if (view.getUint32(offset, true) !== 0x02014b50) break
-
-    const compression = view.getUint16(offset + 10, true)
-    const compressedSize = view.getUint32(offset + 20, true)
-    const fileNameLength = view.getUint16(offset + 28, true)
-    const extraLength = view.getUint16(offset + 30, true)
-    const commentLength = view.getUint16(offset + 32, true)
-    const localHeaderOffset = view.getUint32(offset + 42, true)
-    const nameBytes = new Uint8Array(buffer, offset + 46, fileNameLength)
-    const name = decoder.decode(nameBytes)
-
-    entries.set(name, {name, compression, compressedSize, localHeaderOffset})
-    offset += 46 + fileNameLength + extraLength + commentLength
-  }
-
-  return entries
-}
-
 async function readZipText(path: string) {
-  const bytes = await readZipBytes(path)
-  return new TextDecoder('utf-8').decode(bytes)
+  return getZipEntry(path).async('string')
 }
 
 async function readZipBytes(path: string) {
-  if (!zipData) throw new Error('未加载 EPUB 文件')
+  return getZipEntry(path).async('uint8array')
+}
+
+function getZipEntry(path: string) {
+  if (!zipArchive) throw new Error('未加载 EPUB 文件')
   const normalizedPath = normalizePath(path)
-  const entry = zipEntries.get(normalizedPath)
+  const entry = zipArchive.file(normalizedPath)
   if (!entry) throw new Error(`EPUB 缺少文件：${normalizedPath}`)
-
-  const view = new DataView(zipData)
-  const headerOffset = entry.localHeaderOffset
-  if (view.getUint32(headerOffset, true) !== 0x04034b50) {
-    throw new Error(`ZIP 本地文件头无效：${normalizedPath}`)
-  }
-
-  const fileNameLength = view.getUint16(headerOffset + 26, true)
-  const extraLength = view.getUint16(headerOffset + 28, true)
-  const dataOffset = headerOffset + 30 + fileNameLength + extraLength
-  const compressed = zipData.slice(dataOffset, dataOffset + entry.compressedSize)
-
-  if (entry.compression === 0) {
-    return new Uint8Array(compressed)
-  }
-
-  if (entry.compression === 8 && 'DecompressionStream' in window) {
-    const stream = new Blob([compressed]).stream().pipeThrough(new (window as any).DecompressionStream('deflate-raw'))
-    return new Uint8Array(await new Response(stream).arrayBuffer())
-  }
-
-  throw new Error('当前浏览器不支持解压此 EPUB 的压缩格式')
+  return entry
 }
 
 function parseRootFilePath(containerXml: string) {
@@ -451,7 +386,7 @@ async function parseNavigationLabels(opfDoc: Document, manifest: Map<string, Man
 
 async function prepareResourceUrls() {
   const tasks = Array.from(manifestItems.values())
-      .filter(item => !isDocumentMediaType(item.mediaType) && zipEntries.has(item.fullPath))
+      .filter(item => !isDocumentMediaType(item.mediaType) && zipArchive?.file(item.fullPath))
       .map(async item => {
         const bytes = await readZipBytes(item.fullPath)
         const url = URL.createObjectURL(new Blob([bytes], {type: item.mediaType || 'application/octet-stream'}))

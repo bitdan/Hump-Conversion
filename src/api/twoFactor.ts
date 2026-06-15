@@ -17,7 +17,7 @@ export interface TwoFactorAccountPayload {
     otpauthUri?: string
 }
 
-export interface TwoFactorAccount extends Required<Omit<TwoFactorAccountPayload, 'otpauthUri'>> {
+export interface TwoFactorAccount extends Required<Omit<TwoFactorAccountPayload, 'otpauthUri' | 'secret'>> {
     id: string
     createdAt: string
     updatedAt: string

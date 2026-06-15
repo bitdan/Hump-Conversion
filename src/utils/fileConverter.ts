@@ -53,8 +53,8 @@ function parseYAML(content: string): any {
     }
     
     // 多个文档时，将它们合并成一个对象
-    return documents.reduce((merged, doc) => {
-      return { ...merged, ...doc }
+    return documents.reduce<Record<string, unknown>>((merged, doc) => {
+      return doc && typeof doc === 'object' ? {...merged, ...doc} : merged
     }, {})
     
   } catch (error) {

@@ -2,6 +2,7 @@ import {defineConfig, loadEnv} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import {fileURLToPath, URL} from 'node:url'
+import {VitePWA} from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig(({command, mode}) => {
@@ -17,7 +18,32 @@ export default defineConfig(({command, mode}) => {
                     }
                 }
             }),
-            vuetify({autoImport: true})
+            vuetify({autoImport: true}),
+            VitePWA({
+                registerType: 'autoUpdate',
+                includeAssets: ['logo.png', 'robots.txt'],
+                manifest: {
+                    name: 'Tool Hub',
+                    short_name: 'Tool Hub',
+                    description: '在线开发者工具箱与小游戏集合',
+                    theme_color: '#2563eb',
+                    background_color: '#f8fafc',
+                    display: 'standalone',
+                    start_url: '/',
+                    icons: [
+                        {
+                            src: '/logo.png',
+                            sizes: '200x200',
+                            type: 'image/png',
+                            purpose: 'any maskable'
+                        }
+                    ]
+                },
+                workbox: {
+                    navigateFallback: '/index.html',
+                    globPatterns: ['**/*.{js,css,html,png,svg,woff2}']
+                }
+            })
         ],
         resolve: {
             alias: {

@@ -201,7 +201,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, ref} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
 import {listPosts, type PostItem} from '@/api/post'
 import {POST_CATEGORIES, POST_CATEGORY_COLORS} from '@/views/community/postMeta'
@@ -211,12 +212,9 @@ type TabValue = 'latest' | 'top' | 'hot'
 
 const router = useRouter()
 const keyword = ref('')
+const appliedKeyword = ref('')
 const page = ref(1)
 const pageSize = 10
-const total = ref(0)
-const posts = ref<PostItem[]>([])
-const loading = ref(false)
-const error = ref('')
 const activeTab = ref<TabValue>('latest')
 const selectedCategory = ref('')
 const selectedTag = ref('')
@@ -230,6 +228,27 @@ const tabs: Array<{ label: string; value: TabValue }> = [
 
 const categories = POST_CATEGORIES
 
+const postQuery = useQuery(() => ({
+  queryKey: ['community-posts', appliedKeyword.value, selectedCategory.value, selectedTag.value, page.value],
+  queryFn: async () => {
+    const response = await listPosts({
+      keyword: appliedKeyword.value,
+      category: selectedCategory.value,
+      tag: selectedTag.value,
+      page: page.value,
+      page_size: pageSize
+    })
+    return response.data
+  }
+}))
+
+const posts = computed(() => postQuery.data.value?.items || [])
+const total = computed(() => postQuery.data.value?.total || 0)
+const loading = computed(() => postQuery.isPending.value || postQuery.isFetching.value)
+const error = computed(() => {
+  const err = postQuery.error.value as any
+  return err?.response?.data?.detail || err?.message || ''
+})
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
 const tagOptions = computed(() => {
@@ -253,29 +272,10 @@ const sortedPosts = computed(() => {
   }
 })
 
-async function loadPosts() {
-  loading.value = true
-  error.value = ''
-  try {
-    const response = await listPosts({
-      keyword: keyword.value.trim(),
-      category: selectedCategory.value,
-      tag: selectedTag.value,
-      page: page.value,
-      page_size: pageSize
-    })
-    posts.value = response.data.items
-    total.value = response.data.total
-  } catch (err: any) {
-    error.value = err?.response?.data?.detail || err?.message || '帖子加载失败'
-  } finally {
-    loading.value = false
-  }
-}
-
 function reload() {
+  appliedKeyword.value = keyword.value.trim()
   page.value = 1
-  loadPosts()
+  void postQuery.refetch()
 }
 
 function selectTab(tab: TabValue) {
@@ -285,14 +285,12 @@ function selectTab(tab: TabValue) {
 function applyCategory(value: string) {
   selectedCategory.value = value
   page.value = 1
-  loadPosts()
 }
 
 function applyTag(value: string) {
   selectedTag.value = String(value || '').trim()
   pendingTag.value = selectedTag.value
   page.value = 1
-  loadPosts()
 }
 
 function openPost(postId: string) {
@@ -349,8 +347,6 @@ function categoryColor(category: string) {
   return POST_CATEGORY_COLORS[category] || '#2b84cb'
 }
 
-watch(page, loadPosts)
-onMounted(loadPosts)
 </script>
 
 <style scoped>

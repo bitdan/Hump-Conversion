@@ -8,6 +8,7 @@ import router from './router/index'
 import './assets/tailwind.css'
 import '@mdi/font/css/materialdesignicons.css'
 import VueKonva from 'vue-konva'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 const lightTheme: ThemeDefinition = {
   dark: false,
@@ -43,8 +44,18 @@ const vuetify = createVuetify({
 
 const app: VueApp = createApp(App)
 const pinia = createPinia()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30_000,
+    },
+  },
+})
 
 app.use(pinia)
+app.use(VueQueryPlugin, {queryClient})
 app.use(VueKonva)
 app.use(router)
 app.use(vuetify)

@@ -139,6 +139,8 @@ let gameLoop: number | null = null
 // 游戏对象
 type Direction = 'up' | 'down' | 'left' | 'right'
 type Position = { x: number; y: number }
+const DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right']
+const GHOST_DIRECTIONS: Direction[] = ['right', 'left', 'up', 'down']
 
 const pacman = ref<Position & { direction: Direction }>({
   x: CELL_SIZE * 10,
@@ -456,7 +458,7 @@ const moveGhosts = () => {
     } else {
       // 随机移动
       if (Math.random() < 0.02) {
-        ghost.direction = ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)]
+        ghost.direction = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)]
       }
       
       switch (ghost.direction) {
@@ -533,7 +535,7 @@ const startGame = () => {
     x: CELL_SIZE * (9 + i),
     y: CELL_SIZE * 9,
     color: ghostColors[i],
-    direction: ['right', 'left', 'up', 'down'][i % 4],
+    direction: GHOST_DIRECTIONS[i % GHOST_DIRECTIONS.length],
     isVulnerable: false
   }))
 

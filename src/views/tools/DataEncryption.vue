@@ -83,7 +83,9 @@ import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import { HashFunctions, SymmetricEncryption, AsymmetricEncryption, PasswordHashing, Base64, SMCrypto } from '../../utils/crypto';
 
 // 基础状态
-const selectedType = ref('hash');
+type EncryptionType = 'hash' | 'symmetric' | 'asymmetric' | 'password' | 'base64'
+
+const selectedType = ref<EncryptionType>('hash');
 const selectedAlgorithm = ref('MD5');
 const inputText = ref('');
 const key = ref('');
@@ -103,7 +105,7 @@ const encryptionTypes = [
   { label: 'Base64', value: 'base64' },
 ];
 
-const algorithms = {
+const algorithms: Record<EncryptionType, string[]> = {
   hash: ['MD5', 'SHA-256', 'SHA-512', 'SHA3', 'SM3', 'RIPEMD160'],
   symmetric: ['AES', 'DES', 'Triple DES'],
   asymmetric: ['RSA'],
@@ -181,7 +183,7 @@ async function processText() {
         break;
     }
   } catch (error) {
-    result.value = `错误: ${error.message}`;
+    result.value = `错误: ${error instanceof Error ? error.message : '未知错误'}`;
   } finally {
     processing.value = false;
   }
@@ -207,7 +209,7 @@ async function decrypt() {
         break;
     }
   } catch (error) {
-    result.value = `解密错误: ${error.message}`;
+    result.value = `解密错误: ${error instanceof Error ? error.message : '未知错误'}`;
   } finally {
     processing.value = false;
   }
