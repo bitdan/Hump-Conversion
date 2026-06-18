@@ -128,9 +128,18 @@ export interface MarketRadarSectorStock {
     amount?: number | null
     sector_heat_score: number
     stock_score: number
+    trend_score: number
+    volume_score: number
+    relative_strength_score: number
+    ma_state: string
+    return_5d?: number | null
+    return_10d?: number | null
+    return_20d?: number | null
+    volume_ratio_5d?: number | null
     reasons: string[]
     risks: string[]
     tags: string[]
+    trend_tags: string[]
 }
 
 export interface MarketRadarData {

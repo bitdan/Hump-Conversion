@@ -220,8 +220,19 @@
                 <div v-if="selectedRadarSector" class="sector-stock-radar">
                   <div class="table-toolbar sector-stock-toolbar">
                     <span class="watch-count">
-                      {{ selectedRadarSector }} 全部股票 {{ sectorStocks.length }} 只
+                      {{ selectedRadarSector }} 全部股票 {{ filteredSectorStocks.length }} / {{ sectorStocks.length }} 只
                     </span>
+                    <v-chip-group v-model="sectorStockFilter" selected-class="pool-selected" mandatory>
+                      <v-chip
+                          v-for="filter in sectorStockFilters"
+                          :key="filter.value"
+                          :value="filter.value"
+                          variant="outlined"
+                          size="small"
+                      >
+                        {{ filter.label }}
+                      </v-chip>
+                    </v-chip-group>
                     <v-btn
                         size="small"
                         variant="text"
@@ -243,7 +254,7 @@
                   </v-alert>
                   <v-data-table
                       :headers="radarSectorStockHeaders"
-                      :items="sectorStocks"
+                      :items="filteredSectorStocks"
                       :loading="sectorStockLoading"
                       no-data-text="当前板块暂无成分股数据"
                       density="compact"
@@ -260,8 +271,28 @@
                     <template #item.stock_score="{ item }">
                       <score-bar :value="item.stock_score"/>
                     </template>
+                    <template #item.trend_score="{ item }">
+                      <score-bar :value="item.trend_score"/>
+                    </template>
+                    <template #item.relative_strength_score="{ item }">
+                      {{ item.relative_strength_score.toFixed(1) }}
+                    </template>
+                    <template #item.ma_state="{ item }">
+                      <v-chip size="x-small" :color="item.ma_state === '多头' ? 'green' : 'primary'" variant="tonal">
+                        {{ item.ma_state || '-' }}
+                      </v-chip>
+                    </template>
                     <template #item.change_percent="{ item }">
                       <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
+                    </template>
+                    <template #item.return_5d="{ item }">
+                      <span :class="changeClass(item.return_5d)">{{ formatPercent(item.return_5d) }}</span>
+                    </template>
+                    <template #item.return_20d="{ item }">
+                      <span :class="changeClass(item.return_20d)">{{ formatPercent(item.return_20d) }}</span>
+                    </template>
+                    <template #item.volume_ratio_5d="{ item }">
+                      {{ formatRatio(item.volume_ratio_5d) }}
                     </template>
                     <template #item.turnover_rate="{ item }">
                       {{ item.turnover_rate == null ? '-' : `${item.turnover_rate.toFixed(2)}%` }}
@@ -271,6 +302,15 @@
                     </template>
                     <template #item.reasons="{ item }">
                       <div class="chip-row">
+                        <v-chip
+                            v-for="tag in item.trend_tags"
+                            :key="tag"
+                            size="x-small"
+                            color="green"
+                            variant="tonal"
+                        >
+                          {{ tag }}
+                        </v-chip>
                         <v-chip
                             v-for="reason in item.reasons"
                             :key="reason"
@@ -741,6 +781,7 @@ const selectedName = ref('')
 const selectedPeriod = ref('day')
 const selectedSector = ref('')
 const selectedRadarSector = ref('')
+const sectorStockFilter = ref('all')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
 const watchedItems = ref<WatchItem[]>([])
@@ -843,6 +884,32 @@ const selectedRadarCandidates = computed(() => {
 })
 
 const radarSectors = computed(() => radar.value?.sectors || [])
+
+const filteredSectorStocks = computed(() => {
+  return sectorStocks.value.filter((item) => {
+    if (sectorStockFilter.value === 'strong') {
+      return item.trend_score >= 70 || item.trend_tags.includes('均线多头')
+    }
+    if (sectorStockFilter.value === 'volume') {
+      return item.volume_ratio_5d != null && item.volume_ratio_5d >= 1.2
+    }
+    if (sectorStockFilter.value === 'relative') {
+      return item.relative_strength_score >= 70 || item.trend_tags.includes('跑赢板块')
+    }
+    if (sectorStockFilter.value === 'risk') {
+      return item.risks.length > 0
+    }
+    return true
+  })
+})
+
+const sectorStockFilters = [
+  {label: '全部', value: 'all'},
+  {label: '强趋势', value: 'strong'},
+  {label: '放量', value: 'volume'},
+  {label: '跑赢板块', value: 'relative'},
+  {label: '风险', value: 'risk'}
+]
 
 const candidatePoolTypes = computed(() => {
   const counts = new Map<string, number>()
@@ -1002,7 +1069,13 @@ const radarCandidateHeaders = [
 const radarSectorStockHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '个股分', key: 'stock_score', minWidth: 140},
+  {title: '趋势分', key: 'trend_score', minWidth: 120},
+  {title: '相对强度', key: 'relative_strength_score', width: 104},
+  {title: 'MA状态', key: 'ma_state', width: 96},
   {title: '涨跌幅', key: 'change_percent', width: 90},
+  {title: '5日', key: 'return_5d', width: 80},
+  {title: '20日', key: 'return_20d', width: 80},
+  {title: '量比', key: 'volume_ratio_5d', width: 80},
   {title: '换手%', key: 'turnover_rate', width: 86},
   {title: '成交额', key: 'amount', width: 112},
   {title: '理由', key: 'reasons', minWidth: 220},
@@ -1054,6 +1127,11 @@ function formatPercent(value?: number | null) {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
 }
 
+function formatRatio(value?: number | null) {
+  if (value == null) return '-'
+  return `${value.toFixed(2)}x`
+}
+
 function changeClass(value?: number | null) {
   if (value == null || value === 0) return 'flat-text'
   return value > 0 ? 'up-text' : 'down-text'
@@ -1076,6 +1154,7 @@ function clearRadarSector() {
   selectedRadarSector.value = ''
   sectorStocks.value = []
   sectorStockError.value = ''
+  sectorStockFilter.value = 'all'
 }
 
 function isWatched(code: string) {
