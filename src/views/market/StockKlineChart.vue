@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {CandlestickSeries, ColorType, createChart, HistogramSeries, LineSeries} from 'lightweight-charts'
-import type {StockKlineBar} from '@/api/marketReview'
+import type {StockKlineBar} from '@/api/marketReview/kline'
 
 const props = defineProps<{
   bars: StockKlineBar[]

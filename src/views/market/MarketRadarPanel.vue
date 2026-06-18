@@ -295,7 +295,7 @@ import type {
   MarketRadarData,
   MarketRadarSector,
   MarketRadarSectorStock
-} from '@/api/marketReview'
+} from '@/api/marketReview/radar'
 
 const props = defineProps<{
   radar: MarketRadarData | null

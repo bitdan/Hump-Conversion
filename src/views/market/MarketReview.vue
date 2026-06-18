@@ -477,18 +477,22 @@ import MarketRadarPanel from '@/views/market/MarketRadarPanel.vue'
 import {
   type CandidateStock,
   type DivergenceConsensusSignal,
+  getMarketReview,
+  type LimitUpStock,
+  type MarketReviewData
+} from '@/api/marketReview/review'
+import {
   getMarketRadar,
   getMarketRadarSectorStocks,
-  getMarketReview,
-  getStockKline,
-  type LimitUpStock,
   type MarketRadarCandidate,
   type MarketRadarData,
   type MarketRadarSector,
-  type MarketRadarSectorStock,
-  type MarketReviewData,
+  type MarketRadarSectorStock
+} from '@/api/marketReview/radar'
+import {
+  getStockKline,
   type StockKlineSnapshot
-} from '@/api/marketReview'
+} from '@/api/marketReview/kline'
 
 const today = new Date().toISOString().slice(0, 10)
 const WATCH_STORAGE_KEY = 'market-review-watchlist'
