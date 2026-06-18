@@ -60,293 +60,23 @@
 
     <v-window v-model="tab">
       <v-window-item value="radar">
-        <v-alert
-            v-if="radarError"
-            type="warning"
-            variant="tonal"
-            density="comfortable"
-            class="mb-4"
-            title="市场雷达暂时不可用"
-        >
-          {{ radarError }}
-        </v-alert>
-
-        <v-card class="radar-card" variant="flat">
-          <div class="section-header radar-header">
-            <div>
-              <h2>市场雷达</h2>
-              <p>先看市场环境和板块热度，再从强板块里筛候选股。</p>
-            </div>
-            <v-chip color="primary" variant="tonal" size="small">
-              {{ radar?.date || queryDate }}
-            </v-chip>
-          </div>
-
-          <div class="brief-card radar-brief">
-            <div v-for="item in radarBrief" :key="item.label" class="brief-item">
-              <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
-            </div>
-          </div>
-
-          <div v-if="radarLoading" class="empty-state radar-loading">
-            <v-progress-circular indeterminate color="primary"/>
-            <span>正在生成市场雷达...</span>
-          </div>
-
-          <template v-else>
-            <div class="radar-layout">
-              <section class="radar-sector-panel">
-                <div class="section-header compact">
-                  <h2>板块热度</h2>
-                </div>
-                <div class="radar-sector-list">
-                  <button
-                      v-for="sector in radarSectors"
-                      :key="sector.sector_name"
-                      class="radar-sector-item"
-                      :class="{active: selectedRadarSector === sector.sector_name}"
-                      type="button"
-                      @click="toggleRadarSector(sector)"
-                  >
-                    <div class="sector-rank-row">
-                      <strong>{{ sector.sector_name }}</strong>
-                      <span>{{ sector.heat_score.toFixed(1) }}</span>
-                    </div>
-                    <v-progress-linear :model-value="Math.min(sector.heat_score, 100)" color="primary" rounded/>
-                    <div class="sector-meta-row">
-                      <span>{{ formatPercent(sector.change_percent) }}</span>
-                      <span>{{ sector.rise_count }}/{{ sector.stock_count }} 上涨</span>
-                      <span>{{ formatMoney(sector.total_amount) }}</span>
-                    </div>
-                    <div class="chip-row">
-                      <v-chip
-                          v-for="stock in sector.core_stocks"
-                          :key="stock"
-                          size="x-small"
-                          variant="outlined"
-                      >
-                        {{ stock }}
-                      </v-chip>
-                      <v-chip
-                          v-for="reason in sector.reasons"
-                          :key="reason"
-                          size="x-small"
-                          color="green"
-                          variant="tonal"
-                      >
-                        {{ reason }}
-                      </v-chip>
-                    </div>
-                  </button>
-                </div>
-              </section>
-
-              <section class="radar-candidate-panel">
-                <div class="table-toolbar">
-                  <span class="watch-count">
-                    候选 {{ selectedRadarCandidates.length }} 只
-                  </span>
-                  <v-chip
-                      v-if="selectedRadarSector"
-                      color="primary"
-                      variant="tonal"
-                      size="small"
-                      closable
-                      @click:close="clearRadarSector"
-                  >
-                    板块：{{ selectedRadarSector }}
-                  </v-chip>
-                </div>
-                <v-data-table
-                    :headers="radarCandidateHeaders"
-                    :items="selectedRadarCandidates"
-                    :loading="radarLoading"
-                    no-data-text="当前雷达暂无候选股"
-                    density="compact"
-                    item-value="code"
-                    fixed-header
-                    height="560"
-                >
-                  <template #item.name="{ item }">
-                    <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
-                      <strong>{{ item.name }}</strong>
-                      <span>{{ item.code }}</span>
-                    </button>
-                  </template>
-                  <template #item.candidate_score="{ item }">
-                    <score-bar :value="item.candidate_score"/>
-                  </template>
-                  <template #item.sector_heat_score="{ item }">
-                    {{ item.sector_heat_score.toFixed(1) }}
-                  </template>
-                  <template #item.change_percent="{ item }">
-                    <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
-                  </template>
-                  <template #item.turnover_rate="{ item }">
-                    {{ item.turnover_rate == null ? '-' : `${item.turnover_rate.toFixed(2)}%` }}
-                  </template>
-                  <template #item.amount="{ item }">
-                    {{ formatMoney(item.amount) }}
-                  </template>
-                  <template #item.reasons="{ item }">
-                    <div class="chip-row">
-                      <v-chip v-for="reason in item.reasons" :key="reason" size="x-small" color="green" variant="tonal">
-                        {{ reason }}
-                      </v-chip>
-                    </div>
-                  </template>
-                  <template #item.risks="{ item }">
-                    <div class="chip-row">
-                      <v-chip v-for="tag in item.tags" :key="tag" size="x-small" color="primary" variant="tonal">
-                        {{ tag }}
-                      </v-chip>
-                      <v-chip v-for="risk in item.risks" :key="risk" size="x-small" color="orange" variant="tonal">
-                        {{ risk }}
-                      </v-chip>
-                    </div>
-                  </template>
-                  <template #item.action="{ item }">
-                    <v-btn
-                        size="small"
-                        variant="text"
-                        :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
-                        :color="isWatched(item.code) ? 'amber' : undefined"
-                        @click="toggleWatchFromRadar(item)"
-                    />
-                  </template>
-                </v-data-table>
-
-                <div v-if="selectedRadarSector" class="sector-stock-radar">
-                  <div class="table-toolbar sector-stock-toolbar">
-                    <span class="watch-count">
-                      {{ selectedRadarSector }} 全部股票 {{ filteredSectorStocks.length }} / {{ sectorStocks.length }} 只
-                    </span>
-                    <v-chip-group v-model="sectorStockFilter" selected-class="pool-selected" mandatory>
-                      <v-chip
-                          v-for="filter in sectorStockFilters"
-                          :key="filter.value"
-                          :value="filter.value"
-                          variant="outlined"
-                          size="small"
-                      >
-                        {{ filter.label }}
-                      </v-chip>
-                    </v-chip-group>
-                    <v-btn
-                        size="small"
-                        variant="text"
-                        prepend-icon="mdi-refresh"
-                        :loading="sectorStockLoading"
-                        @click="loadRadarSectorStocks(selectedRadarSector, true)"
-                    >
-                      刷新成分
-                    </v-btn>
-                  </div>
-                  <v-alert
-                      v-if="sectorStockError"
-                      type="warning"
-                      variant="tonal"
-                      density="compact"
-                      class="mx-3 mt-2"
-                  >
-                    {{ sectorStockError }}
-                  </v-alert>
-                  <v-data-table
-                      :headers="radarSectorStockHeaders"
-                      :items="filteredSectorStocks"
-                      :loading="sectorStockLoading"
-                      no-data-text="当前板块暂无成分股数据"
-                      density="compact"
-                      item-value="code"
-                      fixed-header
-                      height="420"
-                  >
-                    <template #item.name="{ item }">
-                      <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
-                        <strong>{{ item.name }}</strong>
-                        <span>{{ item.code }}</span>
-                      </button>
-                    </template>
-                    <template #item.stock_score="{ item }">
-                      <score-bar :value="item.stock_score"/>
-                    </template>
-                    <template #item.trend_score="{ item }">
-                      <score-bar :value="item.trend_score"/>
-                    </template>
-                    <template #item.relative_strength_score="{ item }">
-                      {{ item.relative_strength_score.toFixed(1) }}
-                    </template>
-                    <template #item.ma_state="{ item }">
-                      <v-chip size="x-small" :color="item.ma_state === '多头' ? 'green' : 'primary'" variant="tonal">
-                        {{ item.ma_state || '-' }}
-                      </v-chip>
-                    </template>
-                    <template #item.change_percent="{ item }">
-                      <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
-                    </template>
-                    <template #item.return_5d="{ item }">
-                      <span :class="changeClass(item.return_5d)">{{ formatPercent(item.return_5d) }}</span>
-                    </template>
-                    <template #item.return_20d="{ item }">
-                      <span :class="changeClass(item.return_20d)">{{ formatPercent(item.return_20d) }}</span>
-                    </template>
-                    <template #item.volume_ratio_5d="{ item }">
-                      {{ formatRatio(item.volume_ratio_5d) }}
-                    </template>
-                    <template #item.turnover_rate="{ item }">
-                      {{ item.turnover_rate == null ? '-' : `${item.turnover_rate.toFixed(2)}%` }}
-                    </template>
-                    <template #item.amount="{ item }">
-                      {{ formatMoney(item.amount) }}
-                    </template>
-                    <template #item.reasons="{ item }">
-                      <div class="chip-row">
-                        <v-chip
-                            v-for="tag in item.trend_tags"
-                            :key="tag"
-                            size="x-small"
-                            color="green"
-                            variant="tonal"
-                        >
-                          {{ tag }}
-                        </v-chip>
-                        <v-chip
-                            v-for="reason in item.reasons"
-                            :key="reason"
-                            size="x-small"
-                            color="green"
-                            variant="tonal"
-                        >
-                          {{ reason }}
-                        </v-chip>
-                      </div>
-                    </template>
-                    <template #item.risks="{ item }">
-                      <div class="chip-row">
-                        <v-chip v-for="tag in item.tags" :key="tag" size="x-small" color="primary" variant="tonal">
-                          {{ tag }}
-                        </v-chip>
-                        <v-chip v-for="risk in item.risks" :key="risk" size="x-small" color="orange" variant="tonal">
-                          {{ risk }}
-                        </v-chip>
-                      </div>
-                    </template>
-                    <template #item.action="{ item }">
-                      <v-btn
-                          size="small"
-                          variant="text"
-                          :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
-                          :color="isWatched(item.code) ? 'amber' : undefined"
-                          @click="toggleWatchFromSectorStock(item)"
-                      />
-                    </template>
-                  </v-data-table>
-                </div>
-              </section>
-            </div>
-          </template>
-        </v-card>
+        <MarketRadarPanel
+            :radar="radar"
+            :query-date="queryDate"
+            :radar-loading="radarLoading"
+            :radar-error="radarError"
+            :selected-sector="selectedRadarSector"
+            :sector-stocks="sectorStocks"
+            :sector-stock-loading="sectorStockLoading"
+            :sector-stock-error="sectorStockError"
+            :watched-codes="watchedCodes"
+            @select-sector="toggleRadarSector"
+            @clear-sector="clearRadarSector"
+            @refresh-sector-stocks="loadRadarSectorStocks"
+            @open-kline="openKline"
+            @watch-radar="toggleWatchFromRadar"
+            @watch-sector-stock="toggleWatchFromSectorStock"
+        />
       </v-window-item>
 
       <v-window-item value="pool">
@@ -743,6 +473,7 @@
 <script setup lang="ts">
 import {computed, defineComponent, h, onMounted, ref, watch} from 'vue'
 import StockKlineCard from '@/views/market/StockKlineCard.vue'
+import MarketRadarPanel from '@/views/market/MarketRadarPanel.vue'
 import {
   type CandidateStock,
   type DivergenceConsensusSignal,
@@ -781,7 +512,6 @@ const selectedName = ref('')
 const selectedPeriod = ref('day')
 const selectedSector = ref('')
 const selectedRadarSector = ref('')
-const sectorStockFilter = ref('all')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
 const watchedItems = ref<WatchItem[]>([])
@@ -863,53 +593,6 @@ const reviewBrief = computed(() => {
     {label: '风险标的', value: riskCount}
   ]
 })
-
-const radarBrief = computed(() => {
-  const data = radar.value
-  const environment = data?.market_environment
-  const leadingSectors = data?.sectors.slice(0, 3).map(item => item.sector_name).join(' / ') || '-'
-  return [
-    {label: '市场温度', value: environment ? environment.environment_score.toFixed(1) : '-'},
-    {label: '上涨家数', value: environment ? environment.rise_count : '-'},
-    {label: '下跌家数', value: environment ? environment.fall_count : '-'},
-    {label: '成交额', value: environment ? formatMoney(environment.total_amount) : '-'},
-    {label: '雷达主线', value: leadingSectors}
-  ]
-})
-
-const selectedRadarCandidates = computed(() => {
-  const candidates = radar.value?.candidates || []
-  if (!selectedRadarSector.value) return candidates
-  return candidates.filter(item => item.industry === selectedRadarSector.value)
-})
-
-const radarSectors = computed(() => radar.value?.sectors || [])
-
-const filteredSectorStocks = computed(() => {
-  return sectorStocks.value.filter((item) => {
-    if (sectorStockFilter.value === 'strong') {
-      return item.trend_score >= 70 || item.trend_tags.includes('均线多头')
-    }
-    if (sectorStockFilter.value === 'volume') {
-      return item.volume_ratio_5d != null && item.volume_ratio_5d >= 1.2
-    }
-    if (sectorStockFilter.value === 'relative') {
-      return item.relative_strength_score >= 70 || item.trend_tags.includes('跑赢板块')
-    }
-    if (sectorStockFilter.value === 'risk') {
-      return item.risks.length > 0
-    }
-    return true
-  })
-})
-
-const sectorStockFilters = [
-  {label: '全部', value: 'all'},
-  {label: '强趋势', value: 'strong'},
-  {label: '放量', value: 'volume'},
-  {label: '跑赢板块', value: 'relative'},
-  {label: '风险', value: 'risk'}
-]
 
 const candidatePoolTypes = computed(() => {
   const counts = new Map<string, number>()
@@ -1001,6 +684,8 @@ const watchRows = computed(() => {
   })
 })
 
+const watchedCodes = computed(() => watchedItems.value.map(item => item.code))
+
 const poolHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
@@ -1053,36 +738,6 @@ const signalHeaders = [
   {title: '观察', key: 'action', width: 76, sortable: false}
 ]
 
-const radarCandidateHeaders = [
-  {title: '股票', key: 'name', minWidth: 130},
-  {title: '板块', key: 'industry', minWidth: 110},
-  {title: '候选分', key: 'candidate_score', minWidth: 140},
-  {title: '板块热度', key: 'sector_heat_score', width: 104},
-  {title: '涨跌幅', key: 'change_percent', width: 90},
-  {title: '换手%', key: 'turnover_rate', width: 86},
-  {title: '成交额', key: 'amount', width: 112},
-  {title: '理由', key: 'reasons', minWidth: 220},
-  {title: '风险/标签', key: 'risks', minWidth: 200},
-  {title: '观察', key: 'action', width: 76, sortable: false}
-]
-
-const radarSectorStockHeaders = [
-  {title: '股票', key: 'name', minWidth: 130},
-  {title: '个股分', key: 'stock_score', minWidth: 140},
-  {title: '趋势分', key: 'trend_score', minWidth: 120},
-  {title: '相对强度', key: 'relative_strength_score', width: 104},
-  {title: 'MA状态', key: 'ma_state', width: 96},
-  {title: '涨跌幅', key: 'change_percent', width: 90},
-  {title: '5日', key: 'return_5d', width: 80},
-  {title: '20日', key: 'return_20d', width: 80},
-  {title: '量比', key: 'volume_ratio_5d', width: 80},
-  {title: '换手%', key: 'turnover_rate', width: 86},
-  {title: '成交额', key: 'amount', width: 112},
-  {title: '理由', key: 'reasons', minWidth: 220},
-  {title: '风险/标签', key: 'risks', minWidth: 200},
-  {title: '观察', key: 'action', width: 76, sortable: false}
-]
-
 const watchHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
@@ -1127,11 +782,6 @@ function formatPercent(value?: number | null) {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
 }
 
-function formatRatio(value?: number | null) {
-  if (value == null) return '-'
-  return `${value.toFixed(2)}x`
-}
-
 function changeClass(value?: number | null) {
   if (value == null || value === 0) return 'flat-text'
   return value > 0 ? 'up-text' : 'down-text'
@@ -1154,7 +804,6 @@ function clearRadarSector() {
   selectedRadarSector.value = ''
   sectorStocks.value = []
   sectorStockError.value = ''
-  sectorStockFilter.value = 'all'
 }
 
 function isWatched(code: string) {
@@ -1493,104 +1142,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.radar-card {
-  padding: 18px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
-}
-
-.radar-header {
-  margin-bottom: 14px;
-}
-
-.radar-header p,
-.section-header.compact h2 {
-  margin: 0;
-}
-
-.radar-brief {
-  margin-bottom: 16px;
-}
-
-.radar-loading {
-  min-height: 240px;
-}
-
-.radar-layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.radar-sector-panel,
-.radar-candidate-panel {
-  min-width: 0;
-}
-
-.radar-sector-list {
-  display: grid;
-  gap: 10px;
-  max-height: 640px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.radar-sector-item {
-  width: 100%;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-element);
-  background: var(--color-surface);
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.radar-sector-item:hover,
-.radar-sector-item.active {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-card);
-}
-
-.sector-rank-row,
-.sector-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.sector-rank-row {
-  margin-bottom: 8px;
-}
-
-.sector-rank-row span {
-  color: var(--color-primary);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.sector-meta-row {
-  margin: 8px 0;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.sector-stock-radar {
-  margin-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
-
-.sector-stock-toolbar {
-  justify-content: space-between;
-}
-
 .candidate-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1867,12 +1418,5 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .radar-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .radar-sector-list {
-    max-height: none;
-  }
 }
 </style>
