@@ -50,6 +50,7 @@
     </v-card>
 
     <v-tabs v-model="tab" color="primary" density="comfortable" class="tabs">
+      <v-tab value="radar" prepend-icon="mdi-radar">市场雷达</v-tab>
       <v-tab value="pool" prepend-icon="mdi-format-list-bulleted">涨停池</v-tab>
       <v-tab value="sector" prepend-icon="mdi-chart-box-outline">板块强度</v-tab>
       <v-tab value="candidate" prepend-icon="mdi-filter-star-outline">连板候选</v-tab>
@@ -58,6 +59,169 @@
     </v-tabs>
 
     <v-window v-model="tab">
+      <v-window-item value="radar">
+        <v-alert
+            v-if="radarError"
+            type="warning"
+            variant="tonal"
+            density="comfortable"
+            class="mb-4"
+            title="市场雷达暂时不可用"
+        >
+          {{ radarError }}
+        </v-alert>
+
+        <v-card class="radar-card" variant="flat">
+          <div class="section-header radar-header">
+            <div>
+              <h2>市场雷达</h2>
+              <p>先看市场环境和板块热度，再从强板块里筛候选股。</p>
+            </div>
+            <v-chip color="primary" variant="tonal" size="small">
+              {{ radar?.date || queryDate }}
+            </v-chip>
+          </div>
+
+          <div class="brief-card radar-brief">
+            <div v-for="item in radarBrief" :key="item.label" class="brief-item">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+
+          <div v-if="radarLoading" class="empty-state radar-loading">
+            <v-progress-circular indeterminate color="primary"/>
+            <span>正在生成市场雷达...</span>
+          </div>
+
+          <template v-else>
+            <div class="radar-layout">
+              <section class="radar-sector-panel">
+                <div class="section-header compact">
+                  <h2>板块热度</h2>
+                </div>
+                <div class="radar-sector-list">
+                  <button
+                      v-for="sector in radarSectors"
+                      :key="sector.sector_name"
+                      class="radar-sector-item"
+                      :class="{active: selectedRadarSector === sector.sector_name}"
+                      type="button"
+                      @click="toggleRadarSector(sector)"
+                  >
+                    <div class="sector-rank-row">
+                      <strong>{{ sector.sector_name }}</strong>
+                      <span>{{ sector.heat_score.toFixed(1) }}</span>
+                    </div>
+                    <v-progress-linear :model-value="Math.min(sector.heat_score, 100)" color="primary" rounded/>
+                    <div class="sector-meta-row">
+                      <span>{{ formatPercent(sector.change_percent) }}</span>
+                      <span>{{ sector.rise_count }}/{{ sector.stock_count }} 上涨</span>
+                      <span>{{ formatMoney(sector.total_amount) }}</span>
+                    </div>
+                    <div class="chip-row">
+                      <v-chip
+                          v-for="stock in sector.core_stocks"
+                          :key="stock"
+                          size="x-small"
+                          variant="outlined"
+                      >
+                        {{ stock }}
+                      </v-chip>
+                      <v-chip
+                          v-for="reason in sector.reasons"
+                          :key="reason"
+                          size="x-small"
+                          color="green"
+                          variant="tonal"
+                      >
+                        {{ reason }}
+                      </v-chip>
+                    </div>
+                  </button>
+                </div>
+              </section>
+
+              <section class="radar-candidate-panel">
+                <div class="table-toolbar">
+                  <span class="watch-count">
+                    候选 {{ selectedRadarCandidates.length }} 只
+                  </span>
+                  <v-chip
+                      v-if="selectedRadarSector"
+                      color="primary"
+                      variant="tonal"
+                      size="small"
+                      closable
+                      @click:close="selectedRadarSector = ''"
+                  >
+                    板块：{{ selectedRadarSector }}
+                  </v-chip>
+                </div>
+                <v-data-table
+                    :headers="radarCandidateHeaders"
+                    :items="selectedRadarCandidates"
+                    :loading="radarLoading"
+                    no-data-text="当前雷达暂无候选股"
+                    density="compact"
+                    item-value="code"
+                    fixed-header
+                    height="560"
+                >
+                  <template #item.name="{ item }">
+                    <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
+                      <strong>{{ item.name }}</strong>
+                      <span>{{ item.code }}</span>
+                    </button>
+                  </template>
+                  <template #item.candidate_score="{ item }">
+                    <score-bar :value="item.candidate_score"/>
+                  </template>
+                  <template #item.sector_heat_score="{ item }">
+                    {{ item.sector_heat_score.toFixed(1) }}
+                  </template>
+                  <template #item.change_percent="{ item }">
+                    <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
+                  </template>
+                  <template #item.turnover_rate="{ item }">
+                    {{ item.turnover_rate == null ? '-' : `${item.turnover_rate.toFixed(2)}%` }}
+                  </template>
+                  <template #item.amount="{ item }">
+                    {{ formatMoney(item.amount) }}
+                  </template>
+                  <template #item.reasons="{ item }">
+                    <div class="chip-row">
+                      <v-chip v-for="reason in item.reasons" :key="reason" size="x-small" color="green" variant="tonal">
+                        {{ reason }}
+                      </v-chip>
+                    </div>
+                  </template>
+                  <template #item.risks="{ item }">
+                    <div class="chip-row">
+                      <v-chip v-for="tag in item.tags" :key="tag" size="x-small" color="primary" variant="tonal">
+                        {{ tag }}
+                      </v-chip>
+                      <v-chip v-for="risk in item.risks" :key="risk" size="x-small" color="orange" variant="tonal">
+                        {{ risk }}
+                      </v-chip>
+                    </div>
+                  </template>
+                  <template #item.action="{ item }">
+                    <v-btn
+                        size="small"
+                        variant="text"
+                        :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
+                        :color="isWatched(item.code) ? 'amber' : undefined"
+                        @click="toggleWatchFromRadar(item)"
+                    />
+                  </template>
+                </v-data-table>
+              </section>
+            </div>
+          </template>
+        </v-card>
+      </v-window-item>
+
       <v-window-item value="pool">
         <v-card class="table-card" variant="flat">
           <div class="table-toolbar">
@@ -455,9 +619,13 @@ import StockKlineCard from '@/views/market/StockKlineCard.vue'
 import {
   type CandidateStock,
   type DivergenceConsensusSignal,
+  getMarketRadar,
   getMarketReview,
   getStockKline,
   type LimitUpStock,
+  type MarketRadarCandidate,
+  type MarketRadarData,
+  type MarketRadarSector,
   type MarketReviewData,
   type StockKlineSnapshot
 } from '@/api/marketReview'
@@ -465,10 +633,13 @@ import {
 const today = new Date().toISOString().slice(0, 10)
 const WATCH_STORAGE_KEY = 'market-review-watchlist'
 const queryDate = ref(today)
-const tab = ref('pool')
+const tab = ref('radar')
 const loading = ref(false)
+const radarLoading = ref(false)
 const error = ref('')
+const radarError = ref('')
 const review = ref<MarketReviewData | null>(null)
+const radar = ref<MarketRadarData | null>(null)
 const klineDialog = ref(false)
 const klineLoading = ref(false)
 const klineError = ref('')
@@ -477,6 +648,7 @@ const selectedCode = ref('')
 const selectedName = ref('')
 const selectedPeriod = ref('day')
 const selectedSector = ref('')
+const selectedRadarSector = ref('')
 const poolBoardFilter = ref('all')
 const poolQualityFilter = ref('all')
 const watchedItems = ref<WatchItem[]>([])
@@ -558,6 +730,27 @@ const reviewBrief = computed(() => {
     {label: '风险标的', value: riskCount}
   ]
 })
+
+const radarBrief = computed(() => {
+  const data = radar.value
+  const environment = data?.market_environment
+  const leadingSectors = data?.sectors.slice(0, 3).map(item => item.sector_name).join(' / ') || '-'
+  return [
+    {label: '市场温度', value: environment ? environment.environment_score.toFixed(1) : '-'},
+    {label: '上涨家数', value: environment ? environment.rise_count : '-'},
+    {label: '下跌家数', value: environment ? environment.fall_count : '-'},
+    {label: '成交额', value: environment ? formatMoney(environment.total_amount) : '-'},
+    {label: '雷达主线', value: leadingSectors}
+  ]
+})
+
+const selectedRadarCandidates = computed(() => {
+  const candidates = radar.value?.candidates || []
+  if (!selectedRadarSector.value) return candidates
+  return candidates.filter(item => item.industry === selectedRadarSector.value)
+})
+
+const radarSectors = computed(() => radar.value?.sectors || [])
 
 const candidatePoolTypes = computed(() => {
   const counts = new Map<string, number>()
@@ -701,6 +894,19 @@ const signalHeaders = [
   {title: '观察', key: 'action', width: 76, sortable: false}
 ]
 
+const radarCandidateHeaders = [
+  {title: '股票', key: 'name', minWidth: 130},
+  {title: '板块', key: 'industry', minWidth: 110},
+  {title: '候选分', key: 'candidate_score', minWidth: 140},
+  {title: '板块热度', key: 'sector_heat_score', width: 104},
+  {title: '涨跌幅', key: 'change_percent', width: 90},
+  {title: '换手%', key: 'turnover_rate', width: 86},
+  {title: '成交额', key: 'amount', width: 112},
+  {title: '理由', key: 'reasons', minWidth: 220},
+  {title: '风险/标签', key: 'risks', minWidth: 200},
+  {title: '观察', key: 'action', width: 76, sortable: false}
+]
+
 const watchHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
@@ -754,6 +960,10 @@ function toggleSector(industry: string) {
   selectedSector.value = selectedSector.value === industry ? '' : industry
 }
 
+function toggleRadarSector(sector: MarketRadarSector) {
+  selectedRadarSector.value = selectedRadarSector.value === sector.sector_name ? '' : sector.sector_name
+}
+
 function isWatched(code: string) {
   return watchedItems.value.some(item => item.code === code)
 }
@@ -787,6 +997,16 @@ function toggleWatchFromSignal(signal: DivergenceConsensusSignal) {
     industry: signal.industry,
     watchDate: queryDate.value,
     source: signal.phase
+  })
+}
+
+function toggleWatchFromRadar(candidate: MarketRadarCandidate) {
+  toggleWatch({
+    code: candidate.code,
+    name: candidate.name,
+    industry: candidate.industry,
+    watchDate: queryDate.value,
+    source: candidate.signal_type === 'limit_up' ? '雷达涨停确认' : '雷达板块候选'
   })
 }
 
@@ -837,13 +1057,30 @@ function saveWatchlist() {
 async function loadReview(refresh = false) {
   loading.value = true
   error.value = ''
+  radarLoading.value = true
+  radarError.value = ''
   try {
-    const response = await getMarketReview({date: queryDate.value, refresh})
-    review.value = response.data
+    const [reviewResponse, radarResponse] = await Promise.allSettled([
+      getMarketReview({date: queryDate.value, refresh}),
+      getMarketRadar({date: queryDate.value, refresh, sector_limit: 20, candidate_limit: 80})
+    ])
+    if (reviewResponse.status === 'fulfilled') {
+      review.value = reviewResponse.value.data
+    } else {
+      const err: any = reviewResponse.reason
+      error.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '市场复盘数据加载失败')
+    }
+    if (radarResponse.status === 'fulfilled') {
+      radar.value = radarResponse.value.data
+    } else {
+      const err: any = radarResponse.reason
+      radarError.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '市场雷达数据加载失败')
+    }
   } catch (err: any) {
     error.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '市场复盘数据加载失败')
   } finally {
     loading.value = false
+    radarLoading.value = false
   }
 }
 
@@ -1024,6 +1261,95 @@ onMounted(() => {
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.radar-card {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.radar-header {
+  margin-bottom: 14px;
+}
+
+.radar-header p,
+.section-header.compact h2 {
+  margin: 0;
+}
+
+.radar-brief {
+  margin-bottom: 16px;
+}
+
+.radar-loading {
+  min-height: 240px;
+}
+
+.radar-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.radar-sector-panel,
+.radar-candidate-panel {
+  min-width: 0;
+}
+
+.radar-sector-list {
+  display: grid;
+  gap: 10px;
+  max-height: 640px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.radar-sector-item {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.radar-sector-item:hover,
+.radar-sector-item.active {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.sector-rank-row,
+.sector-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sector-rank-row {
+  margin-bottom: 8px;
+}
+
+.sector-rank-row span {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-meta-row {
+  margin: 8px 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .candidate-toolbar {
@@ -1300,6 +1626,14 @@ onMounted(() => {
 
   .brief-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .radar-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .radar-sector-list {
+    max-height: none;
   }
 }
 </style>
