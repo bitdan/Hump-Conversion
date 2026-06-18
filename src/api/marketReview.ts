@@ -118,6 +118,21 @@ export interface MarketRadarCandidate {
     tags: string[]
 }
 
+export interface MarketRadarSectorStock {
+    code: string
+    name: string
+    industry: string
+    latest_price?: number | null
+    change_percent?: number | null
+    turnover_rate?: number | null
+    amount?: number | null
+    sector_heat_score: number
+    stock_score: number
+    reasons: string[]
+    risks: string[]
+    tags: string[]
+}
+
 export interface MarketRadarData {
     date: string
     market_environment?: MarketEnvironment | null
@@ -199,6 +214,17 @@ export function getMarketRadar(params: {
     candidate_limit?: number
 }) {
     return request.get<ApiResponse<MarketRadarData>>('/api/v1/market-review/radar', {params} as any)
+}
+
+export function getMarketRadarSectorStocks(
+    sectorName: string,
+    params: { date?: string; refresh?: boolean; limit?: number }
+) {
+    const encoded = encodeURIComponent(sectorName)
+    return request.get<ApiResponse<MarketRadarSectorStock[]>>(
+        `/api/v1/market-review/radar/sectors/${encoded}/stocks`,
+        {params} as any
+    )
 }
 
 export function getStockKline(

@@ -153,7 +153,7 @@
                       variant="tonal"
                       size="small"
                       closable
-                      @click:close="selectedRadarSector = ''"
+                      @click:close="clearRadarSector"
                   >
                     板块：{{ selectedRadarSector }}
                   </v-chip>
@@ -216,6 +216,93 @@
                     />
                   </template>
                 </v-data-table>
+
+                <div v-if="selectedRadarSector" class="sector-stock-radar">
+                  <div class="table-toolbar sector-stock-toolbar">
+                    <span class="watch-count">
+                      {{ selectedRadarSector }} 全部股票 {{ sectorStocks.length }} 只
+                    </span>
+                    <v-btn
+                        size="small"
+                        variant="text"
+                        prepend-icon="mdi-refresh"
+                        :loading="sectorStockLoading"
+                        @click="loadRadarSectorStocks(selectedRadarSector, true)"
+                    >
+                      刷新成分
+                    </v-btn>
+                  </div>
+                  <v-alert
+                      v-if="sectorStockError"
+                      type="warning"
+                      variant="tonal"
+                      density="compact"
+                      class="mx-3 mt-2"
+                  >
+                    {{ sectorStockError }}
+                  </v-alert>
+                  <v-data-table
+                      :headers="radarSectorStockHeaders"
+                      :items="sectorStocks"
+                      :loading="sectorStockLoading"
+                      no-data-text="当前板块暂无成分股数据"
+                      density="compact"
+                      item-value="code"
+                      fixed-header
+                      height="420"
+                  >
+                    <template #item.name="{ item }">
+                      <button class="stock-name stock-button" type="button" @click="openKline(item.code, item.name)">
+                        <strong>{{ item.name }}</strong>
+                        <span>{{ item.code }}</span>
+                      </button>
+                    </template>
+                    <template #item.stock_score="{ item }">
+                      <score-bar :value="item.stock_score"/>
+                    </template>
+                    <template #item.change_percent="{ item }">
+                      <span :class="changeClass(item.change_percent)">{{ formatPercent(item.change_percent) }}</span>
+                    </template>
+                    <template #item.turnover_rate="{ item }">
+                      {{ item.turnover_rate == null ? '-' : `${item.turnover_rate.toFixed(2)}%` }}
+                    </template>
+                    <template #item.amount="{ item }">
+                      {{ formatMoney(item.amount) }}
+                    </template>
+                    <template #item.reasons="{ item }">
+                      <div class="chip-row">
+                        <v-chip
+                            v-for="reason in item.reasons"
+                            :key="reason"
+                            size="x-small"
+                            color="green"
+                            variant="tonal"
+                        >
+                          {{ reason }}
+                        </v-chip>
+                      </div>
+                    </template>
+                    <template #item.risks="{ item }">
+                      <div class="chip-row">
+                        <v-chip v-for="tag in item.tags" :key="tag" size="x-small" color="primary" variant="tonal">
+                          {{ tag }}
+                        </v-chip>
+                        <v-chip v-for="risk in item.risks" :key="risk" size="x-small" color="orange" variant="tonal">
+                          {{ risk }}
+                        </v-chip>
+                      </div>
+                    </template>
+                    <template #item.action="{ item }">
+                      <v-btn
+                          size="small"
+                          variant="text"
+                          :icon="isWatched(item.code) ? 'mdi-star' : 'mdi-star-outline'"
+                          :color="isWatched(item.code) ? 'amber' : undefined"
+                          @click="toggleWatchFromSectorStock(item)"
+                      />
+                    </template>
+                  </v-data-table>
+                </div>
               </section>
             </div>
           </template>
@@ -620,12 +707,14 @@ import {
   type CandidateStock,
   type DivergenceConsensusSignal,
   getMarketRadar,
+  getMarketRadarSectorStocks,
   getMarketReview,
   getStockKline,
   type LimitUpStock,
   type MarketRadarCandidate,
   type MarketRadarData,
   type MarketRadarSector,
+  type MarketRadarSectorStock,
   type MarketReviewData,
   type StockKlineSnapshot
 } from '@/api/marketReview'
@@ -636,10 +725,13 @@ const queryDate = ref(today)
 const tab = ref('radar')
 const loading = ref(false)
 const radarLoading = ref(false)
+const sectorStockLoading = ref(false)
 const error = ref('')
 const radarError = ref('')
+const sectorStockError = ref('')
 const review = ref<MarketReviewData | null>(null)
 const radar = ref<MarketRadarData | null>(null)
+const sectorStocks = ref<MarketRadarSectorStock[]>([])
 const klineDialog = ref(false)
 const klineLoading = ref(false)
 const klineError = ref('')
@@ -907,6 +999,17 @@ const radarCandidateHeaders = [
   {title: '观察', key: 'action', width: 76, sortable: false}
 ]
 
+const radarSectorStockHeaders = [
+  {title: '股票', key: 'name', minWidth: 130},
+  {title: '个股分', key: 'stock_score', minWidth: 140},
+  {title: '涨跌幅', key: 'change_percent', width: 90},
+  {title: '换手%', key: 'turnover_rate', width: 86},
+  {title: '成交额', key: 'amount', width: 112},
+  {title: '理由', key: 'reasons', minWidth: 220},
+  {title: '风险/标签', key: 'risks', minWidth: 200},
+  {title: '观察', key: 'action', width: 76, sortable: false}
+]
+
 const watchHeaders = [
   {title: '股票', key: 'name', minWidth: 130},
   {title: '行业', key: 'industry', minWidth: 110},
@@ -961,7 +1064,18 @@ function toggleSector(industry: string) {
 }
 
 function toggleRadarSector(sector: MarketRadarSector) {
-  selectedRadarSector.value = selectedRadarSector.value === sector.sector_name ? '' : sector.sector_name
+  if (selectedRadarSector.value === sector.sector_name) {
+    clearRadarSector()
+    return
+  }
+  selectedRadarSector.value = sector.sector_name
+  loadRadarSectorStocks(sector.sector_name)
+}
+
+function clearRadarSector() {
+  selectedRadarSector.value = ''
+  sectorStocks.value = []
+  sectorStockError.value = ''
 }
 
 function isWatched(code: string) {
@@ -1007,6 +1121,16 @@ function toggleWatchFromRadar(candidate: MarketRadarCandidate) {
     industry: candidate.industry,
     watchDate: queryDate.value,
     source: candidate.signal_type === 'limit_up' ? '雷达涨停确认' : '雷达板块候选'
+  })
+}
+
+function toggleWatchFromSectorStock(stock: MarketRadarSectorStock) {
+  toggleWatch({
+    code: stock.code,
+    name: stock.name,
+    industry: stock.industry,
+    watchDate: queryDate.value,
+    source: '雷达板块成分'
   })
 }
 
@@ -1081,6 +1205,33 @@ async function loadReview(refresh = false) {
   } finally {
     loading.value = false
     radarLoading.value = false
+  }
+  if (selectedRadarSector.value) {
+    await loadRadarSectorStocks(selectedRadarSector.value, refresh)
+  }
+}
+
+async function loadRadarSectorStocks(sectorName = selectedRadarSector.value, refresh = false) {
+  if (!sectorName) {
+    sectorStocks.value = []
+    return
+  }
+  sectorStockLoading.value = true
+  sectorStockError.value = ''
+  try {
+    const response = await getMarketRadarSectorStocks(sectorName, {
+      date: queryDate.value,
+      refresh,
+      limit: 500
+    })
+    if (selectedRadarSector.value === sectorName) {
+      sectorStocks.value = response.data
+    }
+  } catch (err: any) {
+    sectorStockError.value = sanitizeMarketError(err?.response?.data?.detail || err?.message || '板块成分股加载失败')
+    sectorStocks.value = []
+  } finally {
+    sectorStockLoading.value = false
   }
 }
 
@@ -1350,6 +1501,15 @@ onMounted(() => {
   color: var(--color-text-muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+}
+
+.sector-stock-radar {
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sector-stock-toolbar {
+  justify-content: space-between;
 }
 
 .candidate-toolbar {
