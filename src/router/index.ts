@@ -118,8 +118,8 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '字符串生成',
                     icon: 'mdi-format-letter-case',
-                    description: '在线字符串生成工具，快速生成随机文本与测试数据。',
-                    keywords: ['随机', '字符串', '测试数据']
+                    description: '安全生成随机字符串、密码、订单号、UUID 与模板化测试数据。',
+                    keywords: ['随机', '字符串', '密码', '模板', 'UUID', '订单号', '测试数据']
                 }
             },
             {
