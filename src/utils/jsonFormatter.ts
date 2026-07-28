@@ -1,6 +1,20 @@
+import {
+  isLosslessNumber,
+  parse as parseLosslessJson,
+  stringify as stringifyLosslessJson
+} from 'lossless-json'
+
 export interface JsonTransformResult {
   value: unknown
   expandedStringCount: number
+}
+
+function stringifyJson(value: unknown, space?: number): string {
+  const text = stringifyLosslessJson(value, undefined, space)
+  if (text === undefined) {
+    throw new TypeError('无法序列化 JSON 数据')
+  }
+  return text
 }
 
 function looksLikeJsonContainer(value: string): boolean {
@@ -16,7 +30,7 @@ function expandNestedJsonStrings(value: unknown, depth: number): JsonTransformRe
 
   if (typeof value === 'string' && looksLikeJsonContainer(value)) {
     try {
-      const parsed = JSON.parse(value)
+      const parsed = parseLosslessJson(value)
       const expanded = expandNestedJsonStrings(parsed, depth - 1)
       return {
         value: expanded.value,
@@ -37,6 +51,10 @@ function expandNestedJsonStrings(value: unknown, depth: number): JsonTransformRe
     return { value: expanded, expandedStringCount }
   }
 
+  if (isLosslessNumber(value)) {
+    return { value, expandedStringCount: 0 }
+  }
+
   if (value !== null && typeof value === 'object') {
     let expandedStringCount = 0
     const expanded = Object.fromEntries(
@@ -53,14 +71,14 @@ function expandNestedJsonStrings(value: unknown, depth: number): JsonTransformRe
 }
 
 export function parseJsonWithNestedStrings(text: string, maxDepth = 100): JsonTransformResult {
-  return expandNestedJsonStrings(JSON.parse(text), maxDepth)
+  return expandNestedJsonStrings(parseLosslessJson(text), maxDepth)
 }
 
 export function formatJsonWithNestedStrings(text: string): JsonTransformResult & { text: string } {
   const result = parseJsonWithNestedStrings(text)
   return {
     ...result,
-    text: JSON.stringify(result.value, null, 2)
+    text: stringifyJson(result.value, 2)
   }
 }
 
@@ -68,13 +86,13 @@ export function minifyJsonWithNestedStrings(text: string): JsonTransformResult &
   const result = parseJsonWithNestedStrings(text)
   return {
     ...result,
-    text: JSON.stringify(result.value)
+    text: stringifyJson(result.value)
   }
 }
 
 export function escapeJsonText(text: string): string {
-  JSON.parse(text)
-  return JSON.stringify(text)
+  parseLosslessJson(text)
+  return stringifyJson(text)
 }
 
 export function unescapeJsonText(text: string): string {
@@ -82,14 +100,14 @@ export function unescapeJsonText(text: string): string {
   let unescaped: unknown
 
   try {
-    unescaped = JSON.parse(trimmed)
+    unescaped = parseLosslessJson(trimmed)
     if (typeof unescaped !== 'string') {
       throw new Error('当前内容不是转义后的 JSON 字符串')
     }
   } catch (error) {
     try {
       // 兼容旧版“添加转义”生成的无外层引号内容。
-      unescaped = JSON.parse(`"${text}"`)
+      unescaped = parseLosslessJson(`"${text}"`)
     } catch {
       throw error
     }
@@ -98,6 +116,6 @@ export function unescapeJsonText(text: string): string {
   if (typeof unescaped !== 'string') {
     throw new Error('当前内容不是转义后的 JSON 字符串')
   }
-  JSON.parse(unescaped)
+  parseLosslessJson(unescaped)
   return unescaped
 }
