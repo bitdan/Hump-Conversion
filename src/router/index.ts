@@ -412,6 +412,18 @@ export const routes: RouteRecordRaw[] = [
         },
         children: [
             {
+                path: '/games/particle-lab',
+                name: 'ParticleLab',
+                component: () => import('@/views/games/ParticleLab.vue'),
+                meta: {
+                    title: 'GPU 粒子实验室',
+                    icon: 'mdi-creation-outline',
+                    description: '基于 PixiJS 的 GPU 粒子性能实验场，支持深空、烟花和引力模式以及十万粒子压力测试。',
+                    keywords: ['PixiJS', 'GPU', '粒子', 'WebGL', '性能测试', '烟花', '引力'],
+                    featured: true
+                }
+            },
+            {
                 path: '/games/dice-roller',
                 name: 'DiceRoller',
                 component: () => import('@/views/games/DiceRoller.vue'),
