@@ -1,10 +1,4 @@
 <template>
-  <ToolPageLayout
-    theme="none"
-    density="workspace"
-    :card="false"
-    max-width="max-w-7xl"
-  >
     <div class="particle-lab">
       <section class="lab-controls solid-card" aria-label="粒子实验控制台">
         <div class="control-block mode-control">
@@ -104,13 +98,6 @@
             <span>渲染器</span>
             <strong>{{ rendererName }}</strong>
           </div>
-          <v-chip
-            size="small"
-            :color="performanceTone"
-            variant="flat"
-          >
-            {{ performanceLabel }}
-          </v-chip>
         </div>
 
         <div
@@ -131,7 +118,6 @@
             {{ Math.round(buildProgress) }}%
           </v-progress-circular>
           <strong>正在装载 {{ formatParticleCount(particleCount) }} 个粒子</strong>
-          <span>分批创建粒子，避免阻塞页面交互</span>
         </div>
 
         <div v-else-if="initError" class="stage-message stage-message--error" role="alert">
@@ -146,28 +132,8 @@
           <strong>模拟已暂停</strong>
         </div>
 
-        <div class="stage-hint">
-          <v-icon :icon="activeModeMeta.hintIcon" size="18" />
-          <span>{{ activeModeMeta.hint }}</span>
-        </div>
-      </section>
-
-      <section class="lab-notes solid-card">
-        <div class="note-main">
-          <v-icon :icon="activeModeMeta.icon" color="primary" size="24" />
-          <div>
-            <strong>{{ activeModeMeta.label }}</strong>
-            <p>{{ activeModeMeta.description }}</p>
-          </div>
-        </div>
-        <div class="tech-notes">
-          <v-chip size="small" variant="tonal" color="primary">ParticleContainer</v-chip>
-          <v-chip size="small" variant="tonal" color="info">共享纹理</v-chip>
-          <v-chip size="small" variant="tonal" color="success">TypedArray 物理状态</v-chip>
-        </div>
       </section>
     </div>
-  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -182,7 +148,6 @@ import {
   Texture,
   type Ticker
 } from 'pixi.js'
-import ToolPageLayout from '@/components/ToolPageLayout.vue'
 
 type LabMode = 'starfield' | 'fireworks' | 'gravity'
 
@@ -190,9 +155,6 @@ interface ModeDefinition {
   value: LabMode
   label: string
   icon: string
-  hintIcon: string
-  hint: string
-  description: string
 }
 
 interface SimulationBuffers {
@@ -207,34 +169,25 @@ const modes: ModeDefinition[] = [
   {
     value: 'starfield',
     label: '深空穿越',
-    icon: 'mdi-creation-outline',
-    hintIcon: 'mdi-cursor-move',
-    hint: '移动指针改变穿越视角',
-    description: '用透视投影模拟高速星际穿越，粒子越接近镜头，运动越明显。'
+    icon: 'mdi-creation-outline'
   },
   {
     value: 'fireworks',
     label: '烟花矩阵',
-    icon: 'mdi-firework',
-    hintIcon: 'mdi-gesture-tap',
-    hint: '点击画布，在指定位置引爆烟花',
-    description: '持续回收粒子并组成烟花爆发，点击可以向粒子池注入一次局部爆炸。'
+    icon: 'mdi-firework'
   },
   {
     value: 'gravity',
     label: '引力漩涡',
-    icon: 'mdi-orbit',
-    hintIcon: 'mdi-gesture-tap-hold',
-    hint: '移动指针吸引粒子，按住切换为排斥力',
-    description: '每个粒子独立计算速度与引力，指针就是可移动的引力核心。'
+    icon: 'mdi-orbit'
   }
 ]
 
 const particleCountOptions = [
-  {title: '10K · 轻松', value: 10_000},
-  {title: '25K · 热身', value: 25_000},
-  {title: '50K · 压力', value: 50_000},
-  {title: '100K · 极限', value: 100_000}
+  {title: '10K', value: 10_000},
+  {title: '25K', value: 25_000},
+  {title: '50K', value: 50_000},
+  {title: '100K', value: 100_000}
 ]
 
 const FIREWORK_GROUP_SIZE = 220
@@ -278,7 +231,6 @@ let pointerIdleSeconds = 0
 let burstCursor = 0
 let palette: number[] = []
 
-const activeModeMeta = computed(() => modes.find(mode => mode.value === activeMode.value) || modes[0])
 const formattedParticleCount = computed(() => {
   const currentCount = formatParticleCount(buffers.particles.length || particleCount.value)
   return isBuilding.value ? `${currentCount} → ${formatParticleCount(particleCount.value)}` : currentCount
@@ -288,18 +240,6 @@ const fpsToneClass = computed(() => ({
   'stat-value--fair': displayedFps.value >= 40 && displayedFps.value < 55,
   'stat-value--hot': displayedFps.value > 0 && displayedFps.value < 40
 }))
-const performanceLabel = computed(() => {
-  if (!displayedFps.value) return '采样中'
-  if (displayedFps.value >= 55) return '丝滑'
-  if (displayedFps.value >= 40) return '稳定'
-  return '压力区'
-})
-const performanceTone = computed(() => {
-  if (!displayedFps.value) return 'info'
-  if (displayedFps.value >= 55) return 'success'
-  if (displayedFps.value >= 40) return 'warning'
-  return 'error'
-})
 const gravityCoreStyle = computed(() => {
   const width = pixiApp?.screen.width || 1
   const height = pixiApp?.screen.height || 1
@@ -997,26 +937,6 @@ onBeforeUnmount(() => {
   padding: 20px 26px;
 }
 
-.stage-hint {
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  bottom: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  max-width: calc(100% - 28px);
-  padding: 7px 12px;
-  transform: translateX(-50%);
-  border: 1px solid color-mix(in srgb, var(--color-surface) 16%, transparent);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-text) 70%, transparent);
-  color: color-mix(in srgb, var(--color-surface) 86%, transparent);
-  font-size: 0.78rem;
-  white-space: nowrap;
-  backdrop-filter: blur(10px);
-}
-
 .gravity-core {
   position: absolute;
   z-index: 2;
@@ -1039,40 +959,6 @@ onBeforeUnmount(() => {
   box-shadow:
     0 0 24px color-mix(in srgb, var(--color-error) 78%, transparent),
     0 0 58px color-mix(in srgb, var(--color-warning) 48%, transparent);
-}
-
-.lab-notes {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 14px 16px;
-  border-radius: var(--radius-element);
-}
-
-.note-main {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-}
-
-.note-main strong {
-  color: var(--color-text);
-}
-
-.note-main p {
-  margin: 3px 0 0;
-  color: var(--color-text-muted);
-  font-size: 0.86rem;
-  line-height: 1.45;
-}
-
-.tech-notes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 7px;
 }
 
 @media (max-width: 1100px) {
@@ -1132,14 +1018,6 @@ onBeforeUnmount(() => {
     padding-inline: 4px;
   }
 
-  .lab-notes {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .tech-notes {
-    justify-content: flex-start;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
