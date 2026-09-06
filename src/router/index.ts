@@ -88,6 +88,18 @@ export const routes: RouteRecordRaw[] = [
                 redirect: '/tools/skill-chat-workspace'
             },
             {
+                path: '/tools/rag-lab',
+                name: 'RagLab',
+                component: () => import('@/views/tools/RagLab.vue'),
+                meta: {
+                    title: 'RAG 证据实验台',
+                    icon: 'mdi-text-search-variant',
+                    description: '可解释的离线 RAG 实验台，展示混合召回、证据图扩散、MMR 重排、引用与置信度。',
+                    keywords: ['RAG', '检索增强', '混合检索', '证据图', '引用'],
+                    featured: true
+                }
+            },
+            {
                 path: '/tools/mysql-analysis',
                 name: 'MysqlAnalysis',
                 component: () => import('@/views/tools/MysqlAnalysis.vue'),
