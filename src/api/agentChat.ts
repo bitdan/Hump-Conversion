@@ -1,5 +1,8 @@
 import request from '@/utils/request'
 import {useUserStore} from '@/stores/user'
+import {z} from 'zod'
+
+const agentStreamDataSchema = z.record(z.string(), z.unknown())
 
 export interface AgentChatRequest {
     message: string
@@ -95,8 +98,9 @@ function parseSseChunk(chunk: string): AgentChatStreamEvent | null {
         .map((line) => line.slice(5).trim())
         .join('\n')
     if (!dataText) return null
+    const data = agentStreamDataSchema.parse(JSON.parse(dataText))
     return {
         event,
-        data: JSON.parse(dataText)
+        data
     }
 }

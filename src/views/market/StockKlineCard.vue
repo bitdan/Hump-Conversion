@@ -82,7 +82,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import StockKlineChart from '@/views/market/StockKlineChart.vue'
-import type {StockKlineSnapshot, StockKlineSummary} from '@/api/marketReview'
+import type {StockKlineSnapshot, StockKlineSummary} from '@/api/marketReview/kline'
 
 const props = defineProps<{
   snapshot: StockKlineSnapshot | null

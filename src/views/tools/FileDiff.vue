@@ -128,7 +128,7 @@ function detectEditorLanguage(file: File | null, content: string): CodeEditorLan
     return EXTENSION_LANGUAGES[extension]
   }
 
-  const format = detectFormat(content)
+  const format = detectFormat(content).kind
   if (format === 'json' || format === 'yaml' || format === 'xml') {
     return format
   }

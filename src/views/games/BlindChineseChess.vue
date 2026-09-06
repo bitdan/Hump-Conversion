@@ -810,7 +810,7 @@ function handleResize() {
     boardCanvas.value.width = BOARD_WIDTH.value
     boardCanvas.value.height = BOARD_HEIGHT.value
   }
-  updateCanvas()
+  redraw()
 }
 
 onMounted(() => {

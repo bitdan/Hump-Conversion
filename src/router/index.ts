@@ -130,8 +130,8 @@ export const routes: RouteRecordRaw[] = [
                 meta: {
                     title: '字符串生成',
                     icon: 'mdi-format-letter-case',
-                    description: '在线字符串生成工具，快速生成随机文本与测试数据。',
-                    keywords: ['随机', '字符串', '测试数据']
+                    description: '安全生成随机字符串、密码、订单号、UUID 与模板化测试数据。',
+                    keywords: ['随机', '字符串', '密码', '模板', 'UUID', '订单号', '测试数据']
                 }
             },
             {
@@ -277,6 +277,18 @@ export const routes: RouteRecordRaw[] = [
                     icon: 'mdi-camera-outline',
                     description: '在线代码截图生成器，支持主题、语言、背景和 PNG 导出。',
                     keywords: ['代码截图', 'PNG', '主题']
+                }
+            },
+            {
+                path: '/tools/pixi-lab',
+                alias: ['/tools/gpu-shader-lab', '/games/particle-lab'],
+                name: 'PixiLab',
+                component: () => import('@/views/tools/PixiLab.vue'),
+                meta: {
+                    title: 'PixiJS',
+                    icon: 'mdi-chart-bubble',
+                    keywords: ['PixiJS', 'GPU', 'WebGL', '粒子', 'Shader', 'GLSL', '烟花', '水波', '极光'],
+                    featured: true
                 }
             },
             {

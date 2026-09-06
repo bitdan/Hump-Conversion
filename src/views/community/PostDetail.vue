@@ -3,7 +3,7 @@
     <div class="detail-actions">
       <v-btn variant="text" prepend-icon="mdi-arrow-left" to="/community/posts">返回列表</v-btn>
       <div v-if="canEdit" class="owner-actions">
-        <v-btn variant="tonal" prepend-icon="mdi-pencil" :to="`/community/posts/${post.id}/edit`">编辑</v-btn>
+        <v-btn variant="tonal" prepend-icon="mdi-pencil" :to="post ? `/community/posts/${post.id}/edit` : ''">编辑</v-btn>
         <v-btn color="error" variant="tonal" prepend-icon="mdi-delete-outline" @click="removePost">删除</v-btn>
       </div>
     </div>
@@ -151,7 +151,8 @@ const commentTree = computed<CommentNode[]>(() => {
   return roots
 })
 
-const NestedComment = defineComponent({
+let NestedComment: ReturnType<typeof defineComponent>
+NestedComment = defineComponent({
   name: 'NestedComment',
   props: {
     comment: {
@@ -164,7 +165,7 @@ const NestedComment = defineComponent({
     }
   },
   emits: ['reply'],
-  setup(props, {emit}) {
+  setup(props, {emit}): () => ReturnType<typeof h> {
     return () => h('article', {class: 'comment-card nested'}, [
       h('div', {class: 'comment-meta'}, [
         h('strong', props.comment.author_name),

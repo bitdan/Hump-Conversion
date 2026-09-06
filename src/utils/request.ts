@@ -1,4 +1,4 @@
-import type {AxiosInstance, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
+import type {AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
 import axios from 'axios'
 import {useUserStore} from '@/stores/user'
 import {useMessage} from '@/composables/useMessage'
@@ -92,19 +92,19 @@ service.interceptors.response.use(
 
 // 导出请求方法
 const request = {
-  get<T = any>(url: string, config?: InternalAxiosRequestConfig): Promise<T> {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return service.get(url, config)
   },
 
-  post<T = any>(url: string, data?: any, config?: InternalAxiosRequestConfig): Promise<T> {
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return service.post(url, data, config)
   },
 
-  put<T = any>(url: string, data?: any, config?: InternalAxiosRequestConfig): Promise<T> {
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return service.put(url, data, config)
   },
 
-  delete<T = any>(url: string, config?: InternalAxiosRequestConfig): Promise<T> {
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return service.delete(url, config)
   }
 }

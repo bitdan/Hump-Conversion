@@ -108,13 +108,22 @@
           <h2>事件日志</h2>
           <v-btn size="small" variant="text" :disabled="logs.length === 0" @click="logs = []">清空</v-btn>
         </div>
-        <div class="log-list">
-          <div v-for="entry in logs" :key="entry.id" class="log-item">
+        <div ref="logScrollRef" class="log-list">
+          <div class="log-list-inner" :style="{height: `${logVirtualizer.getTotalSize()}px`}">
+          <div
+            v-for="virtualRow in logVirtualizer.getVirtualItems()"
+            :key="logs[virtualRow.index].id"
+            :ref="measureLogElement"
+            :data-index="virtualRow.index"
+            class="log-item"
+            :style="{transform: `translateY(${virtualRow.start}px)`}"
+          >
             <div class="log-meta">
-              <span>{{ entry.time }}</span>
-              <span :class="['log-kind', `log-kind-${entry.kind}`]">{{ entry.kind }}</span>
+              <span>{{ logs[virtualRow.index].time }}</span>
+              <span :class="['log-kind', `log-kind-${logs[virtualRow.index].kind}`]">{{ logs[virtualRow.index].kind }}</span>
             </div>
-            <pre>{{ entry.message }}</pre>
+            <pre>{{ logs[virtualRow.index].message }}</pre>
+          </div>
           </div>
         </div>
       </section>
@@ -125,6 +134,7 @@
 
 <script setup lang="ts">
 import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {useVirtualizer} from '@tanstack/vue-virtual'
 import ToolPageLayout from '@/components/ToolPageLayout.vue'
 import {useMessage} from '@/composables/useMessage'
 
@@ -153,6 +163,7 @@ const toolArguments = ref(JSON.stringify({
 }, null, 2))
 const resultText = ref('')
 const logs = ref<McpLogEntry[]>([])
+const logScrollRef = ref<HTMLElement | null>(null)
 const tools = ref<McpToolDefinition[]>([])
 const selectedToolName = ref('')
 const messageEndpoint = ref('')
@@ -164,6 +175,19 @@ const messageCounter = ref(1)
 const pendingResponses = new Map<number, any>()
 
 const pendingRequests = new Map<number, { resolve: (value: any) => void, reject: (reason?: any) => void }>()
+
+const logVirtualizer = useVirtualizer(computed(() => ({
+  count: logs.value.length,
+  getScrollElement: () => logScrollRef.value,
+  estimateSize: () => 132,
+  overscan: 4,
+})))
+
+function measureLogElement(element: any) {
+  if (element instanceof Element) {
+    logVirtualizer.value.measureElement(element)
+  }
+}
 
 const toolOptions = computed(() => tools.value.map(tool => ({
   title: tool.name,
@@ -688,13 +712,22 @@ onBeforeUnmount(() => {
 }
 
 .log-list {
-  display: grid;
-  gap: 12px;
+  position: relative;
   max-height: 520px;
   overflow: auto;
 }
 
+.log-list-inner {
+  position: relative;
+  width: 100%;
+}
+
 .log-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin-bottom: 12px;
   padding: 14px 16px;
   border-radius: 18px;
   background: var(--color-bg);

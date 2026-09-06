@@ -80,12 +80,12 @@ npm run dev
 5. 运行项目校验
 ```bash
 npm run build       # 生产构建
-npm run check       # 当前项目校验入口，现阶段等同于生产构建
-npm run test        # 当前等同于 npm run check
+npm run typecheck   # Vue 与 TypeScript 类型检查
+npm run lint        # ESLint 静态检查
+npm run test        # Vitest 单元测试
+npm run test:e2e    # Playwright 浏览器测试
+npm run check       # 类型检查、Lint、单测和生产构建
 ```
-
-> 当前仓库尚未接入 Vitest、Playwright 或 ESLint。`test`、`lint`、`typecheck` 暂时作为可执行的构建校验入口保留，避免
-> CI/文档命令缺失；后续引入专门测试和代码检查工具后再替换为真实检查命令。
 
 ## 生产环境部署
 

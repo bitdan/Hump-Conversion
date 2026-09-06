@@ -1,4 +1,4 @@
-<template>
+ <template>
   <ToolPageLayout :card="false" max-width="max-w-6xl">
     <section class="qr-workspace">
       <aside class="qr-controls">
@@ -54,7 +54,7 @@
               label="上传 Logo 图片"
               hide-details
               @update:model-value="handleLogoFile"
-              @click:clear="clearLogo"
+              @click:clear="clearLogo()"
           />
         </div>
 
@@ -103,7 +103,7 @@
             <h1>二维码美化器</h1>
             <p>支持 Logo、颜色和模块样式，适合分享链接、活动入口和个人名片。</p>
           </div>
-          <v-btn icon="mdi-refresh" variant="text" :disabled="!qrValue" @click="renderQrCode"/>
+          <v-btn icon="mdi-refresh" variant="text" :disabled="!qrValue" @click="renderQrCode()"/>
         </div>
 
         <div class="canvas-shell">
