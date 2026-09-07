@@ -10,6 +10,8 @@
     "reinstall": "npm run clean && npm install",
     "dev": "vite",
     "preview": "vite preview",
+    "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "prebuild": "npm run generate:sitemap",
     "build": "vite build",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "typecheck": "vue-tsc --noEmit",

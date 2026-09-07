@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tool.linger.host/sitemap.xml
+Sitemap: http://tool.linger.host/sitemap.xml

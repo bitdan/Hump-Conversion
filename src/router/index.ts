@@ -12,6 +12,7 @@ declare module 'vue-router' {
         keywords?: string[];
         featured?: boolean;
         groupOrder?: number;
+        robots?: string;
     }
 }
 
@@ -586,6 +587,17 @@ export const routes: RouteRecordRaw[] = [
                 }
             }
         ]
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/NotFoundView.vue'),
+        meta: {
+            title: '页面不存在',
+            description: '访问的页面不存在，请返回 Tool Hub 首页或通过导航选择工具。',
+            hiddenInNav: true,
+            robots: 'noindex,follow'
+        }
     }
 ]
 
@@ -636,13 +648,21 @@ function updatePropertyMetaTag(property: string, content: string) {
 router.afterEach((to) => {
     const title = typeof to.meta?.title === 'string' ? `${to.meta.title}` : DEFAULT_TITLE
     const description = typeof to.meta?.description === 'string' ? `${to.meta.description}` : DEFAULT_DESCRIPTION
+    const robots = typeof to.meta?.robots === 'string'
+        ? to.meta.robots
+        : to.meta?.requiresAuth || to.path.startsWith('/auth/')
+            ? 'noindex,nofollow'
+            : 'index,follow'
 
     document.title = title.includes('Tool Hub') ? title : `${title} - Tool Hub`
     updateMetaTag('description', description)
+    updateMetaTag('robots', robots)
     updatePropertyMetaTag('og:title', document.title)
     updatePropertyMetaTag('og:description', description)
 
-    const canonicalHref = `https://tool.linger.host${to.fullPath === '/' ? '/' : to.fullPath}`
+    const canonicalPath = to.path === '/' ? '/' : to.path.replace(/\/+$/, '')
+    const configuredSiteUrl = String(import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/+$/, '')
+    const canonicalHref = `${configuredSiteUrl}${canonicalPath}`
     let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
     if (!canonical) {
         canonical = document.createElement('link')
