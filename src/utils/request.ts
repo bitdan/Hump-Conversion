@@ -9,7 +9,8 @@ const { showError } = useMessage()
 
 // 创建axios实例
 const service: AxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api/v1', // API的base_url
+    // API 封装已包含 /api/v1，baseURL 只配置 Java 服务 origin。
+    baseURL: import.meta.env.VITE_API_URL || '',
   timeout: 1000*60, // 请求超时时间
     withCredentials: true,
   headers: { 'Content-Type': 'application/json;charset=utf-8' }
@@ -85,7 +86,9 @@ service.interceptors.response.use(
       if (axios.isCancel(error)) {
           return Promise.reject(error)
       }
-    showError(error.message || '请求失败')
+      const responseMessage = error.response?.data?.msg || error.response?.data?.detail || error.message || '请求失败'
+      error.message = responseMessage
+    showError(responseMessage)
     return Promise.reject(error)
   }
 )

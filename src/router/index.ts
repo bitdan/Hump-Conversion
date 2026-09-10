@@ -23,7 +23,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/components/Home.vue'),
         meta: {
             title: 'Tool Hub - 在线开发者工具箱与小游戏集合',
-            description: 'Tool Hub 提供在线驼峰转换、JSON 编辑器、文件 Diff、二维码生成、时间戳转换、MCP 测试台以及多种网页小游戏。',
+            description: 'Tool Hub 提供在线驼峰转换、JSON 编辑器、文件 Diff、二维码生成、时间戳转换以及多种网页小游戏。',
             keywords: ['工具箱', '开发工具', '小游戏', 'AI 对话']
         }
     },
@@ -65,29 +65,14 @@ export const routes: RouteRecordRaw[] = [
     {
         path: '/tools',
         name: 'Tools',
-        redirect: '/tools/skill-chat-workspace',
+        redirect: '/tools/mysql-analysis',
         meta: {
             title: '工具',
             icon: 'mdi-tools',
             groupOrder: 1
         },
         children: [
-            {
-                path: '/tools/skill-chat-workspace',
-                name: 'SkillChatWorkspace',
-                component: () => import('@/views/tools/SkillChatWorkspace.vue'),
-                meta: {
-                    title: 'Agent 任务工作台',
-                    icon: 'mdi-robot-outline',
-                    description: '面向开发任务的 Agent 工作台，支持意图路由、架构设计、堆栈诊断、算法辅导、SQL 生成和结构化轨迹展示。',
-                    keywords: ['AI', 'Agent', '工具调用', '堆栈', 'LeetCode', 'SQL'],
-                    featured: true
-                }
-            },
-            {
-                path: '/tools/langgraph-viewer',
-                redirect: '/tools/skill-chat-workspace'
-            },
+            // Agent 任务工作台依赖 Python Agent 后端，Java 重构期间暂不注册路由。
             {
                 path: '/tools/mysql-analysis',
                 name: 'MysqlAnalysis',
@@ -100,18 +85,7 @@ export const routes: RouteRecordRaw[] = [
                     featured: true
                 }
             },
-            {
-                path: '/tools/mcp-tester',
-                name: 'McpTester',
-                component: () => import('@/views/tools/McpTester.vue'),
-                meta: {
-                    title: 'MCP 测试台',
-                    icon: 'mdi-connection',
-                    description: '在线测试 MCP SSE 连接、工具列表与工具调用结果。',
-                    keywords: ['MCP', 'SSE', '工具调用'],
-                    featured: true
-                }
-            },
+            // MCP 测试台依赖独立 MCP 服务，Java 重构期间暂不注册路由。
             {
                 path: '/tools/string-generator',
                 name: 'StringGenerator',
@@ -337,29 +311,7 @@ export const routes: RouteRecordRaw[] = [
             }
         ]
     },
-    {
-        path: '/market',
-        name: 'Market',
-        meta: {
-            title: '市场',
-            icon: 'mdi-finance',
-            groupOrder: 2
-        },
-        children: [
-            {
-                path: '/market/review',
-                name: 'MarketReview',
-                component: () => import('@/views/market/MarketReview.vue'),
-                meta: {
-                    title: '涨停池复盘',
-                    icon: 'mdi-chart-timeline-variant',
-                    description: '涨停池、板块强度、2进3候选和分歧转一致识别。',
-                    keywords: ['股票', '涨停池', '复盘', '板块强度'],
-                    featured: true
-                }
-            }
-        ]
-    },
+    // 市场复盘依赖 Python 行情聚合后端，Java 重构期间暂不注册路由。
     {
         path: '/community',
         name: 'Community',

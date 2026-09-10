@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url><loc>http://tool.linger.host/</loc></url>
-    <url><loc>http://tool.linger.host/tools/skill-chat-workspace</loc></url>
     <url><loc>http://tool.linger.host/tools/mysql-analysis</loc></url>
-    <url><loc>http://tool.linger.host/tools/mcp-tester</loc></url>
     <url><loc>http://tool.linger.host/tools/string-generator</loc></url>
     <url><loc>http://tool.linger.host/tools/case-converter</loc></url>
     <url><loc>http://tool.linger.host/tools/file-diff</loc></url>
@@ -18,7 +16,6 @@
     <url><loc>http://tool.linger.host/tools/pixi-lab</loc></url>
     <url><loc>http://tool.linger.host/tools/jetbrain-checker</loc></url>
     <url><loc>http://tool.linger.host/tools/markdown-resume-pdf</loc></url>
-    <url><loc>http://tool.linger.host/market/review</loc></url>
     <url><loc>http://tool.linger.host/community/posts</loc></url>
     <url><loc>http://tool.linger.host/games/dice-roller</loc></url>
     <url><loc>http://tool.linger.host/games/sudoku</loc></url>

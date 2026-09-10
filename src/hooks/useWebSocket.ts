@@ -8,7 +8,7 @@ export function useWebSocket(url: string) {
   const userStore = useUserStore()
 
   const connect = () => {
-    const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
+    const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:9999'
     const token = userStore.token
       const shouldUseLegacyQueryToken = import.meta.env.VITE_WS_TOKEN_IN_QUERY === 'true'
       const wsUrl = shouldUseLegacyQueryToken && token
